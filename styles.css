@@ -2892,47 +2892,186 @@ textarea.form-input {
   }
 }
 
-@media (max-width: 480px) {
+/* ========================================================
+   PRICING CARDS GRID & STREAMLINED ACTIONS
+   ======================================================== */
+.hero-action-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.hero-btn-main {
+  font-size: 1.1rem;
+  padding: 1rem 1.75rem;
+  border-radius: var(--radius-md);
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: linear-gradient(135deg, #00f0ff 0%, #0088ff 100%);
+  color: #000;
+  font-weight: 700;
+  box-shadow: 0 10px 30px rgba(0, 240, 255, 0.4);
+  transition: var(--transition-smooth);
+}
+
+.hero-btn-main:hover {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 15px 40px rgba(0, 240, 255, 0.6);
+}
+
+.hero-btn-sub {
+  font-size: 1rem;
+  padding: 1rem 1.5rem;
+  border-radius: var(--radius-md);
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.pricing-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1.25rem;
+  margin-top: 1.5rem;
+}
+
+.price-pack-card {
+  padding: 1.5rem;
+  border-radius: var(--radius-lg);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 0.75rem;
+  transition: var(--transition-smooth);
+  position: relative;
+  overflow: hidden;
+}
+
+.price-pack-card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(0, 240, 255, 0.4);
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.6), 0 0 25px rgba(0, 240, 255, 0.2);
+}
+
+.featured-pack {
+  border-color: rgba(255, 51, 102, 0.5);
+  box-shadow: 0 15px 35px rgba(255, 51, 102, 0.25);
+  background: radial-gradient(circle at top, rgba(255, 51, 102, 0.15) 0%, rgba(15, 23, 42, 0.8) 100%);
+}
+
+.pack-badge {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 0.9rem;
+  letter-spacing: 0.05em;
+  padding: 0.35rem 0.9rem;
+  border-radius: var(--radius-pill);
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: var(--text-main);
+}
+
+.pack-amount {
+  font-family: var(--font-display);
+  font-size: 2.25rem;
+  font-weight: 800;
+  color: var(--accent-cyan);
+  line-height: 1;
+}
+
+.pack-stock-info {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.font-cyan {
+  color: var(--accent-cyan);
+}
+
+.btn-pack-buy {
+  width: 100%;
+  justify-content: center;
+  padding: 0.75rem 1rem;
+  text-decoration: none;
+  margin-top: 0.5rem;
+  border-radius: var(--radius-md);
+  font-weight: 600;
+}
+
+/* RESPONSIVE DESIGN FOR MOBILE */
+@media (max-width: 768px) {
+  .app-container {
+    padding: 0.5rem 0.5rem 2rem 0.5rem;
+  }
+
+  .main-header {
+    padding: 0.6rem 0.75rem;
+    border-radius: var(--radius-md);
+  }
+
+  .brand-name {
+    font-size: 1.1rem;
+  }
+
+  .security-status-badge {
+    display: none;
+  }
+
+  .hero-glass-card {
+    padding: 1.25rem;
+  }
+
   .hero-title {
-    font-size: 1.85rem;
-    line-height: 1.25;
+    font-size: 2.1rem;
+  }
+
+  .hero-subtitle {
+    font-size: 0.95rem;
   }
 
   .spec-cards-row {
+    grid-template-columns: 1fr 1fr;
+    gap: 0.6rem;
+  }
+
+  .hero-action-buttons {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .hero-btn-main, .hero-btn-sub {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .pricing-cards-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+  }
+
+  .pack-amount {
+    font-size: 1.85rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .pricing-cards-grid {
     grid-template-columns: 1fr;
     gap: 0.75rem;
   }
 
-  .main-header {
-    padding: 0.5rem 0.75rem;
+  .hero-title {
+    font-size: 1.75rem;
   }
 
-  .header-right {
-    gap: 0.5rem;
-  }
-
-  .glow-btn, .btn-tg-primary, .btn-primary {
-    width: 100%;
-    justify-content: center;
-    font-size: 0.95rem;
-    padding: 0.85rem 1rem;
-  }
-
-  .tg-banner-actions {
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
-  }
-
-  .modal-dialog {
-    width: 95vw !important;
-    max-width: 95vw !important;
-    margin: 1rem auto;
-    padding: 1rem !important;
-  }
-
-  .cart-drawer {
-    width: 100vw;
+  .spec-cards-row {
+    grid-template-columns: 1fr;
   }
 }
+
 

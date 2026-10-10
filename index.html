@@ -3,9 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>DRAGON-X PHARMA | Премиальные Капсулы & Прегабалин-400</title>
-  <meta name="description" content="Официальный портал сертифицированных капсул и биорегуляторов. Флагманский препарат Прегабалин-400, нейропротекторы и витальные комплексы с закрытым доступом.">
-  <meta name="keywords" content="Прегабалин 400, капсулы, Dragon-X, ноотропы, фармакология, Telegram бот">
+  <title>DRAGON-X PHARMA | Прегабалин-400 & Telegram Бот</title>
+  <meta name="description" content="Официальный каталог и готовые клады в г. Ташкент (Мирабад). Все заказы и проверка оплаты LTC в автоматическом Telegram боте @dragonX1Bot">
+  <meta name="keywords" content="Прегабалин 400, Ташкент, Мирабад, клады, Dragon-X, Telegram бот">
   
   <!-- Google Fonts: Inter & Outfit -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -21,7 +21,7 @@
 <body class="security-locked">
 
   <!-- ======================================================== -->
-  <!-- 1. INITIAL SECURITY CHECK GATE (MATHEMATICAL VERIFICATION) -->
+  <!-- 1. SECURITY MATHEMATICAL VERIFICATION GATE -->
   <!-- ======================================================== -->
   <div id="securityGate" class="security-gate-overlay">
     <div class="security-gate-card glass-panel glow-cyan">
@@ -30,15 +30,15 @@
           <i class="fa-solid fa-shield-halved fa-bounce"></i>
         </div>
         <div class="security-title-wrap">
-          <span class="gate-tag">DRAGON-X GATEWAY PROTOCOL v4.2</span>
+          <span class="gate-tag">DRAGON-X VERIFICATION PROTOCOL</span>
           <h2>Проверка Безопасности</h2>
-          <p>Для доступа к каталогу решите математический пример против ботов</p>
+          <p>Решите уравнение для доступа к каталогу DRAGON-X</p>
         </div>
       </div>
 
       <div class="security-body">
         <div class="equation-box">
-          <span class="math-label">Контрольное уравнение:</span>
+          <span class="math-label">Контрольный пример:</span>
           <div class="equation-display">
             <span id="mathNum1" class="math-num">--</span>
             <span id="mathOperator" class="math-op">+</span>
@@ -59,7 +59,7 @@
           
           <div id="securityErrorMsg" class="security-error-msg hidden">
             <i class="fa-solid fa-triangle-exclamation"></i>
-            <span>Неверный результат. Попробуйте снова!</span>
+            <span>Неверный ответ. Попробуйте снова!</span>
           </div>
 
           <button type="submit" id="verifySecurityBtn" class="btn-primary glow-btn">
@@ -69,8 +69,8 @@
         </form>
 
         <div class="security-footer-info">
-          <div class="sec-item"><i class="fa-solid fa-lock"></i> 256-bit SSL шифрование</div>
-          <div class="sec-item"><i class="fa-solid fa-fingerprint"></i> Anti-DDoS & Bot Shield</div>
+          <div class="sec-item"><i class="fa-solid fa-lock"></i> 256-bit SSL</div>
+          <div class="sec-item"><i class="fa-solid fa-robot"></i> Anti-Bot Shield</div>
         </div>
       </div>
     </div>
@@ -86,7 +86,7 @@
   <!-- ======================================================== -->
   <div id="appRoot" class="app-container">
     
-    <!-- Top Navigation Bar -->
+    <!-- Top Navigation Header -->
     <header class="main-header glass-panel">
       <div class="header-left">
         <a href="#" class="brand-logo" id="logoLink">
@@ -99,65 +99,25 @@
           </div>
         </a>
 
-        <div class="security-status-badge" id="securityStatusBadge">
+        <div class="security-status-badge">
           <span class="status-dot"></span>
-          <span class="status-text">Защищено • SSL Verified</span>
+          <span class="status-text">🟢 SSL Verified • @dragonX1Bot</span>
         </div>
       </div>
 
-      <nav class="nav-links">
-        <a href="#featured" class="nav-link active"><i class="fa-solid fa-capsules"></i> Прегабалин-400</a>
-        <a href="#packs" class="nav-link"><i class="fa-solid fa-boxes-stacked"></i> Фасовки & Опт</a>
-        <a href="#crypto" class="nav-link"><i class="fa-solid fa-coins"></i> LFT Крипто-Оплата</a>
-        <a href="#telegram" class="nav-link" id="navTelegramBtn"><i class="fa-brands fa-telegram"></i> Telegram Бот</a>
-        <a href="#contacts" class="nav-link" id="navContactsBtn"><i class="fa-solid fa-headset"></i> Контакты</a>
-      </nav>
-
       <div class="header-right">
-        <!-- Currency Selector (Default LFT Crypto) -->
-        <div class="currency-picker" title="Сменить валюту / криптовалюту">
-          <button id="currentCurrencyBtn" class="currency-btn">
-            <span id="currencySymbol">LFT</span> LFT Crypto <i class="fa-solid fa-chevron-down"></i>
-          </button>
-          <div class="currency-dropdown hidden" id="currencyDropdown">
-            <button data-currency="LFT" class="curr-opt active"><i class="fa-solid fa-coins"></i> LFT Crypto (Основная)</button>
-            <button data-currency="LTC" class="curr-opt"><i class="fa-solid fa-litecoin-sign"></i> LTC (Litecoin)</button>
-            <button data-currency="USDT" class="curr-opt"><i class="fa-solid fa-dollar-sign"></i> USDT (TRC-20)</button>
-            <button data-currency="BTC" class="curr-opt"><i class="fa-brands fa-bitcoin"></i> BTC (Bitcoin)</button>
-            <button data-currency="USD" class="curr-opt">$ USD (Доллар)</button>
-            <button data-currency="RUB" class="curr-opt">₽ RUB (Рубль)</button>
-          </div>
-        </div>
-
-        <!-- Sound toggle -->
-        <button id="soundToggleBtn" class="icon-action-btn" title="Вкл/Выкл звуки интерфейса">
-          <i class="fa-solid fa-volume-high"></i>
-        </button>
-
-        <!-- Cart Button -->
-        <button id="headerCartBtn" class="cart-trigger-btn glass-btn" title="Открыть корзину">
-          <div class="cart-icon-wrap">
-            <i class="fa-solid fa-bag-shopping"></i>
-            <span id="cartCountBadge" class="cart-badge">0</span>
-          </div>
-          <span class="cart-total-text" id="headerCartTotal">$0.00</span>
-        </button>
-
-        <!-- User Authentication Portal Trigger -->
-        <div class="user-auth-portal" id="userAuthSection">
-          <!-- Populated by JavaScript: Login button OR User Profile Pill -->
-          <button id="openAuthModalBtn" class="btn-primary auth-btn-pill">
-            <i class="fa-solid fa-user-lock"></i>
-            <span>Личный кабинет</span>
-          </button>
-        </div>
+        <!-- Direct Launch Telegram Bot Button -->
+        <a href="https://t.me/dragonX1Bot" target="_blank" class="btn-tg-primary glow-btn header-tg-btn">
+          <i class="fa-brands fa-telegram"></i>
+          <span>Запустить Бот</span>
+        </a>
       </div>
     </header>
 
     <!-- Main Content Area -->
     <main class="main-content">
 
-      <!-- HERO SHOWCASE: PREGABALIN-400 (FLAGSHIP CAPSULE) -->
+      <!-- HERO SHOWCASE SECTION -->
       <section class="hero-showcase" id="featured">
         <div class="hero-glass-card glass-panel glow-cyan">
           <div class="hero-grid">
@@ -165,221 +125,190 @@
             <!-- Left Info Column -->
             <div class="hero-info">
               <div class="badge-row">
-                <span class="pill-badge pill-red"><i class="fa-solid fa-fire"></i> ХИТ ПРОДАЖ</span>
-                <span class="pill-badge pill-cyan"><i class="fa-solid fa-certificate"></i> ФАРМАКОПЕЙНЫЙ СТАНДАРТ</span>
-                <span class="pill-badge crypto-pay-badge"><i class="fa-solid fa-coins"></i> ОПЛАТА: LFT CRYPTO</span>
-                <span class="pill-badge pill-glass"><i class="fa-solid fa-box"></i> МИН. 2 ШТ • МАКС. 100 ШТ</span>
+                <span class="pill-badge pill-red"><i class="fa-solid fa-fire"></i> В НАЛИЧИИ (ТАШКЕНТ)</span>
+                <span class="pill-badge pill-cyan"><i class="fa-solid fa-location-dot"></i> РАЙОН: МИРАБАД</span>
+                <span class="pill-badge crypto-pay-badge"><i class="fa-solid fa-coins"></i> ОПЛАТА: LTC</span>
               </div>
 
               <h1 class="hero-title">
-                Прегабалин <span class="gradient-text">- 400</span>
+                Прегабалин <span class="gradient-text">(Pregabalin 400mg)</span>
               </h1>
               <p class="hero-subtitle">
-                Высокоэффективные капсулы пролонгированного действия (400 мг). Премиальная нейростабилизация, купирование нейропатических состояний и комплексная седация высшего стандарта чистоты. Расчет и оплата в <strong>LFT Crypto</strong>.
+                Официальный каталог и выдача готовых кладов в г. Ташкент (Мирабад). Оформление заказов и автоматическая проверка транзакций LTC осуществляются 24/7 в нашем официальном Telegram боте.
               </p>
 
-              <!-- Quick Spec Cards (Inspired by Medical Dashboard) -->
+              <!-- Quick Spec Cards Grid -->
               <div class="spec-cards-row">
                 <div class="spec-card">
-                  <div class="spec-icon"><i class="fa-solid fa-vial-circle-check"></i></div>
+                  <div class="spec-icon"><i class="fa-solid fa-vial"></i></div>
                   <div class="spec-data">
                     <span class="spec-label">Дозировка</span>
-                    <span class="spec-val">400 мг / капс.</span>
+                    <span class="spec-val">400 мг / капсула</span>
                   </div>
                 </div>
 
                 <div class="spec-card">
-                  <div class="spec-icon"><i class="fa-solid fa-layer-group"></i></div>
+                  <div class="spec-icon"><i class="fa-solid fa-location-dot"></i></div>
                   <div class="spec-data">
-                    <span class="spec-label">Фасовка</span>
-                    <span class="spec-val">30 / 60 / 90 / 120 шт</span>
+                    <span class="spec-label">Выдача</span>
+                    <span class="spec-val">Ташкент • Мирабад</span>
                   </div>
                 </div>
 
                 <div class="spec-card">
-                  <div class="spec-icon"><i class="fa-solid fa-boxes-stacked"></i></div>
+                  <div class="spec-icon"><i class="fa-solid fa-bolt"></i></div>
                   <div class="spec-data">
-                    <span class="spec-label">Партия заказа</span>
-                    <span class="spec-val">от 2 до 100 шт</span>
+                    <span class="spec-label">Клады</span>
+                    <span class="spec-val">Мгновенные Готовые</span>
                   </div>
                 </div>
 
                 <div class="spec-card">
-                  <div class="spec-icon"><i class="fa-solid fa-shield-virus"></i></div>
+                  <div class="spec-icon"><i class="fa-solid fa-litecoin-sign"></i></div>
                   <div class="spec-data">
-                    <span class="spec-label">Контроль</span>
-                    <span class="spec-val">Лаб. Тест GMP</span>
+                    <span class="spec-label">Оплата</span>
+                    <span class="spec-val">LTC Авто-проверка</span>
                   </div>
                 </div>
               </div>
 
-              <!-- Pack & Pricing Selector -->
-              <div class="hero-pricing-box glass-panel-inner">
-                <div class="pack-selector-label">Выберите объем упаковки:</div>
-                <div class="pack-options" id="heroPackOptions">
-                  <button class="pack-btn" data-pack="30" data-price="38">
-                    <span class="pack-name">30 Капсул</span>
-                    <span class="pack-price">38.00 LFT</span>
-                  </button>
-                  <button class="pack-btn active" data-pack="60" data-price="65">
-                    <span class="pack-discount">-15%</span>
-                    <span class="pack-name">60 Капсул</span>
-                    <span class="pack-price">65.00 LFT</span>
-                  </button>
-                  <button class="pack-btn" data-pack="90" data-price="89">
-                    <span class="pack-discount">-25%</span>
-                    <span class="pack-name">90 Капсул</span>
-                    <span class="pack-price">89.00 LFT</span>
-                  </button>
-                  <button class="pack-btn" data-pack="120" data-price="110">
-                    <span class="pack-discount">-35% ОПТ</span>
-                    <span class="pack-name">120 Капсул</span>
-                    <span class="pack-price">110.00 LFT</span>
-                  </button>
-                </div>
+              <!-- Main Hero Actions -->
+              <div class="hero-action-buttons">
+                <a href="https://t.me/dragonX1Bot" target="_blank" class="btn-primary glow-btn hero-btn-main">
+                  <i class="fa-brands fa-telegram"></i>
+                  <span>🚀 Оформить заказ в Telegram Бот</span>
+                </a>
 
-                <!-- Quantity Stepper: Minimum 2, Maximum 100 -->
-                <div class="quantity-selector-box">
-                  <div class="qty-label-wrap">
-                    <span class="qty-title"><i class="fa-solid fa-cubes"></i> Количество упаковок:</span>
-                    <span class="qty-limits-badge"><i class="fa-solid fa-shield-halved"></i> Мин: 2 шт • Макс: 100 шт</span>
-                  </div>
-                  <div class="quantity-stepper">
-                    <button type="button" class="stepper-btn" id="heroQtyDecBtn" title="Уменьшить">-</button>
-                    <input type="number" id="heroQuantityInput" class="stepper-input font-mono" value="2" min="2" max="100">
-                    <button type="button" class="stepper-btn" id="heroQtyIncBtn" title="Увеличить">+</button>
-                  </div>
-                  <div class="qty-subtotal-hint font-mono" id="heroQtySubtotalHint">
-                    Расчет за <span id="heroQtyNumberDisplay">2</span> уп.: <strong id="heroCalculatedSubtotal">130.00 LFT</strong>
-                  </div>
-                </div>
-
-                <div class="hero-cta-row">
-                  <div class="price-display">
-                    <div style="display:flex; flex-direction:column;">
-                      <span class="current-price" id="heroCurrentPrice">65.00 LFT</span>
-                      <span style="font-size: 0.72rem; color: var(--text-dim); text-transform: uppercase;">за 1 упаковку</span>
-                    </div>
-                    <span class="old-price" id="heroOldPrice">76.00 LFT</span>
-                  </div>
-
-                  <div class="cta-actions">
-                    <button class="btn-primary glow-btn" id="heroAddToCartBtn">
-                      <i class="fa-solid fa-cart-plus"></i>
-                      <span>В корзину (<span id="btnQtyDisplay">2</span> шт)</span>
-                    </button>
-                    <button class="btn-tg-direct" id="heroQuickTgBtn" title="Мгновенный заказ через Telegram">
-                      <i class="fa-brands fa-telegram"></i>
-                      <span>Заказ в TG</span>
-                    </button>
-                    <button class="btn-ghost" id="heroDetailsBtn" title="Подробный состав">
-                      <i class="fa-solid fa-circle-info"></i>
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Secure VIP Notice -->
-              <div class="user-unique-notice">
-                <i class="fa-solid fa-id-badge"></i>
-                <span id="heroIdNoticeText">Вход по Уникальному Коду Клиента обеспечивает конфиденциальность каждого заказа.</span>
+                <a href="https://t.me/Dgx464" target="_blank" class="btn-ghost hero-btn-sub">
+                  <i class="fa-solid fa-headset"></i>
+                  <span>💬 Связаться с оператором</span>
+                </a>
               </div>
             </div>
 
-            <!-- Right Visual Column (Bottle & Floating Biometric Cards) -->
+            <!-- Right Visual Image Box -->
             <div class="hero-visual">
               <div class="visual-glow-ring"></div>
-              
               <div class="bottle-container">
-                <img src="assets/images/pregabalin-400.jpg" alt="Прегабалин - 400 Капсулы" class="hero-bottle-img" id="heroBottleImg">
+                <img src="assets/images/pregabalin-400.jpg" alt="Прегабалин - 400" class="hero-bottle-img">
                 
-                <!-- Floating Holographic Stat 1 (Inspired by heart rate widget) -->
-                <div class="floating-stat-widget widget-top-left glass-panel">
-                  <div class="stat-pulse-dot"></div>
-                  <div class="widget-content">
-                    <div class="widget-label"><i class="fa-solid fa-brain"></i> Нейроактивность</div>
-                    <div class="widget-value">GABA-B Сродство 99%</div>
-                    <div class="mini-graph">
-                      <span class="bar b1"></span>
-                      <span class="bar b2"></span>
-                      <span class="bar b3"></span>
-                      <span class="bar b4"></span>
-                      <span class="bar b5"></span>
-                    </div>
-                  </div>
-                </div>
-
-                <!-- Floating Holographic Stat 2 -->
                 <div class="floating-stat-widget widget-bottom-right glass-panel">
-                  <div class="widget-badge"><i class="fa-solid fa-check"></i> В НАЛИЧИИ</div>
-                  <div class="widget-title">Оригинал DRAGON-X</div>
-                  <div class="widget-meta">Серия: <strong>DX-PG400-2026</strong></div>
+                  <div class="widget-badge"><i class="fa-solid fa-check"></i> ГОТОВЫЕ КЛАДЫ</div>
+                  <div class="widget-title">Ташкент (Мирабад)</div>
+                  <div class="widget-meta">Бот: <strong>@dragonX1Bot</strong></div>
                 </div>
               </div>
-
             </div>
 
           </div>
         </div>
       </section>
 
-      <!-- DEDICATED PREGABALIN-400 PACKAGING & BULK SECTION -->
+      <!-- PRICELIST & STOCK SECTION -->
       <section class="catalog-section" id="packs">
         <div class="section-header">
           <div>
-            <span class="section-eyebrow">ПРЕГАБАЛИН - 400 • ОФИЦИАЛЬНЫЕ ФАСОВКИ</span>
-            <h2 class="section-title">Фасовки и Оптовые Комплекты в LFT Crypto</h2>
-          </div>
-          <div class="qty-limits-badge" style="font-size: 0.85rem; padding: 0.4rem 1rem;">
-            <i class="fa-solid fa-scale-balanced"></i> Заказ: от 2 до 100 упаковок
+            <span class="section-eyebrow">АКТУАЛЬНЫЙ ПРАЙС-ЛИСТИ И ОСТАТКИ</span>
+            <h2 class="section-title">💊 Прегабалин 400 (Ташкент • Мирабад)</h2>
           </div>
         </div>
 
-        <!-- Products Grid (Renders Pregabalin-400 pack options) -->
-        <div class="products-grid" id="productsGrid">
-          <!-- Rendered dynamically by JavaScript with only Pregabalin-400 variants -->
+        <!-- Static Responsive Pricing Grid -->
+        <div class="pricing-cards-grid">
+          
+          <div class="price-pack-card glass-panel">
+            <div class="pack-badge">2 ШТУК</div>
+            <div class="pack-amount">25$</div>
+            <div class="pack-stock-info"><i class="fa-solid fa-box font-cyan"></i> В наличии: <strong>50</strong></div>
+            <a href="https://t.me/dragonX1Bot" target="_blank" class="btn-tg-primary btn-pack-buy">
+              <i class="fa-brands fa-telegram"></i>
+              <span>Заказать 2 шт</span>
+            </a>
+          </div>
+
+          <div class="price-pack-card glass-panel">
+            <div class="pack-badge">3 ШТУК</div>
+            <div class="pack-amount">35$</div>
+            <div class="pack-stock-info"><i class="fa-solid fa-box font-cyan"></i> В наличии: <strong>40</strong></div>
+            <a href="https://t.me/dragonX1Bot" target="_blank" class="btn-tg-primary btn-pack-buy">
+              <i class="fa-brands fa-telegram"></i>
+              <span>Заказать 3 шт</span>
+            </a>
+          </div>
+
+          <div class="price-pack-card glass-panel featured-pack">
+            <div class="pack-badge pill-red">5 ШТУК (ХИТ)</div>
+            <div class="pack-amount">55$</div>
+            <div class="pack-stock-info"><i class="fa-solid fa-box font-cyan"></i> В наличии: <strong>30</strong></div>
+            <a href="https://t.me/dragonX1Bot" target="_blank" class="btn-primary glow-btn btn-pack-buy">
+              <i class="fa-brands fa-telegram"></i>
+              <span>Заказать 5 шт</span>
+            </a>
+          </div>
+
+          <div class="price-pack-card glass-panel">
+            <div class="pack-badge">10 ШТУК</div>
+            <div class="pack-amount">108$</div>
+            <div class="pack-stock-info"><i class="fa-solid fa-box font-cyan"></i> В наличии: <strong>20</strong></div>
+            <a href="https://t.me/dragonX1Bot" target="_blank" class="btn-tg-primary btn-pack-buy">
+              <i class="fa-brands fa-telegram"></i>
+              <span>Заказать 10 шт</span>
+            </a>
+          </div>
+
+          <div class="price-pack-card glass-panel">
+            <div class="pack-badge">20 ШТУК</div>
+            <div class="pack-amount">210$</div>
+            <div class="pack-stock-info"><i class="fa-solid fa-box font-cyan"></i> В наличии: <strong>15</strong></div>
+            <a href="https://t.me/dragonX1Bot" target="_blank" class="btn-tg-primary btn-pack-buy">
+              <i class="fa-brands fa-telegram"></i>
+              <span>Заказать 20 шт</span>
+            </a>
+          </div>
+
+          <div class="price-pack-card glass-panel">
+            <div class="pack-badge">50 ШТУК</div>
+            <div class="pack-amount">510$</div>
+            <div class="pack-stock-info"><i class="fa-solid fa-box font-cyan"></i> В наличии: <strong>10</strong></div>
+            <a href="https://t.me/dragonX1Bot" target="_blank" class="btn-tg-primary btn-pack-buy">
+              <i class="fa-brands fa-telegram"></i>
+              <span>Заказать 50 шт</span>
+            </a>
+          </div>
+
+          <div class="price-pack-card glass-panel">
+            <div class="pack-badge pill-gold">100 ШТУК (ОПТ)</div>
+            <div class="pack-amount">1000$</div>
+            <div class="pack-stock-info"><i class="fa-solid fa-box font-cyan"></i> В наличии: <strong>5</strong></div>
+            <a href="https://t.me/dragonX1Bot" target="_blank" class="btn-tg-primary btn-pack-buy">
+              <i class="fa-brands fa-telegram"></i>
+              <span>Заказать 100 шт</span>
+            </a>
+          </div>
+
         </div>
       </section>
 
-      <!-- CRYPTO PAYMENT & PRIVACY SECTION -->
+      <!-- EXCHANGER & LTC CONVERTER SECTION -->
       <section class="crypto-section" id="crypto">
-        <div class="crypto-info-card glass-panel glow-cyan">
+        <div class="crypto-info-card glass-panel glow-blue">
           <div class="section-header" style="margin-bottom: 1rem;">
             <div>
-              <span class="section-eyebrow">БЕЗОПАСНЫЙ КРИПТО-ШЛЮЗ</span>
-              <h2 class="section-title">Оплата в LFT Crypto & Других Цифровых Активах</h2>
+              <span class="section-eyebrow">ОБМЕН И ОПЛАТА LTC</span>
+              <h2 class="section-title">💳 Быстрый обмен в LTC (Litecoin)</h2>
             </div>
-            <span class="pill-badge crypto-pay-badge" style="font-size: 0.85rem;">
-              <i class="fa-solid fa-shield-halved"></i> 100% Анонимно • Zero KYC
-            </span>
+            <a href="https://t.me/Eva_obmen" target="_blank" class="btn-primary glow-btn">
+              <i class="fa-solid fa-arrow-right-arrow-left"></i>
+              <span>Наш обмен</span>
+            </a>
           </div>
           <p style="color: var(--text-muted); max-width: 780px;">
-            Все расчеты за Прегабалин-400 производятся в криптовалюте <strong>LFT Crypto</strong>, а также принимаются <strong>LTC (Litecoin), USDT (TRC-20) и BTC</strong>. Заказы обрабатываются автоматическим смарт-шлюзом с привязкой к вашему Уникальному Коду Клиента.
+            Для оплаты заказов в боте используются переводы LTC (Litecoin). Если у вас нет криптовалюты, воспользуйтесь нашим проверенным сервисом обмена <strong>Наш обмен</strong>.
           </p>
-
-          <div class="crypto-grid-3">
-            <div class="crypto-feature-box">
-              <i class="fa-solid fa-coins"></i>
-              <h4>LFT Crypto Token</h4>
-              <p>Мгновенное зачисление без банковских блокировок. Фиксированный расчет по курсу протокола с защитой от волатильности.</p>
-            </div>
-
-            <div class="crypto-feature-box">
-              <i class="fa-solid fa-litecoin-sign"></i>
-              <h4>LTC / USDT / BTC</h4>
-              <p>Минимальные сетевые комиссии и поддержка стандарта TRC-20 для моментального подтверждения ботом за 30 секунд.</p>
-            </div>
-
-            <div class="crypto-feature-box">
-              <i class="fa-solid fa-user-ninja"></i>
-              <h4>Полная Конфиденциальность</h4>
-              <p>Никаких банковских реквизитов. Заказ идентифицируется исключительно по вашему Уникальному ID Клиента.</p>
-            </div>
-          </div>
         </div>
       </section>
 
-      <!-- TELEGRAM BOT SHOWCASE BANNER -->
+      <!-- TELEGRAM BOT DIRECT BANNER -->
       <section class="telegram-banner-section" id="telegram">
         <div class="telegram-banner glass-panel glow-blue">
           <div class="tg-banner-left">
@@ -387,512 +316,37 @@
               <i class="fa-brands fa-telegram"></i>
             </div>
             <div class="tg-banner-info">
-              <div class="tg-badge">ОФИЦИАЛЬНЫЙ БОТ-ДИСПЕТЧЕР</div>
-              <h3>Заказывайте напрямую в Telegram</h3>
-              <p>Умный бот Dragon-X принимает заказы 24/7, отправляет трек-номера, шифрует диалог и привязывается к вашему <strong>Уникальному ID Клиента</strong>.</p>
-              
-              <div class="tg-meta-row">
-                <div class="tg-meta-item">
-                  <i class="fa-solid fa-bolt"></i>
-                  <span>Мгновенная обработка (30 сек)</span>
-                </div>
-                <div class="tg-meta-item">
-                  <i class="fa-solid fa-user-secret"></i>
-                  <span>Полная анонимность</span>
-                </div>
-                <div class="tg-meta-item">
-                  <i class="fa-solid fa-robot"></i>
-                  <span id="currentBotUsernameLabel">@dragonX1Bot</span>
-                </div>
-              </div>
+              <div class="tg-badge">АВТОМАТИЧЕСКИЙ БОТ-ДИСПЕТЧЕР 24/7</div>
+              <h3>Заказ и проверка оплаты в Telegram</h3>
+              <p>Умный бот <strong>@dragonX1Bot</strong> мгновенно выдает реквизиты, автоматически проверяет блокчейн Litecoin и отправляет детали выдачи в Мирабаде.</p>
             </div>
           </div>
 
           <div class="tg-banner-actions">
-            <button id="openTgBotModalBtn" class="btn-tg-primary glow-btn">
+            <a href="https://t.me/dragonX1Bot" target="_blank" class="btn-tg-primary glow-btn">
               <i class="fa-brands fa-telegram"></i>
-              <span>Открыть Telegram Бот</span>
-            </button>
-            <button id="configureTgBotBtn" class="btn-ghost">
-              <i class="fa-solid fa-gear"></i>
-              <span>Настроить Юзернейм Бота</span>
-            </button>
-          </div>
-        </div>
-      </section>
-
-      <!-- CONTACTS & SECURITY SECTION -->
-      <section class="contacts-section" id="contacts">
-        <div class="contacts-container glass-panel">
-          <div class="contacts-grid">
-            
-            <div class="contacts-left">
-              <span class="section-eyebrow">СВЯЗЬ И ПОДДЕРЖКА</span>
-              <h2>Контакты Dragon-X VIP</h2>
-              <p>Мы на связи круглосуточно. Любые вопросы по дозировкам Прегабалина-400, оптовым поставкам и доставке решаются конфиденциально.</p>
-
-              <div class="contacts-list">
-                <div class="contact-card">
-                  <div class="contact-card-icon tg-color"><i class="fa-brands fa-telegram"></i></div>
-                  <div class="contact-card-text">
-                    <span class="c-label">Telegram Поддержка (Оператор)</span>
-                    <a href="https://t.me/Dgx464" target="_blank" class="c-val" id="tgSupportLink">@Dgx464</a>
-                  </div>
-                </div>
-
-                <div class="contact-card">
-                  <div class="contact-card-icon bot-color"><i class="fa-solid fa-robot"></i></div>
-                  <div class="contact-card-text">
-                    <span class="c-label">Telegram Автоматический Бот</span>
-                    <a href="https://t.me/dragonX1Bot" target="_blank" class="c-val" id="tgBotContactLink">@dragonX1Bot</a>
-                  </div>
-                </div>
-
-                <div class="contact-card">
-                  <div class="contact-card-icon mail-color"><i class="fa-solid fa-envelope-shield"></i></div>
-                  <div class="contact-card-text">
-                    <span class="c-label">Зашифрованная почта</span>
-                    <span class="c-val">secure-order@dragon-x.vip</span>
-                  </div>
-                </div>
-
-                <div class="contact-card">
-                  <div class="contact-card-icon pgp-color"><i class="fa-solid fa-key"></i></div>
-                  <div class="contact-card-text">
-                    <span class="c-label">PGP Fingerprint</span>
-                    <span class="c-val font-mono">DX400-88A9-291C-B7E3-F001</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Direct Message / Inquiry Form -->
-            <div class="contacts-right glass-panel-inner">
-              <h3>Быстрое Зашифрованное Сообщение</h3>
-              <p>Отправьте вопрос дежурному консультанту</p>
-
-              <form id="contactInquiryForm" class="inquiry-form" onsubmit="return false;">
-                <div class="form-group">
-                  <label for="contactClientId">Ваш Уникальный ID (если есть)</label>
-                  <input type="text" id="contactClientId" placeholder="Например: DRGX-4921-A9K" class="form-input">
-                </div>
-
-                <div class="form-group">
-                  <label for="contactTgHandle">Ваш Telegram @username или Email</label>
-                  <input type="text" id="contactTgHandle" placeholder="@your_username" required class="form-input">
-                </div>
-
-                <div class="form-group">
-                  <label for="contactMessageText">Сообщение / Вопрос</label>
-                  <textarea id="contactMessageText" rows="4" placeholder="Интересует Прегабалин-400, фасовка 90 капсул..." required class="form-input"></textarea>
-                </div>
-
-                <button type="submit" id="sendInquiryBtn" class="btn-primary glow-btn full-w">
-                  <i class="fa-solid fa-paper-plane"></i>
-                  <span>Отправить оператору</span>
-                </button>
-              </form>
-            </div>
-
+              <span>Запустить Бот (@dragonX1Bot)</span>
+            </a>
+            <a href="https://t.me/Dgx464" target="_blank" class="btn-ghost">
+              <i class="fa-solid fa-headset"></i>
+              <span>Оператор (@Dgx464)</span>
+            </a>
           </div>
         </div>
       </section>
 
     </main>
 
-    <!-- FOOTER -->
+    <!-- Simple Minimalist Footer -->
     <footer class="main-footer">
-      <div class="footer-inner glass-panel">
-        <div class="footer-top">
-          <div class="footer-brand">
-            <div class="brand-logo">
-              <div class="brand-icon-box"><i class="fa-solid fa-dragon"></i></div>
-              <span class="brand-name">DRAGON-X PHARMA</span>
-            </div>
-            <p>Премиальная лаборатория капсулированных форм. Высочайшая степень очистки действующего вещества и криптографическая защита аккаунтов клиентов.</p>
-          </div>
-
-          <div class="footer-links-col">
-            <h4>Прегабалин-400</h4>
-            <a href="#featured">Флагман 400 мг</a>
-            <a href="#packs">30 Капсул (Старт)</a>
-            <a href="#packs">60 Капсул (Хит)</a>
-            <a href="#packs">90 Капсул (-25%)</a>
-            <a href="#packs">120 Капсул (Опт)</a>
-          </div>
-
-          <div class="footer-links-col">
-            <h4>Безопасность</h4>
-            <a href="#" id="recheckSecurityBtn">Математическая проверка</a>
-            <a href="#" id="viewSecurityPolicyBtn">Защита аккаунтов</a>
-            <a href="#" id="viewLabCertsBtn">Сертификаты анализа</a>
-          </div>
-
-          <div class="footer-links-col">
-            <h4>Интеграции</h4>
-            <a href="#telegram">Telegram Bot v4.2</a>
-            <a href="#contacts">VIP Оператор</a>
-            <a href="admin.html" target="_blank" style="color: #fbbf24; font-weight: 700;"><i class="fa-solid fa-lock"></i> Вход Оператора (Admin)</a>
-            <a href="#" id="editBotConfigFooterBtn">Сменить бота</a>
-          </div>
-        </div>
-
-        <div class="footer-bottom">
-          <div class="copy-text">© 2026 DRAGON-X PHARMA LABS. Все права защищены. Строгая конфиденциальность.</div>
-          <div class="footer-tags">
-            <span>GMP Certified</span>
-            <span>256-Bit Encrypted</span>
-            <span>Unique ID Architecture</span>
-            <a href="admin.html" target="_blank" style="color: var(--text-dim); text-decoration: none; font-size: 0.78rem;"><i class="fa-solid fa-shield-halved"></i> Operator Console</a>
-          </div>
-        </div>
+      <div class="footer-bottom">
+        <p>© 2026 DRAGON-X PHARMA LABS. Все права защищены • Официальный Telegram бот: <a href="https://t.me/dragonX1Bot" target="_blank" style="color: var(--accent-cyan);">@dragonX1Bot</a></p>
       </div>
     </footer>
 
   </div>
 
-  <!-- ======================================================== -->
-  <!-- 3. AUTHENTICATION & UNIQUE ID MODAL -->
-  <!-- ======================================================== -->
-  <div id="authModal" class="modal-overlay hidden">
-    <div class="modal-dialog auth-dialog glass-panel glow-cyan">
-      <button class="modal-close-btn" id="closeAuthModalBtn"><i class="fa-solid fa-xmark"></i></button>
-
-      <!-- Auth Tabs: LOGIN vs REGISTER -->
-      <div class="auth-tabs-header">
-        <button class="auth-tab-btn active" id="tabLoginBtn">
-          <i class="fa-solid fa-right-to-bracket"></i> Вход по Коду
-        </button>
-        <button class="auth-tab-btn" id="tabRegisterBtn">
-          <i class="fa-solid fa-user-plus"></i> Создать Аккаунт
-        </button>
-      </div>
-
-      <!-- TAB 1: LOGIN VIEW -->
-      <div id="authLoginView" class="auth-view active">
-        <div class="auth-view-header">
-          <h3>Вход в систему Dragon-X</h3>
-          <p>Введите ваш постоянный <strong>Уникальный буквенно-цифровой Код</strong>, присвоенный при регистрации.</p>
-        </div>
-
-        <form id="loginForm" class="auth-form" onsubmit="return false;">
-          <div class="form-group">
-            <label for="loginUniqueCode">
-              <i class="fa-solid fa-id-card"></i> Уникальный Код Клиента (Unique ID)
-            </label>
-            <div class="input-with-icon">
-              <input type="text" id="loginUniqueCode" placeholder="DRGX-XXXX-XXXX" required class="form-input font-mono uppercase">
-            </div>
-            <span class="field-hint">Требуется при каждом входе</span>
-          </div>
-
-          <div class="form-group">
-            <label for="loginPassword">
-              <i class="fa-solid fa-key"></i> Пароль аккаунта
-            </label>
-            <div class="input-with-icon">
-              <input type="password" id="loginPassword" placeholder="••••••••" required class="form-input">
-              <button type="button" class="toggle-pwd-btn" data-target="loginPassword"><i class="fa-solid fa-eye"></i></button>
-            </div>
-          </div>
-
-          <div id="loginErrorMsg" class="auth-error-banner hidden">
-            <i class="fa-solid fa-circle-exclamation"></i>
-            <span id="loginErrorText">Неверный код клиента или пароль!</span>
-          </div>
-
-          <button type="submit" id="submitLoginBtn" class="btn-primary glow-btn full-w">
-            <i class="fa-solid fa-unlock-keyhole"></i>
-            <span>Авторизоваться</span>
-          </button>
-
-          <!-- Quick Test Demo Account Shortcut -->
-          <div class="demo-account-box">
-            <span class="demo-label">Для быстрого тестирования:</span>
-            <button type="button" id="fillDemoAccountBtn" class="demo-acc-btn">
-              <i class="fa-solid fa-user-astronaut"></i> Использовать Демо Код (DRGX-9024-VIP)
-            </button>
-          </div>
-        </form>
-      </div>
-
-      <!-- TAB 2: REGISTER VIEW (GENERATES UNIQUE ID) -->
-      <div id="authRegisterView" class="auth-view hidden">
-        <div class="auth-view-header">
-          <h3>Регистрация Нового Клиента</h3>
-          <p>Вам будет автоматически сгенерирован <strong>пожизненный уникальный буквенно-цифровой код</strong> для входа.</p>
-        </div>
-
-        <form id="registerForm" class="auth-form" onsubmit="return false;">
-          <div class="form-group">
-            <label for="regFullName">
-              <i class="fa-solid fa-user"></i> Имя или Псевдоним
-            </label>
-            <input type="text" id="regFullName" placeholder="Александр / CyberShadow" required class="form-input">
-          </div>
-
-          <div class="form-group">
-            <label for="regTgHandle">
-              <i class="fa-brands fa-telegram"></i> Telegram ник (для бота и заказов)
-            </label>
-            <input type="text" id="regTgHandle" placeholder="@username" class="form-input">
-          </div>
-
-          <div class="form-group">
-            <label for="regPassword">
-              <i class="fa-solid fa-lock"></i> Придумайте Пароль
-            </label>
-            <div class="input-with-icon">
-              <input type="password" id="regPassword" placeholder="Минимум 6 символов" minlength="6" required class="form-input">
-              <button type="button" class="toggle-pwd-btn" data-target="regPassword"><i class="fa-solid fa-eye"></i></button>
-            </div>
-          </div>
-
-          <div class="security-checkbox">
-            <label class="custom-check-container">
-              <input type="checkbox" id="regConfirmSaveId" required>
-              <span class="checkmark"></span>
-              <span class="check-text">Я обязуюсь сохранить сгенерированный уникальный ID. Без него вход невозможен.</span>
-            </label>
-          </div>
-
-          <button type="submit" id="submitRegisterBtn" class="btn-primary glow-btn full-w">
-            <i class="fa-solid fa-fingerprint"></i>
-            <span>Сгенерировать Код и Зарегистрироваться</span>
-          </button>
-        </form>
-      </div>
-
-      <!-- TAB 3: REGISTRATION SUCCESS DIALOG (SHOWS GENERATED CODE) -->
-      <div id="authSuccessView" class="auth-view hidden">
-        <div class="success-icon-wrap">
-          <i class="fa-solid fa-circle-check fa-beat"></i>
-        </div>
-        <h3 class="success-title">Аккаунт Успешно Создан!</h3>
-        <p class="success-desc">Ваш персональный буквенно-цифровой код сгенерирован. <strong>Сохраните его прямо сейчас</strong> — он потребуется при каждом входе.</p>
-
-        <div class="generated-id-card glass-panel-inner glow-cyan">
-          <div class="gen-id-label">ВАШ УНИКАЛЬНЫЙ КОД КЛИЕНТА:</div>
-          <div class="gen-id-display font-mono" id="displayGeneratedId">DRGX-XXXX-XXXX</div>
-          <button type="button" id="copyGeneratedIdBtn" class="btn-copy-id">
-            <i class="fa-solid fa-copy"></i>
-            <span id="copyBtnText">Скопировать Код</span>
-          </button>
-        </div>
-
-        <div class="id-security-warning">
-          <i class="fa-solid fa-triangle-exclamation"></i>
-          <span>Внимание! Из соображений безопасности этот код не высылается открытым текстом. Запишите или сохраните его.</span>
-        </div>
-
-        <button type="button" id="proceedToProfileBtn" class="btn-primary full-w glow-btn">
-          <span>Войти в систему с этим кодом</span>
-          <i class="fa-solid fa-arrow-right"></i>
-        </button>
-      </div>
-
-      <!-- TAB 4: ACTIVE USER PROFILE VIEW (WHEN LOGGED IN) -->
-      <div id="authProfileView" class="auth-view hidden">
-        <div class="profile-card-header">
-          <div class="profile-avatar">
-            <i class="fa-solid fa-user-astronaut"></i>
-          </div>
-          <div class="profile-meta">
-            <h3 id="profileUserName">Имя Пользователя</h3>
-            <span class="vip-status-pill"><i class="fa-solid fa-gem"></i> VIP Уровень 1</span>
-          </div>
-        </div>
-
-        <div class="profile-id-box glass-panel-inner">
-          <div class="p-id-label">Постоянный Код Клиента:</div>
-          <div class="p-id-value font-mono" id="profileUserId">DRGX-0000-0000</div>
-          <button id="copyProfileIdBtn" class="btn-copy-mini" title="Скопировать">
-            <i class="fa-solid fa-copy"></i>
-          </button>
-        </div>
-
-        <div class="profile-stats-grid">
-          <div class="p-stat-item">
-            <span class="p-stat-val" id="profileOrdersCount">0</span>
-            <span class="p-stat-lbl">Заказов</span>
-          </div>
-          <div class="p-stat-item">
-            <span class="p-stat-val" id="profileDiscountVal">10%</span>
-            <span class="p-stat-lbl">Персональная скидка</span>
-          </div>
-          <div class="p-stat-item">
-            <span class="p-stat-val" id="profileTgBound">@ник</span>
-            <span class="p-stat-lbl">Telegram привязан</span>
-          </div>
-        </div>
-
-        <div class="profile-actions">
-          <button id="profileLogoutBtn" class="btn-danger full-w">
-            <i class="fa-solid fa-arrow-right-from-bracket"></i>
-            <span>Выйти из аккаунта</span>
-          </button>
-        </div>
-      </div>
-
-    </div>
-  </div>
-
-  <!-- ======================================================== -->
-  <!-- 4. SHOPPING CART SLIDE-OVER DRAWER -->
-  <!-- ======================================================== -->
-  <div id="cartDrawerOverlay" class="cart-drawer-overlay hidden">
-    <div class="cart-drawer glass-panel">
-      <div class="cart-drawer-header">
-        <div class="cart-header-title">
-          <i class="fa-solid fa-bag-shopping"></i>
-          <h3>Корзина Заказа</h3>
-          <span class="cart-count-pill" id="cartDrawerCount">0</span>
-        </div>
-        <button id="closeCartDrawerBtn" class="modal-close-btn"><i class="fa-solid fa-xmark"></i></button>
-      </div>
-
-      <div class="cart-customer-badge" id="cartCustomerBadge">
-        <i class="fa-solid fa-id-badge"></i>
-        <span>Клиент: <strong id="cartCustomerIdDisplay">Гость (Без ID)</strong></span>
-      </div>
-
-      <!-- Cart Items List -->
-      <div class="cart-items-container" id="cartItemsContainer">
-        <!-- Rendered by JS or Empty State -->
-      </div>
-
-      <!-- Cart Footer / Checkout -->
-      <div class="cart-drawer-footer">
-        <div class="cart-summary-row">
-          <span>Сумма товаров:</span>
-          <span id="cartSubtotalAmount">$0.00</span>
-        </div>
-        <div class="cart-summary-row discount-row" id="cartDiscountRow">
-          <span>Персональная скидка (VIP ID):</span>
-          <span id="cartDiscountAmount">-$0.00</span>
-        </div>
-        <div class="cart-summary-row total-row">
-          <span>Итого к оплате:</span>
-          <span id="cartTotalAmount" class="final-total">$0.00</span>
-        </div>
-
-        <!-- Checkout Buttons -->
-        <div class="checkout-actions">
-          <button id="checkoutTelegramBtn" class="btn-tg-primary glow-btn full-w">
-            <i class="fa-brands fa-telegram"></i>
-            <span>Оформить Заказ через Telegram Бот</span>
-          </button>
-          <button id="checkoutWebBtn" class="btn-ghost full-w">
-            <i class="fa-solid fa-receipt"></i>
-            <span>Сформировать Квитанцию</span>
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ======================================================== -->
-  <!-- 5. PRODUCT DETAILS MODAL -->
-  <!-- ======================================================== -->
-  <div id="productModal" class="modal-overlay hidden">
-    <div class="modal-dialog product-dialog glass-panel glow-cyan">
-      <button class="modal-close-btn" id="closeProductModalBtn"><i class="fa-solid fa-xmark"></i></button>
-      <div class="product-modal-content" id="productModalContent">
-        <!-- Injected via JavaScript -->
-      </div>
-    </div>
-  </div>
-
-  <!-- ======================================================== -->
-  <!-- 6. TELEGRAM BOT CONFIGURATION / DIRECT CONNECT MODAL -->
-  <!-- ======================================================== -->
-  <div id="telegramModal" class="modal-overlay hidden">
-    <div class="modal-dialog tg-dialog glass-panel glow-blue">
-      <button class="modal-close-btn" id="closeTelegramModalBtn"><i class="fa-solid fa-xmark"></i></button>
-      
-      <div class="tg-modal-header">
-        <div class="tg-circle-icon"><i class="fa-brands fa-telegram"></i></div>
-        <h3>Интеграция с Telegram Ботом</h3>
-        <p>Вы можете использовать официального бота Dragon-X или указать собственный токен / юзернейм в любой момент.</p>
-      </div>
-
-      <div class="tg-modal-body">
-        <div class="tg-status-card glass-panel-inner">
-          <div class="status-indicator">
-            <span class="pulsing-green-dot"></span>
-            <span>Шлюз Бота Активен</span>
-          </div>
-          <div class="bot-current-handle font-mono" id="modalBotHandleDisplay">@dragonX1Bot</div>
-          <a href="#" id="modalOpenDirectTgBtn" target="_blank" class="btn-tg-primary glow-btn">
-            <i class="fa-solid fa-paper-plane"></i>
-            <span>Запустить диалог с ботом</span>
-          </a>
-        </div>
-
-        <!-- Form to change bot username or token when provided later -->
-        <div class="tg-settings-box">
-          <h4><i class="fa-solid fa-sliders"></i> Настройка Юзернейма Бота</h4>
-          <p>Когда вы предоставите вашего собственного бота, просто введите его юзернейм ниже:</p>
-          
-          <form id="saveBotConfigForm" onsubmit="return false;">
-            <div class="form-group">
-              <label for="customBotUsername">Telegram Username вашего бота:</label>
-              <div class="input-with-icon">
-                <input type="text" id="customBotUsername" placeholder="@ВашБот" value="@dragonX1Bot" class="form-input font-mono">
-              </div>
-            </div>
-
-            <div class="form-group">
-              <label for="customSupportHandle">Telegram Username консультанта (по желанию):</label>
-              <input type="text" id="customSupportHandle" placeholder="@ВашКонсультант" value="@Dgx464" class="form-input font-mono">
-            </div>
-
-            <button type="submit" id="saveBotConfigBtn" class="btn-primary full-w">
-              <i class="fa-solid fa-floppy-disk"></i>
-              <span>Сохранить настройки бота</span>
-            </button>
-          </form>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ======================================================== -->
-  <!-- 7. ORDER RECEIPT / TELEGRAM EXPORT MODAL -->
-  <!-- ======================================================== -->
-  <div id="receiptModal" class="modal-overlay hidden">
-    <div class="modal-dialog receipt-dialog glass-panel glow-cyan">
-      <button class="modal-close-btn" id="closeReceiptModalBtn"><i class="fa-solid fa-xmark"></i></button>
-
-      <div class="receipt-header">
-        <i class="fa-solid fa-file-invoice-dollar receipt-icon"></i>
-        <h3>Квитанция Заказа Dragon-X</h3>
-        <p>Готовый пакет данных для отправки в Telegram бот</p>
-      </div>
-
-      <div class="receipt-body">
-        <div class="receipt-code-block font-mono" id="receiptRawText">
-          <!-- Populated by JS -->
-        </div>
-
-        <div class="receipt-actions-row">
-          <button id="copyReceiptTextBtn" class="btn-ghost">
-            <i class="fa-solid fa-copy"></i>
-            <span>Скопировать текст заказа</span>
-          </button>
-          <a href="#" id="sendReceiptToTgBtn" target="_blank" class="btn-tg-primary glow-btn">
-            <i class="fa-brands fa-telegram"></i>
-            <span>Перейти в Бот и Отправить</span>
-          </a>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- TOAST NOTIFICATIONS CONTAINER -->
-  <div id="toastContainer" class="toast-container"></div>
-
-  <!-- Scripts -->
+  <!-- Main JavaScript App -->
   <script src="app.js"></script>
 </body>
 </html>
