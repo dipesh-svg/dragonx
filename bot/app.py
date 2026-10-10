@@ -4,6 +4,7 @@ import time
 import asyncio
 import logging
 from html import escape
+import aiohttp
 from aiohttp import web
 from aiogram import Bot, Dispatcher
 from aiogram.client.default import DefaultBotProperties
@@ -40,6 +41,35 @@ async def get_bot_username() -> str:
     if bot_info_cache and bot_info_cache.username:
         return bot_info_cache.username
     return os.getenv("BOT_USERNAME", "") or "DragonX_Bot"
+
+
+async def check_ltc_transactions(address: str):
+    """
+    Queries public Litecoin block explorers to check
+    incoming transactions for the target LTC address.
+    """
+    url_blockcypher = f"https://api.blockcypher.com/v1/ltc/main/addrs/{address}/full?limit=5"
+    tx_list = []
+    try:
+        async with aiohttp.ClientSession() as session:
+            async with session.get(url_blockcypher, timeout=5) as resp:
+                if resp.status == 200:
+                    data = await resp.json()
+                    for tx in data.get('txs', []):
+                        tx_hash = tx.get('hash')
+                        confirmations = tx.get('confirmations', 0)
+                        outputs = tx.get('outputs', [])
+                        received_sat = sum(out.get('value', 0) for out in outputs if address in out.get('addresses', []))
+                        if received_sat > 0:
+                            tx_list.append({
+                                'hash': tx_hash,
+                                'amount_ltc': received_sat / 1e8,
+                                'confirmations': confirmations
+                            })
+                    return tx_list
+    except Exception as e:
+        logging.warning(f"LTC transaction verification fetch error: {e}")
+    return tx_list
 
 
 # ── Keyboards ────────────────────────────────────────────────────────────────
@@ -305,7 +335,9 @@ async def menu(callback: CallbackQuery):
             "buy_100": ("100 штук", "1000$"),
         }
         qty_info = qty_map.get(data, ("штук", "уточняйте"))
+        
         keyboard = InlineKeyboardMarkup(inline_keyboard=[
+            [InlineKeyboardButton(text="🔍 Проверить транзакцию LTC", callback_data=f"check_tx_{unique_order_id}")],
             [InlineKeyboardButton(text="💬 Оплатить и связаться с оператором", url=SUPPORT_URL)],
             [InlineKeyboardButton(text="🔙 К прайс-листу", callback_data="district_mirabad")],
             [InlineKeyboardButton(text="🔙 Главное меню",    callback_data="home")]
@@ -321,9 +353,49 @@ async def menu(callback: CallbackQuery):
             f"<code>{unique_order_id}</code>\n\n"
             "💳 <b>Реквизиты для оплаты LTC:</b>\n"
             f"<code>{LTC_ADDRESS}</code>\n\n"
-            "📌 <i>Укажите ваш уникальный ID заказа при связи с оператором для моментального подтверждения оплаты!</i>",
+            "📌 <b>Инструкция по оплате:</b>\n"
+            "1. Переведите сумму заказа в LTC на адрес выше.\n"
+            "2. После перевода нажмите кнопку <b>🔍 Проверить транзакцию LTC</b> для авто-проверки в блокчейне!",
             reply_markup=keyboard
         )
+
+    # ── Automatic LTC Blockchain Transaction Verification Handler ──────────────
+    elif data.startswith("check_tx_"):
+        order_code = data.replace("check_tx_", "")
+        await callback.message.answer("🔎 <b>Проверка сети Litecoin... Пожалуйста, подождите.</b>")
+        
+        txs = await check_ltc_transactions(LTC_ADDRESS)
+        
+        if txs:
+            latest_tx = txs[0]
+            keyboard = InlineKeyboardMarkup(inline_keyboard=[
+                [InlineKeyboardButton(text="💬 Написать оператору для получения", url=SUPPORT_URL)],
+                [InlineKeyboardButton(text="🔙 Главное меню",                       callback_data="home")]
+            ])
+            await callback.message.answer(
+                "✅ <b>Транзакция обнаружена в блокчейне Litecoin!</b>\n\n"
+                f"🔑 <b>Код заказа:</b> <code>{order_code}</code>\n"
+                f"📊 <b>Статус:</b> Подтверждено ({latest_tx['confirmations']} конф.)\n"
+                f"💰 <b>Получено:</b> {latest_tx['amount_ltc']} LTC\n"
+                f"🔗 <b>TxID хэш:</b>\n<code>{latest_tx['hash']}</code>\n\n"
+                "🎉 <b>Заказ успешно оплачен и передан в доставку!</b>\n"
+                "Нажмите кнопку ниже, чтобы связаться с оператором и получить детали выдачи.",
+                reply_markup=keyboard
+            )
+        else:
+            keyboard = InlineKeyboardMarkup(inline_keyboard=[
+                [InlineKeyboardButton(text="🔄 Проверить еще раз",                 callback_data=data)],
+                [InlineKeyboardButton(text="💬 Связаться с оператором напрямую", url=SUPPORT_URL)],
+                [InlineKeyboardButton(text="🔙 Главное меню",                      callback_data="home")]
+            ])
+            await callback.message.answer(
+                "⏳ <b>Транзакция пока не найдена в сети Litecoin.</b>\n\n"
+                f"🔑 <b>Код заказа:</b> <code>{order_code}</code>\n"
+                "💳 <b>Адрес для оплаты LTC:</b>\n"
+                f"<code>{LTC_ADDRESS}</code>\n\n"
+                "💡 <i>Примечание: Транзакции Litecoin могут появляться в сети с задержкой 1–3 минуты. Если вы уже отправили средства, нажмите «Проверить еще раз» через минуту или отправьте чек оператору.</i>",
+                reply_markup=keyboard
+            )
 
     # ── Fallback ──────────────────────────────────────────────────────────────
     else:
