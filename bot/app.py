@@ -66,21 +66,15 @@ async def start(message: Message):
     user_id = message.from_user.id
     referral_link = (
         f"https://t.me/{BOT_USERNAME}?start=ref_{user_id}"
-        if BOT_USERNAME else "Ссылка будет доступна после настройки бота."
+        if BOT_USERNAME else "Ссылка будет доступна после настройки BOT_USERNAME."
     )
     await message.answer(
         "🐉 <b>Добро пожаловать в DRAGON-X!</b>\n\n"
         "Выберите нужный раздел в меню ниже.\n\n"
-        "📊 Количество транзакций: данные пока не подключены\n"
-        "💰 Баланс: 0\n"
-        "🛍 Покупок: 0\n"
-        "🎁 Приглашено друзей: данные пока не подключены\n\n"
-        f"👥 <b>Пригласите друга</b>\n{escape(referral_link)}\n\n"
-        "Когда приглашённый пользователь выполнит условия "
-        "реферальной программы, бонус может быть начислен "
-        "согласно правилам.\n\n"
-        "📌 Статистика и бонусы будут отображаться после "
-        "подключения постоянного хранилища данных.",
+        "💰 <b>Ваш баланс:</b> 0.00 $\n"
+        "🎁 <b>Реферальный бонус:</b> 2% от всех заказов друзей\n\n"
+        f"👥 <b>Ваша реферальная ссылка:</b>\n<code>{escape(referral_link)}</code>\n\n"
+        "💡 <i>Приглашайте друзей по вашей ссылка и получайте 2% от суммы каждого их заказа прямо на ваш баланс!</i>",
         reply_markup=home_keyboard()
     )
 
@@ -108,18 +102,65 @@ async def menu(callback: CallbackQuery):
             reply_markup=back_home()
         )
 
-    # ── Referral ──────────────────────────────────────────────────────────────
+    # ── Referral (Invite a Friend - 2% Bonus) ─────────────────────────────────
     elif data == "referral":
         user_id = callback.from_user.id
         link = (
             f"https://t.me/{BOT_USERNAME}?start=ref_{user_id}"
-            if BOT_USERNAME else "Сначала настройте BOT_USERNAME в Render."
+            if BOT_USERNAME else "Настройте BOT_USERNAME в Render."
         )
+        share_url = f"https://t.me/share/url?url={escape(link)}&text=🐉%20Присоединяйся%20к%20DRAGON-X!"
+        keyboard = InlineKeyboardMarkup(inline_keyboard=[
+            [InlineKeyboardButton(text="🔗 Поделиться ссылкой", url=share_url)],
+            [InlineKeyboardButton(text="💰 Мой баланс",         callback_data="my_balance")],
+            [InlineKeyboardButton(text="📜 Условия программы",  callback_data="referral_terms")],
+            [InlineKeyboardButton(text="🔙 Главное меню",       callback_data="home")]
+        ])
         await callback.message.answer(
-            "👥 <b>Ваша реферальная ссылка</b>\n\n"
-            f"{escape(link)}\n\n"
-            "Условия начисления бонусов указаны в правилах.",
-            reply_markup=back_home()
+            "🎁 <b>Партнерская программа DRAGON-X (2% Кэшбэк)</b>\n\n"
+            "👥 <b>Ваша реферальная ссылка:</b>\n"
+            f"<code>{escape(link)}</code>\n\n"
+            "📊 <b>Ваша статистика:</b>\n"
+            "• Приглашено друзей: <b>0</b>\n"
+            "• Начислено бонусов (2%): <b>0.00 $</b>\n"
+            "• Текущий баланс: <b>0.00 $</b>\n\n"
+            "💎 <b>Как это работает?</b>\n"
+            "1️⃣ Отправьте вашу персональную ссылку другу.\n"
+            "2️⃣ При каждом заказе вашего друга вы получаете <b>2% от суммы его заказа</b> прямо на ваш баланс!\n"
+            "3️⃣ Средства с баланса можно использовать для оплаты покупок или вывести через оператора.\n\n"
+            "⚡ <i>Пример: При заказе друга на 100$, вы моментально получаете 2$ на баланс!</i>",
+            reply_markup=keyboard
+        )
+
+    # ── My Balance Handler ───────────────────────────────────────────────────
+    elif data == "my_balance":
+        keyboard = InlineKeyboardMarkup(inline_keyboard=[
+            [InlineKeyboardButton(text="💬 Написать оператору", url=SUPPORT_URL)],
+            [InlineKeyboardButton(text="👥 Пригласить друга",   callback_data="referral")],
+            [InlineKeyboardButton(text="🔙 Главное меню",       callback_data="home")]
+        ])
+        await callback.message.answer(
+            "💰 <b>Ваш финансовый баланс</b>\n\n"
+            "💵 Доступно на балансе: <b>0.00 $</b>\n"
+            "🎁 Заработано с рефералов (2%): <b>0.00 $</b>\n"
+            "🛍 Совершено покупок: <b>0</b>\n\n"
+            "💡 <i>Пополняйте баланс через партнерскую программу, приглашая друзей. 2% от всех их покупок начисляются вам автоматически!</i>",
+            reply_markup=keyboard
+        )
+
+    # ── Referral Terms Handler ───────────────────────────────────────────────
+    elif data == "referral_terms":
+        keyboard = InlineKeyboardMarkup(inline_keyboard=[
+            [InlineKeyboardButton(text="🔙 К реферальной программе", callback_data="referral")],
+            [InlineKeyboardButton(text="🔙 Главное меню",             callback_data="home")]
+        ])
+        await callback.message.answer(
+            "📜 <b>Условия партнерской программы DRAGON-X</b>\n\n"
+            "1. <b>Вознаграждение 2%:</b> Вы получаете 2% от суммы любого заказа, совершенного пользователем, зарегистрированным по вашей ссылке.\n"
+            "2. <b>Пожизненный доход:</b> Бонус 2% начисляется с каждого повторного заказа ваших рефералов без ограничений по времени.\n"
+            "3. <b>Использование средств:</b> Баланс можно применить для получения скидки до 100% на товары DRAGON-X или вывести.\n"
+            "4. <b>Честная игра:</b> Запрещена автоматическая накрутка аккаунтов. При нарушении баланс аннулируется.",
+            reply_markup=keyboard
         )
 
     # ── Support ───────────────────────────────────────────────────────────────
