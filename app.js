@@ -86,8 +86,8 @@
     currentCurrency: 'LFT', // Default LFT Crypto
     soundEnabled: true,
     currentBotConfig: {
-      username: '@DragonX_Capsules_Bot',
-      support: '@DragonX_Support'
+      username: '@dragonX1Bot',
+      support: '@Dgx464'
     },
     mathProblem: { num1: 0, num2: 0, operator: '+', answer: 0 },
     heroSelectedPack: 60,
