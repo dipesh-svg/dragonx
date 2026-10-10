@@ -1,6 +1,7 @@
 import os
 import random
 import time
+import datetime
 import asyncio
 import logging
 from html import escape
@@ -30,6 +31,8 @@ bot = Bot(token=TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
 dp  = Dispatcher()
 
 bot_info_cache = None
+ACTIVE_ORDERS = {}        # { order_code: {'user_id': int, 'created_at': float, 'qty': str, 'price': str} }
+PROCESSED_TX_HASHES = set()
 
 async def get_bot_username() -> str:
     global bot_info_cache
@@ -43,13 +46,32 @@ async def get_bot_username() -> str:
     return os.getenv("BOT_USERNAME", "") or "DragonX_Bot"
 
 
-async def check_ltc_transactions(address: str):
+async def init_historical_txs(address: str):
     """
-    Queries public Litecoin block explorers to check
-    incoming transactions for the target LTC address.
+    Loads pre-existing historical transaction hashes into PROCESSED_TX_HASHES
+    on startup so old transactions are never matched against new orders.
     """
-    url_blockcypher = f"https://api.blockcypher.com/v1/ltc/main/addrs/{address}/full?limit=5"
-    tx_list = []
+    url = f"https://api.blockcypher.com/v1/ltc/main/addrs/{address}/full?limit=20"
+    try:
+        async with aiohttp.ClientSession() as session:
+            async with session.get(url, timeout=5) as resp:
+                if resp.status == 200:
+                    data = await resp.json()
+                    for tx in data.get('txs', []):
+                        tx_hash = tx.get('hash')
+                        if tx_hash:
+                            PROCESSED_TX_HASHES.add(tx_hash)
+                    logging.info(f"Initialized {len(PROCESSED_TX_HASHES)} historical LTC transactions as processed.")
+    except Exception as e:
+        logging.warning(f"Failed to pre-populate historical LTC transactions: {e}")
+
+
+async def check_new_ltc_transaction(address: str, min_timestamp: float):
+    """
+    Queries Litecoin blockchain API for a NEW, UNPROCESSED incoming transaction
+    received AFTER min_timestamp.
+    """
+    url_blockcypher = f"https://api.blockcypher.com/v1/ltc/main/addrs/{address}/full?limit=10"
     try:
         async with aiohttp.ClientSession() as session:
             async with session.get(url_blockcypher, timeout=5) as resp:
@@ -57,19 +79,33 @@ async def check_ltc_transactions(address: str):
                     data = await resp.json()
                     for tx in data.get('txs', []):
                         tx_hash = tx.get('hash')
-                        confirmations = tx.get('confirmations', 0)
-                        outputs = tx.get('outputs', [])
-                        received_sat = sum(out.get('value', 0) for out in outputs if address in out.get('addresses', []))
-                        if received_sat > 0:
-                            tx_list.append({
-                                'hash': tx_hash,
-                                'amount_ltc': received_sat / 1e8,
-                                'confirmations': confirmations
-                            })
-                    return tx_list
+                        if not tx_hash or tx_hash in PROCESSED_TX_HASHES:
+                            continue
+
+                        # Parse transaction time
+                        received_str = tx.get('received') or tx.get('confirmed')
+                        tx_time = 0
+                        if received_str:
+                            try:
+                                clean_str = received_str.split('.')[0].replace('Z', '')
+                                dt = datetime.datetime.strptime(clean_str, "%Y-%m-%dT%H:%M:%S")
+                                tx_time = dt.replace(tzinfo=datetime.timezone.utc).timestamp()
+                            except Exception:
+                                pass
+
+                        # Only accept if transaction occurred AFTER order creation (with 2-minute buffer)
+                        if tx_time >= (min_timestamp - 120):
+                            outputs = tx.get('outputs', [])
+                            received_sat = sum(out.get('value', 0) for out in outputs if address in out.get('addresses', []))
+                            if received_sat > 0:
+                                return {
+                                    'hash': tx_hash,
+                                    'amount_ltc': received_sat / 1e8,
+                                    'confirmations': tx.get('confirmations', 0)
+                                }
     except Exception as e:
-        logging.warning(f"LTC transaction verification fetch error: {e}")
-    return tx_list
+        logging.warning(f"LTC check new transaction error: {e}")
+    return None
 
 
 # ── Keyboards ────────────────────────────────────────────────────────────────
@@ -336,6 +372,14 @@ async def menu(callback: CallbackQuery):
         }
         qty_info = qty_map.get(data, ("штук", "уточняйте"))
         
+        # Track active order creation timestamp
+        ACTIVE_ORDERS[unique_order_id] = {
+            'user_id': user_id,
+            'created_at': time.time(),
+            'qty': qty_info[0],
+            'price': qty_info[1]
+        }
+
         keyboard = InlineKeyboardMarkup(inline_keyboard=[
             [InlineKeyboardButton(text="🔍 Проверить транзакцию LTC", callback_data=f"check_tx_{unique_order_id}")],
             [InlineKeyboardButton(text="💬 Оплатить и связаться с оператором", url=SUPPORT_URL)],
@@ -362,22 +406,29 @@ async def menu(callback: CallbackQuery):
     # ── Automatic LTC Blockchain Transaction Verification Handler ──────────────
     elif data.startswith("check_tx_"):
         order_code = data.replace("check_tx_", "")
+        order_info = ACTIVE_ORDERS.get(order_code)
+        
+        # Only check for new transactions sent AFTER order creation
+        min_time = order_info['created_at'] if order_info else (time.time() - 900)
+
         await callback.message.answer("🔎 <b>Проверка сети Litecoin... Пожалуйста, подождите.</b>")
         
-        txs = await check_ltc_transactions(LTC_ADDRESS)
+        new_tx = await check_new_ltc_transaction(LTC_ADDRESS, min_time)
         
-        if txs:
-            latest_tx = txs[0]
+        if new_tx:
+            # Mark transaction hash as processed to prevent reuse
+            PROCESSED_TX_HASHES.add(new_tx['hash'])
+            
             keyboard = InlineKeyboardMarkup(inline_keyboard=[
                 [InlineKeyboardButton(text="💬 Написать оператору для получения", url=SUPPORT_URL)],
                 [InlineKeyboardButton(text="🔙 Главное меню",                       callback_data="home")]
             ])
             await callback.message.answer(
-                "✅ <b>Транзакция обнаружена в блокчейне Litecoin!</b>\n\n"
+                "✅ <b>Новая транзакция обнаружена в блокчейне Litecoin!</b>\n\n"
                 f"🔑 <b>Код заказа:</b> <code>{order_code}</code>\n"
-                f"📊 <b>Статус:</b> Подтверждено ({latest_tx['confirmations']} конф.)\n"
-                f"💰 <b>Получено:</b> {latest_tx['amount_ltc']} LTC\n"
-                f"🔗 <b>TxID хэш:</b>\n<code>{latest_tx['hash']}</code>\n\n"
+                f"📊 <b>Статус:</b> Подтверждено ({new_tx['confirmations']} конф.)\n"
+                f"💰 <b>Получено:</b> {new_tx['amount_ltc']} LTC\n"
+                f"🔗 <b>TxID хэш:</b>\n<code>{new_tx['hash']}</code>\n\n"
                 "🎉 <b>Заказ успешно оплачен и передан в доставку!</b>\n"
                 "Нажмите кнопку ниже, чтобы связаться с оператором и получить детали выдачи.",
                 reply_markup=keyboard
@@ -389,11 +440,11 @@ async def menu(callback: CallbackQuery):
                 [InlineKeyboardButton(text="🔙 Главное меню",                      callback_data="home")]
             ])
             await callback.message.answer(
-                "⏳ <b>Транзакция пока не найдена в сети Litecoin.</b>\n\n"
+                "⏳ <b>Новая транзакция пока не найдена в сети Litecoin.</b>\n\n"
                 f"🔑 <b>Код заказа:</b> <code>{order_code}</code>\n"
                 "💳 <b>Адрес для оплаты LTC:</b>\n"
                 f"<code>{LTC_ADDRESS}</code>\n\n"
-                "💡 <i>Примечание: Транзакции Litecoin могут появляться в сети с задержкой 1–3 минуты. Если вы уже отправили средства, нажмите «Проверить еще раз» через минуту или отправьте чек оператору.</i>",
+                "💡 <i>Примечание: Проверяются только НОВЫЕ переводы, сделанные после оформления заказа. Если вы только что перевели средства, нажмите «Проверить еще раз» через 1–2 минуты.</i>",
                 reply_markup=keyboard
             )
 
@@ -426,6 +477,10 @@ async def main():
     logging.info("Webhook deleted. Fetching bot username...")
     username = await get_bot_username()
     logging.info(f"Bot info loaded: @{username}")
+    
+    # Pre-populate historical transactions so old ones are excluded
+    await init_historical_txs(LTC_ADDRESS)
+    
     await asyncio.gather(
         run_web_server(),
         dp.start_polling(bot)
