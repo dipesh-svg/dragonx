@@ -42,7 +42,7 @@ def home_keyboard():
             InlineKeyboardButton(text="👥 Пригласить друга", callback_data="referral")
         ],
         [
-            InlineKeyboardButton(text="🔄 Конвертер LTC",    url=CONVERTER_URL)
+            InlineKeyboardButton(text="🔄 Наш обмен",        url=CONVERTER_URL)
         ]
     ]
     # Only add URL buttons when the URL is actually configured
@@ -51,7 +51,6 @@ def home_keyboard():
     if REVIEWS_URL:
         rows.insert(3, [InlineKeyboardButton(text="⭐ Отзывы",   url=REVIEWS_URL)])
     return InlineKeyboardMarkup(inline_keyboard=rows)
-
 
 
 def back_home():
@@ -126,13 +125,13 @@ async def menu(callback: CallbackQuery):
     # ── Support ───────────────────────────────────────────────────────────────
     elif data == "support":
         keyboard = InlineKeyboardMarkup(inline_keyboard=[
-            [InlineKeyboardButton(text=f"💬 Написать {SUPPORT_HANDLE}", url=SUPPORT_URL)],
-            [InlineKeyboardButton(text="📦 Оптовый запрос",              url=SUPPORT_URL)],
-            [InlineKeyboardButton(text="🔙 Главное меню",                callback_data="home")]
+            [InlineKeyboardButton(text="💬 Написать оператору", url=SUPPORT_URL)],
+            [InlineKeyboardButton(text="📦 Оптовый запрос",      url=SUPPORT_URL)],
+            [InlineKeyboardButton(text="🔙 Главное меню",        callback_data="home")]
         ])
         await callback.message.answer(
             "💬 <b>Поддержка DRAGON-X</b>\n\n"
-            f"Свяжитесь с нами в Telegram: <b>{SUPPORT_HANDLE}</b>\n"
+            "Нажмите кнопку ниже, чтобы перейти к диалогу с оператором.\n"
             "Мы ответим как можно скорее.",
             reply_markup=keyboard
         )
@@ -168,7 +167,7 @@ async def menu(callback: CallbackQuery):
             reply_markup=keyboard
         )
 
-    # ── 3rd Page: Region Selection (Show ONLY Tashkent) ──────────────────────
+    # ── 3rd Page: Region Selection (Tashkent) ────────────────────────────────
     elif data == "select_region":
         keyboard = InlineKeyboardMarkup(inline_keyboard=[
             [InlineKeyboardButton(text="📍 Ташкент", callback_data="region_tashkent")],
@@ -181,43 +180,58 @@ async def menu(callback: CallbackQuery):
             reply_markup=keyboard
         )
 
-    # ── 4th Page: Price Section & Quantity Options (Tashkent) ────────────────
-    elif data == "region_tashkent" or data == "product_pregabalin":
+    # ── Tashkent -> District Selection (Mirabad) ──────────────────────────────
+    elif data == "region_tashkent":
+        keyboard = InlineKeyboardMarkup(inline_keyboard=[
+            [InlineKeyboardButton(text="📍 Мирабад", callback_data="district_mirabad")],
+            [InlineKeyboardButton(text="🔙 К выбору региона", callback_data="select_region")],
+            [InlineKeyboardButton(text="🔙 Главное меню",     callback_data="home")]
+        ])
+        await callback.message.answer(
+            "📍 <b>Регион: Ташкент</b>\n\n"
+            "🏘 <b>Выберите район:</b>\n"
+            "• <b>Мирабад</b>",
+            reply_markup=keyboard
+        )
+
+    # ── 4th Page: Price Section & Quantity Options (Mirabad, Tashkent) ───────
+    elif data == "district_mirabad" or data == "product_pregabalin":
         keyboard = InlineKeyboardMarkup(inline_keyboard=[
             [
-                InlineKeyboardButton(text="2 капс — 25$",   callback_data="buy_2"),
-                InlineKeyboardButton(text="3 капс — 35$",   callback_data="buy_3")
+                InlineKeyboardButton(text="2 шт — 25$",   callback_data="buy_2"),
+                InlineKeyboardButton(text="3 шт — 35$",   callback_data="buy_3")
             ],
             [
-                InlineKeyboardButton(text="5 капс — 55$",   callback_data="buy_5"),
-                InlineKeyboardButton(text="10 капс — 108$", callback_data="buy_10")
+                InlineKeyboardButton(text="5 шт — 55$",   callback_data="buy_5"),
+                InlineKeyboardButton(text="10 шт — 108$", callback_data="buy_10")
             ],
             [
-                InlineKeyboardButton(text="20 капс — 210$", callback_data="buy_20"),
-                InlineKeyboardButton(text="50 капс — 510$", callback_data="buy_50")
+                InlineKeyboardButton(text="20 шт — 210$", callback_data="buy_20"),
+                InlineKeyboardButton(text="50 шт — 510$", callback_data="buy_50")
             ],
             [
-                InlineKeyboardButton(text="100 капс — 1000$", callback_data="buy_100")
+                InlineKeyboardButton(text="100 шт — 1000$", callback_data="buy_100")
             ],
             [
-                InlineKeyboardButton(text=f"💬 Написать оператору ({SUPPORT_HANDLE})", url=SUPPORT_URL)
+                InlineKeyboardButton(text="💬 Написать оператору", url=SUPPORT_URL)
             ],
             [
-                InlineKeyboardButton(text="🔙 К выбору региона", callback_data="select_region"),
+                InlineKeyboardButton(text="🔙 К выбору района", callback_data="region_tashkent"),
                 InlineKeyboardButton(text="🔙 Главное меню",     callback_data="home")
             ]
         ])
         await callback.message.answer(
             "💊 <b>Прегабалин (Pregabalin)</b>\n"
-            "📍 <b>Регион:</b> Ташкент\n\n"
+            "📍 <b>Регион:</b> Ташкент\n"
+            "🏘 <b>Район:</b> Мирабад\n\n"
             "💰 <b>Прайс-лист / Варианты фасовки:</b>\n"
-            "• 2 capsule — <b>25$</b>\n"
-            "• 3 capsule — <b>35$</b>\n"
-            "• 5 capsule — <b>55$</b>\n"
-            "• 10 capsule — <b>108$</b>\n"
-            "• 20 capsule — <b>210$</b>\n"
-            "• 50 capsule — <b>510$</b>\n"
-            "• 100 capsule — <b>1000$</b>\n\n"
+            "• 2 штук — <b>25$</b>\n"
+            "• 3 штук — <b>35$</b>\n"
+            "• 5 штук — <b>55$</b>\n"
+            "• 10 штук — <b>108$</b>\n"
+            "• 20 штук — <b>210$</b>\n"
+            "• 50 штук — <b>510$</b>\n"
+            "• 100 штук — <b>1000$</b>\n\n"
             "💳 <b>Оплата принимается на LTC адрес:</b>\n"
             f"<code>{LTC_ADDRESS}</code>\n\n"
             "👇 Выберите нужную фасовку для оформления заказа:",
@@ -227,29 +241,30 @@ async def menu(callback: CallbackQuery):
     # ── Order Confirmation for Quantity ──────────────────────────────────────
     elif data.startswith("buy_"):
         qty_map = {
-            "buy_2":   ("2 капсулы", "25$"),
-            "buy_3":   ("3 капсулы", "35$"),
-            "buy_5":   ("5 капсул", "55$"),
-            "buy_10":  ("10 капсул", "108$"),
-            "buy_20":  ("20 капсул", "210$"),
-            "buy_50":  ("50 капсул", "510$"),
-            "buy_100": ("100 капсул", "1000$"),
+            "buy_2":   ("2 штук", "25$"),
+            "buy_3":   ("3 штук", "35$"),
+            "buy_5":   ("5 штук", "55$"),
+            "buy_10":  ("10 штук", "108$"),
+            "buy_20":  ("20 штук", "210$"),
+            "buy_50":  ("50 штук", "510$"),
+            "buy_100": ("100 штук", "1000$"),
         }
-        qty_info = qty_map.get(data, ("Капсулы", "уточняйте"))
+        qty_info = qty_map.get(data, ("штук", "уточняйте"))
         keyboard = InlineKeyboardMarkup(inline_keyboard=[
-            [InlineKeyboardButton(text=f"💬 Оплатить и связаться {SUPPORT_HANDLE}", url=SUPPORT_URL)],
-            [InlineKeyboardButton(text="🔙 К прайс-листу", callback_data="region_tashkent")],
+            [InlineKeyboardButton(text="💬 Оплатить и связаться с оператором", url=SUPPORT_URL)],
+            [InlineKeyboardButton(text="🔙 К прайс-листу", callback_data="district_mirabad")],
             [InlineKeyboardButton(text="🔙 Главное меню",    callback_data="home")]
         ])
         await callback.message.answer(
             "📦 <b>Оформление заказа — DRAGON-X</b>\n\n"
             "📍 <b>Регион:</b> Ташкент\n"
+            "🏘 <b>Район:</b> Мирабад\n"
             "💊 <b>Препарат:</b> Прегабалин\n"
             f"📊 <b>Объем:</b> {qty_info[0]}\n"
             f"💵 <b>Сумма к оплате:</b> {qty_info[1]}\n\n"
             "💳 <b>Реквизиты для оплаты LTC:</b>\n"
             f"<code>{LTC_ADDRESS}</code>\n\n"
-            f"После перевода средств нажмите кнопку ниже для связи с оператором <b>{SUPPORT_HANDLE}</b>.",
+            "После перевода средств нажмите кнопку ниже для связи с оператором.",
             reply_markup=keyboard
         )
 
