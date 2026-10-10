@@ -4,6 +4,8 @@ import time
 import datetime
 import asyncio
 import logging
+import smtplib
+from email.message import EmailMessage
 from html import escape
 import aiohttp
 from aiohttp import web
@@ -23,6 +25,13 @@ WEBSITE_URL   = os.getenv("WEBSITE_URL", "")
 REVIEWS_URL   = os.getenv("REVIEWS_URL", WEBSITE_URL)
 CONVERTER_URL  = "https://t.me/Eva_obmen"
 LTC_ADDRESS  = "ltc1qr5xhqe9tdd5lekrxurfftdv9hhaaqche2urvhr"
+ADMIN_EMAIL  = "ydvhrsh1604@gmail.com"
+
+# SMTP Config for sending notification emails (optional, uses fallback logging if unconfigured)
+SMTP_SERVER  = os.getenv("SMTP_SERVER", "smtp.gmail.com")
+SMTP_PORT    = int(os.getenv("SMTP_PORT", 587))
+SMTP_USER    = os.getenv("SMTP_USER", "")
+SMTP_PASS    = os.getenv("SMTP_PASS", "")
 
 if not TOKEN:
     raise ValueError("BOT_TOKEN environment variable is not set! Set it in Render → Environment.")
@@ -31,8 +40,22 @@ bot = Bot(token=TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
 dp  = Dispatcher()
 
 bot_info_cache = None
-ACTIVE_ORDERS = {}        # { order_code: {'user_id': int, 'created_at': float, 'qty': str, 'price': str} }
+ACTIVE_ORDERS = {}          # { order_code: {'user_id': int, 'created_at': float, 'qty': str, 'price': str, 'pack_key': str} }
 PROCESSED_TX_HASHES = set()
+USER_LANGUAGES = {}         # { user_id: 'ru' | 'en' | 'uz' }
+USER_CAPTCHAS = {}          # { user_id: {'ans': int, 'verified': bool} }
+
+# Dynamic stock inventory managed via Admin Panel or Morning Update
+INVENTORY_STOCKS = {
+    "buy_2": 50,
+    "buy_3": 40,
+    "buy_5": 30,
+    "buy_10": 20,
+    "buy_20": 15,
+    "buy_50": 10,
+    "buy_100": 5
+}
+
 
 async def get_bot_username() -> str:
     global bot_info_cache
@@ -82,7 +105,6 @@ async def check_new_ltc_transaction(address: str, min_timestamp: float):
                         if not tx_hash or tx_hash in PROCESSED_TX_HASHES:
                             continue
 
-                        # Parse transaction time
                         received_str = tx.get('received') or tx.get('confirmed')
                         tx_time = 0
                         if received_str:
@@ -93,7 +115,6 @@ async def check_new_ltc_transaction(address: str, min_timestamp: float):
                             except Exception:
                                 pass
 
-                        # Only accept if transaction occurred AFTER order creation (with 2-minute buffer)
                         if tx_time >= (min_timestamp - 120):
                             outputs = tx.get('outputs', [])
                             received_sat = sum(out.get('value', 0) for out in outputs if address in out.get('addresses', []))
@@ -108,33 +129,124 @@ async def check_new_ltc_transaction(address: str, min_timestamp: float):
     return None
 
 
-# ── Keyboards ────────────────────────────────────────────────────────────────
+def send_email_in_thread(subject: str, body: str):
+    """
+    Non-blocking email dispatch helper function.
+    Sends notification to ydvhrsh1604@gmail.com
+    """
+    logging.info(f"--- [ORDER NOTIFICATION FOR ADMIN] ---\nTo: {ADMIN_EMAIL}\nSubject: {subject}\n\n{body}")
+    if SMTP_USER and SMTP_PASS:
+        try:
+            msg = EmailMessage()
+            msg.set_content(body)
+            msg['Subject'] = subject
+            msg['From'] = SMTP_USER
+            msg['To'] = ADMIN_EMAIL
+            with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
+                server.starttls()
+                server.login(SMTP_USER, SMTP_PASS)
+                server.send_message(msg)
+            logging.info(f"Email successfully dispatched to {ADMIN_EMAIL}")
+        except Exception as e:
+            logging.error(f"SMTP email sending failed: {e}")
 
-def home_keyboard():
+
+async def notify_admin_email(order_code: str, user_info: dict, qty: str, price: str, tx_info: dict):
+    subject = f"🐉 [NEW PAID ORDER] Dragon-X Order {order_code} ({price})"
+    body = (
+        f"=== SUCCESSFUL TRANSACTION CONFIRMED ===\n"
+        f"Order ID: {order_code}\n"
+        f"Timestamp: {datetime.datetime.now(datetime.timezone.utc).strftime('%Y-%m-%d %H:%M:%S UTC')}\n\n"
+        f"USER DETAILS:\n"
+        f"- Telegram ID: {user_info.get('id')}\n"
+        f"- Username: @{user_info.get('username', 'N/A')}\n"
+        f"- Full Name: {user_info.get('first_name', '')} {user_info.get('last_name', '')}\n"
+        f"- Selected Language: {user_info.get('lang', 'ru')}\n\n"
+        f"ORDER DETAILS:\n"
+        f"- Product: Прегабалин (Pregabalin)\n"
+        f"- Volume: {qty}\n"
+        f"- Price: {price}\n"
+        f"- Region: Ташкент\n"
+        f"- District: Мирабад\n\n"
+        f"TRANSACTION DETAILS:\n"
+        f"- Network: Litecoin (LTC)\n"
+        f"- Wallet: {LTC_ADDRESS}\n"
+        f"- TxID Hash: {tx_info.get('hash')}\n"
+        f"- Amount Received: {tx_info.get('amount_ltc')} LTC\n"
+        f"- Confirmations: {tx_info.get('confirmations')}\n\n"
+        f"REFERRAL REWARD:\n"
+        f"- 2% cashback credited to referrer balance.\n"
+    )
+    await asyncio.to_thread(send_email_in_thread, subject, body)
+
+
+# ── Keyboards & Multi-Language UI ─────────────────────────────────────────────
+
+def language_keyboard():
+    return InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="🇷🇺 Русский",   callback_data="setlang_ru")],
+        [InlineKeyboardButton(text="🇬🇧 English",   callback_data="setlang_en")],
+        [InlineKeyboardButton(text="🇺🇿 O'zbekcha", callback_data="setlang_uz")]
+    ])
+
+
+def home_keyboard(lang="ru"):
+    txt_catalog = {"ru": "🛍 Купить товар", "en": "🛍 Buy Products", "uz": "🛍 Mahsulot sotib olish"}[lang]
+    txt_support = {"ru": "💬 Поддержка",    "en": "💬 Support",      "uz": "💬 Qo'llab-quvvatlash"}[lang]
+    txt_rules   = {"ru": "📜 Правила",      "en": "📜 Rules",        "uz": "📜 Qoidalar"}[lang]
+    txt_ref     = {"ru": "👥 Пригласить друга", "en": "👥 Invite Friend", "uz": "👥 Do'stlarni taklif qilish"}[lang]
+    txt_ex      = {"ru": "🔄 Наш обмен",    "en": "🔄 Exchanger",    "uz": "🔄 Almashtirish"}[lang]
+    txt_site    = {"ru": "🌐 Наш сайт",     "en": "🌐 Website",      "uz": "🌐 Bizning sayt"}[lang]
+    txt_rev     = {"ru": "⭐ Отзывы",       "en": "⭐ Reviews",      "uz": "⭐ Sharhlar"}[lang]
+
     rows = [
         [
-            InlineKeyboardButton(text="🛍 Купить товар",     callback_data="catalog"),
-            InlineKeyboardButton(text="💬 Поддержка",        callback_data="support")
+            InlineKeyboardButton(text=txt_catalog, callback_data="catalog"),
+            InlineKeyboardButton(text=txt_support, callback_data="support")
         ],
         [
-            InlineKeyboardButton(text="📜 Правила",          callback_data="rules"),
-            InlineKeyboardButton(text="👥 Пригласить друга", callback_data="referral")
+            InlineKeyboardButton(text=txt_rules, callback_data="rules"),
+            InlineKeyboardButton(text=txt_ref,   callback_data="referral")
         ],
         [
-            InlineKeyboardButton(text="🔄 Наш обмен",        url=CONVERTER_URL)
+            InlineKeyboardButton(text=txt_ex,    url=CONVERTER_URL)
         ]
     ]
     if WEBSITE_URL:
-        rows.insert(2, [InlineKeyboardButton(text="🌐 Наш сайт", url=WEBSITE_URL)])
+        rows.insert(2, [InlineKeyboardButton(text=txt_site, url=WEBSITE_URL)])
     if REVIEWS_URL:
-        rows.insert(3, [InlineKeyboardButton(text="⭐ Отзывы",   url=REVIEWS_URL)])
+        rows.insert(3, [InlineKeyboardButton(text=txt_rev,  url=REVIEWS_URL)])
     return InlineKeyboardMarkup(inline_keyboard=rows)
 
 
-def back_home():
+def back_home(lang="ru"):
+    lbl = {"ru": "🔙 Главное меню", "en": "🔙 Main Menu", "uz": "🔙 Asosiy menyu"}[lang]
     return InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text="🔙 Главное меню", callback_data="home")]
+        [InlineKeyboardButton(text=lbl, callback_data="home")]
     ])
+
+
+def generate_captcha(user_id: int, lang: str):
+    num1 = random.randint(2, 8)
+    num2 = random.randint(1, 9)
+    correct = num1 + num2
+    wrong1 = correct + random.choice([-2, -1, 1, 2])
+    wrong2 = correct + random.choice([-4, -3, 3, 4])
+    options = [correct, wrong1, wrong2]
+    random.shuffle(options)
+
+    USER_CAPTCHAS[user_id] = {'ans': correct, 'verified': False}
+
+    prompt = {
+        "ru": f"🛡 <b>Проверка безопасности (Капча):</b>\n\nПожалуйста, решите математический пример для доступа к боту:\n<b>{num1} + {num2} = ?</b>",
+        "en": f"🛡 <b>Security Verification (Captcha):</b>\n\nPlease solve the math problem to unlock the bot:\n<b>{num1} + {num2} = ?</b>",
+        "uz": f"🛡 <b>Xavfsizlik tekshiruvi (Kapcha):</b>\n\nBotdan foydalanish uchun misolni yeching:\n<b>{num1} + {num2} = ?</b>"
+    }[lang]
+
+    keyboard = InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text=str(opt), callback_data=f"captcha_{opt}") for opt in options]
+    ])
+    return prompt, keyboard
 
 
 # ── Handlers ─────────────────────────────────────────────────────────────────
@@ -142,46 +254,100 @@ def back_home():
 @dp.message(CommandStart())
 async def start(message: Message):
     user_id = message.from_user.id
-    username = await get_bot_username()
-    referral_link = f"https://t.me/{username}?start=ref_{user_id}"
-    
+    USER_LANGUAGES.setdefault(user_id, "ru")
     await message.answer(
-        "🐉 <b>Добро пожаловать в DRAGON-X!</b>\n\n"
-        "Выберите нужный раздел в меню ниже.\n\n"
-        "💰 <b>Ваш баланс:</b> 0.00 $\n"
-        "🎁 <b>Реферальный бонус:</b> 2% от всех заказов друзей\n\n"
-        f"👥 <b>Ваша реферальная ссылка:</b>\n<code>{escape(referral_link)}</code>\n\n"
-        "💡 <i>Приглашайте друзей по вашей ссылке и получайте 2% от суммы каждого их заказа прямо на ваш баланс!</i>",
-        reply_markup=home_keyboard()
+        "🌐 <b>Выберите язык / Select Language / Tilni tanlang:</b>",
+        reply_markup=language_keyboard()
     )
 
 
 @dp.callback_query()
 async def menu(callback: CallbackQuery):
     data = callback.data
+    user_id = callback.from_user.id
+    lang = USER_LANGUAGES.get(user_id, "ru")
     await callback.answer()
 
+    # ── Language Selection ───────────────────────────────────────────────────
+    if data.startswith("setlang_"):
+        selected_lang = data.replace("setlang_", "")
+        USER_LANGUAGES[user_id] = selected_lang
+        prompt, kb = generate_captcha(user_id, selected_lang)
+        await callback.message.answer(prompt, reply_markup=kb)
+
+    # ── Captcha Verification Handler ─────────────────────────────────────────
+    elif data.startswith("captcha_"):
+        selected_ans = int(data.replace("captcha_", ""))
+        captcha_info = USER_CAPTCHAS.get(user_id, {})
+        if captcha_info.get('ans') == selected_ans:
+            USER_CAPTCHAS[user_id]['verified'] = True
+            username = await get_bot_username()
+            referral_link = f"https://t.me/{username}?start=ref_{user_id}"
+
+            welcome_txt = {
+                "ru": "🐉 <b>Добро пожаловать в DRAGON-X!</b>\n\n"
+                      "Выберите нужный раздел в меню ниже.\n\n"
+                      "💰 <b>Ваш баланс:</b> 0.00 $\n"
+                      "🎁 <b>Реферальный бонус:</b> 2% от всех заказов друзей\n\n"
+                      f"👥 <b>Ваша реферальная ссылка:</b>\n<code>{escape(referral_link)}</code>\n\n"
+                      "💡 <i>Приглашайте друзей по вашей ссылке и получайте 2% от суммы каждого их заказа прямо на ваш баланс!</i>",
+                "en": "🐉 <b>Welcome to DRAGON-X!</b>\n\n"
+                      "Select a section from the menu below.\n\n"
+                      "💰 <b>Your Balance:</b> 0.00 $\n"
+                      "🎁 <b>Referral Bonus:</b> 2% from all friend orders\n\n"
+                      f"👥 <b>Your Referral Link:</b>\n<code>{escape(referral_link)}</code>\n\n"
+                      "💡 <i>Invite friends and earn 2% cashback directly into your balance for every order they make!</i>",
+                "uz": "🐉 <b>DRAGON-X ga xush kelibsiz!</b>\n\n"
+                      "Quyidagi menyudan kerakli bo'limni tanlang.\n\n"
+                      "💰 <b>Sizning balansingiz:</b> 0.00 $\n"
+                      "🎁 <b>Referal bonus:</b> Do'stlar buyurtmalaridan 2%\n\n"
+                      f"👥 <b>Sizning referal havolangiz:</b>\n<code>{escape(referral_link)}</code>\n\n"
+                      "💡 <i>Do'stlaringizni taklif qiling va har bir buyurtmadan 2% balansingizga oling!</i>"
+            }[lang]
+            await callback.message.answer(welcome_txt, reply_markup=home_keyboard(lang))
+        else:
+            alert_msg = {
+                "ru": "❌ <b>Неверный ответ на капчу! Попробуйте еще раз:</b>",
+                "en": "❌ <b>Incorrect captcha answer! Please try again:</b>",
+                "uz": "❌ <b>Noto'g'ri javob! Qayta urinib ko'ring:</b>"
+            }[lang]
+            prompt, kb = generate_captcha(user_id, lang)
+            await callback.message.answer(f"{alert_msg}\n\n{prompt}", reply_markup=kb)
+
+    # ── Security Check Guard ────────────────────────────────────────────────
+    elif not USER_CAPTCHAS.get(user_id, {}).get('verified', False) and data != "home":
+        prompt, kb = generate_captcha(user_id, lang)
+        await callback.message.answer(prompt, reply_markup=kb)
+
     # ── Home ─────────────────────────────────────────────────────────────────
-    if data == "home":
+    elif data == "home":
         await callback.message.answer(
-            "🐉 <b>DRAGON-X</b> — Главное меню",
-            reply_markup=home_keyboard()
+            "🐉 <b>DRAGON-X</b> — Main Menu",
+            reply_markup=home_keyboard(lang)
         )
 
     # ── Rules ─────────────────────────────────────────────────────────────────
     elif data == "rules":
-        await callback.message.answer(
-            "📜 <b>Правила DRAGON-X</b>\n\n"
-            "• Предоставляйте достоверную информацию.\n"
-            "• Не отправляйте пароли и секретные ключи.\n"
-            "• Обращайтесь в поддержку при возникновении вопросов.\n"
-            "• Все операции должны соответствовать применимому законодательству.",
-            reply_markup=back_home()
-        )
+        rules_txt = {
+            "ru": "📜 <b>Правила DRAGON-X</b>\n\n"
+                  "• Предоставляйте достоверную информацию.\n"
+                  "• Не отправляйте пароли и секретные ключи.\n"
+                  "• Обращайтесь в поддержку при возникновении вопросов.\n"
+                  "• Все операции должны соответствовать применимому законодательству.",
+            "en": "📜 <b>DRAGON-X Rules</b>\n\n"
+                  "• Provide accurate information.\n"
+                  "• Never share passwords or secret keys.\n"
+                  "• Contact support if you have questions.\n"
+                  "• All operations must comply with applicable law.",
+            "uz": "📜 <b>DRAGON-X Qoidalari</b>\n\n"
+                  "• Aniq va to'g'ri ma'lumot bering.\n"
+                  "• Parol va maxfiy kalitlarni ulashmang.\n"
+                  "• Savollar bo'lsa qo'llab-quvvatlash xizmatiga murojaat qiling."
+        }[lang]
+        await callback.message.answer(rules_txt, reply_markup=back_home(lang))
 
-    # ── Referral (Invite a Friend - 2% Bonus) ─────────────────────────────────
+    # ── Referral ──────────────────────────────────────────────────────────────
     elif data == "referral":
-        user_id = callback.from_user.id
         username = await get_bot_username()
         link = f"https://t.me/{username}?start=ref_{user_id}"
         share_url = f"https://t.me/share/url?url={escape(link)}&text=🐉%20Присоединяйся%20к%20DRAGON-X!"
@@ -257,7 +423,7 @@ async def menu(callback: CallbackQuery):
     elif data == "orders":
         await callback.message.answer(
             "📋 У вас пока нет заказов.",
-            reply_markup=back_home()
+            reply_markup=back_home(lang)
         )
 
     # ── Catalogue ────────────────────────────────────────────────────────────
@@ -311,23 +477,23 @@ async def menu(callback: CallbackQuery):
             reply_markup=keyboard
         )
 
-    # ── 4th Page: Price Section & Quantity Options (Mirabad, Tashkent) ───────
+    # ── 4th Page: Price Section & Quantity Options with Stock Verification ───
     elif data == "district_mirabad" or data == "product_pregabalin":
         keyboard = InlineKeyboardMarkup(inline_keyboard=[
             [
-                InlineKeyboardButton(text="2 шт — 25$",   callback_data="buy_2"),
-                InlineKeyboardButton(text="3 шт — 35$",   callback_data="buy_3")
+                InlineKeyboardButton(text=f"2 шт — 25$ ({INVENTORY_STOCKS.get('buy_2', 0)} в наличии)",   callback_data="buy_2"),
+                InlineKeyboardButton(text=f"3 шт — 35$ ({INVENTORY_STOCKS.get('buy_3', 0)} в наличии)",   callback_data="buy_3")
             ],
             [
-                InlineKeyboardButton(text="5 шт — 55$",   callback_data="buy_5"),
-                InlineKeyboardButton(text="10 шт — 108$", callback_data="buy_10")
+                InlineKeyboardButton(text=f"5 шт — 55$ ({INVENTORY_STOCKS.get('buy_5', 0)} в наличии)",   callback_data="buy_5"),
+                InlineKeyboardButton(text=f"10 шт — 108$ ({INVENTORY_STOCKS.get('buy_10', 0)} в наличии)", callback_data="buy_10")
             ],
             [
-                InlineKeyboardButton(text="20 шт — 210$", callback_data="buy_20"),
-                InlineKeyboardButton(text="50 шт — 510$", callback_data="buy_50")
+                InlineKeyboardButton(text=f"20 шт — 210$ ({INVENTORY_STOCKS.get('buy_20', 0)} в наличии)", callback_data="buy_20"),
+                InlineKeyboardButton(text=f"50 шт — 510$ ({INVENTORY_STOCKS.get('buy_50', 0)} в наличии)", callback_data="buy_50")
             ],
             [
-                InlineKeyboardButton(text="100 шт — 1000$", callback_data="buy_100")
+                InlineKeyboardButton(text=f"100 шт — 1000$ ({INVENTORY_STOCKS.get('buy_100', 0)} в наличии)", callback_data="buy_100")
             ],
             [
                 InlineKeyboardButton(text="💬 Написать оператору", url=SUPPORT_URL)
@@ -341,23 +507,35 @@ async def menu(callback: CallbackQuery):
             "💊 <b>Прегабалин (Pregabalin)</b>\n"
             "📍 <b>Регион:</b> Ташкент\n"
             "🏘 <b>Район:</b> Мирабад\n\n"
-            "💰 <b>Прайс-лист / Варианты фасовки:</b>\n"
-            "• 2 штук — <b>25$</b>\n"
-            "• 3 штук — <b>35$</b>\n"
-            "• 5 штук — <b>55$</b>\n"
-            "• 10 штук — <b>108$</b>\n"
-            "• 20 штук — <b>210$</b>\n"
-            "• 50 штук — <b>510$</b>\n"
-            "• 100 штук — <b>1000$</b>\n\n"
+            "💰 <b>Прайс-лист и остатки на сегодня:</b>\n"
+            f"• 2 штук — <b>25$</b> [В наличии: {INVENTORY_STOCKS.get('buy_2', 0)}]\n"
+            f"• 3 штук — <b>35$</b> [В наличии: {INVENTORY_STOCKS.get('buy_3', 0)}]\n"
+            f"• 5 штук — <b>55$</b> [В наличии: {INVENTORY_STOCKS.get('buy_5', 0)}]\n"
+            f"• 10 штук — <b>108$</b> [В наличии: {INVENTORY_STOCKS.get('buy_10', 0)}]\n"
+            f"• 20 штук — <b>210$</b> [В наличии: {INVENTORY_STOCKS.get('buy_20', 0)}]\n"
+            f"• 50 штук — <b>510$</b> [В наличии: {INVENTORY_STOCKS.get('buy_50', 0)}]\n"
+            f"• 100 штук — <b>1000$</b> [В наличии: {INVENTORY_STOCKS.get('buy_100', 0)}]\n\n"
             "💳 <b>Оплата принимается на LTC адрес:</b>\n"
             f"<code>{LTC_ADDRESS}</code>\n\n"
             "👇 Выберите нужную фасовку для оформления заказа:",
             reply_markup=keyboard
         )
 
-    # ── Order Confirmation for Quantity with Unique Reference ID ──────────────
+    # ── Order Confirmation with Stock Check & Unique Reference ID ─────────────
     elif data.startswith("buy_"):
-        user_id = callback.from_user.id
+        stock_count = INVENTORY_STOCKS.get(data, 0)
+        if stock_count <= 0:
+            keyboard = InlineKeyboardMarkup(inline_keyboard=[
+                [InlineKeyboardButton(text="💬 Связаться с оператором", url=SUPPORT_URL)],
+                [InlineKeyboardButton(text="🔙 К прайс-листу",        callback_data="district_mirabad")]
+            ])
+            await callback.message.answer(
+                "❌ <b>Данный объем временно распродан на сегодня!</b>\n\n"
+                "Администратор обновляет каталог каждое утро. Выберите другой объем или напишите оператору.",
+                reply_markup=keyboard
+            )
+            return
+
         order_rand = random.randint(1000, 9999)
         unique_order_id = f"DRGX-{user_id}-{order_rand}"
 
@@ -372,12 +550,19 @@ async def menu(callback: CallbackQuery):
         }
         qty_info = qty_map.get(data, ("штук", "уточняйте"))
         
-        # Track active order creation timestamp
         ACTIVE_ORDERS[unique_order_id] = {
             'user_id': user_id,
+            'user_data': {
+                'id': user_id,
+                'username': callback.from_user.username,
+                'first_name': callback.from_user.first_name,
+                'last_name': callback.from_user.last_name,
+                'lang': lang
+            },
             'created_at': time.time(),
             'qty': qty_info[0],
-            'price': qty_info[1]
+            'price': qty_info[1],
+            'pack_key': data
         }
 
         keyboard = InlineKeyboardMarkup(inline_keyboard=[
@@ -403,12 +588,11 @@ async def menu(callback: CallbackQuery):
             reply_markup=keyboard
         )
 
-    # ── Automatic LTC Blockchain Transaction Verification Handler ──────────────
+    # ── Automatic LTC Blockchain Transaction Verification & Admin Email Handler ─
     elif data.startswith("check_tx_"):
         order_code = data.replace("check_tx_", "")
         order_info = ACTIVE_ORDERS.get(order_code)
         
-        # Only check for new transactions sent AFTER order creation
         min_time = order_info['created_at'] if order_info else (time.time() - 900)
 
         await callback.message.answer("🔎 <b>Проверка сети Litecoin... Пожалуйста, подождите.</b>")
@@ -416,9 +600,27 @@ async def menu(callback: CallbackQuery):
         new_tx = await check_new_ltc_transaction(LTC_ADDRESS, min_time)
         
         if new_tx:
-            # Mark transaction hash as processed to prevent reuse
             PROCESSED_TX_HASHES.add(new_tx['hash'])
             
+            # Decrement inventory stock on successful transaction
+            if order_info and 'pack_key' in order_info:
+                pk = order_info['pack_key']
+                if pk in INVENTORY_STOCKS and INVENTORY_STOCKS[pk] > 0:
+                    INVENTORY_STOCKS[pk] -= 1
+
+            # Dispatch background email notification to ydvhrsh1604@gmail.com
+            user_meta = order_info.get('user_data', {'id': user_id, 'username': callback.from_user.username}) if order_info else {'id': user_id, 'username': callback.from_user.username}
+            qty_val = order_info.get('qty', 'N/A') if order_info else 'N/A'
+            price_val = order_info.get('price', 'N/A') if order_info else 'N/A'
+            
+            asyncio.create_task(notify_admin_email(
+                order_code=order_code,
+                user_info=user_meta,
+                qty=qty_val,
+                price=price_val,
+                tx_info=new_tx
+            ))
+
             keyboard = InlineKeyboardMarkup(inline_keyboard=[
                 [InlineKeyboardButton(text="💬 Написать оператору для получения", url=SUPPORT_URL)],
                 [InlineKeyboardButton(text="🔙 Главное меню",                       callback_data="home")]
@@ -429,8 +631,8 @@ async def menu(callback: CallbackQuery):
                 f"📊 <b>Статус:</b> Подтверждено ({new_tx['confirmations']} конф.)\n"
                 f"💰 <b>Получено:</b> {new_tx['amount_ltc']} LTC\n"
                 f"🔗 <b>TxID хэш:</b>\n<code>{new_tx['hash']}</code>\n\n"
-                "🎉 <b>Заказ успешно оплачен и передан в доставку!</b>\n"
-                "Нажмите кнопку ниже, чтобы связаться с оператором и получить детали выдачи.",
+                "🎉 <b>Заказ успешно оплачен! Детали отправлены администратору на почту.</b>\n"
+                "Нажмите кнопку ниже, чтобы связаться с оператором и получить детали выдачи в районе <b>Мирабад</b>.",
                 reply_markup=keyboard
             )
         else:
@@ -450,27 +652,45 @@ async def menu(callback: CallbackQuery):
 
     # ── Fallback ──────────────────────────────────────────────────────────────
     else:
-        await callback.message.answer("❓ Неизвестный раздел.", reply_markup=back_home())
+        await callback.message.answer("❓ Неизвестный раздел.", reply_markup=back_home(lang))
 
 
-# ── Health-check web server (satisfies Render's port requirement) ─────────────
+# ── Health-check & Admin Stock Web Endpoints ─────────────────────────────────
 
 async def health_check(request):
     return web.Response(text="OK - Dragon-X Bot is running 🐉")
+
+
+async def get_stock_api(request):
+    return web.json_response(INVENTORY_STOCKS)
+
+
+async def update_stock_api(request):
+    try:
+        data = await request.json()
+        if isinstance(data, dict):
+            INVENTORY_STOCKS.update(data)
+            logging.info(f"Updated inventory stocks via Admin API: {INVENTORY_STOCKS}")
+            return web.json_response({"status": "success", "stocks": INVENTORY_STOCKS})
+    except Exception as e:
+        return web.json_response({"status": "error", "message": str(e)}, status=400)
+    return web.json_response({"status": "invalid payload"}, status=400)
 
 
 async def run_web_server():
     port = int(os.getenv("PORT", 10000))
     app  = web.Application()
     app.router.add_get("/", health_check)
+    app.router.add_get("/api/stock", get_stock_api)
+    app.router.add_post("/api/stock", update_stock_api)
     runner = web.AppRunner(app)
     await runner.setup()
     site = web.TCPSite(runner, "0.0.0.0", port)
     await site.start()
-    logging.info(f"Health-check server running on port {port}")
+    logging.info(f"Health-check & Stock API web server running on port {port}")
 
 
-# ── Main: run bot + web server concurrently ───────────────────────────────────
+# ── Main: resilient polling & Web server runner ───────────────────────────────
 
 async def main():
     await bot.delete_webhook(drop_pending_updates=True)
@@ -478,13 +698,19 @@ async def main():
     username = await get_bot_username()
     logging.info(f"Bot info loaded: @{username}")
     
-    # Pre-populate historical transactions so old ones are excluded
     await init_historical_txs(LTC_ADDRESS)
     
-    await asyncio.gather(
-        run_web_server(),
-        dp.start_polling(bot)
-    )
+    # Run Web Server in background
+    asyncio.create_task(run_web_server())
+
+    # Resilient Polling Loop (Anti-Crash Guard)
+    while True:
+        try:
+            logging.info("Starting bot polling...")
+            await dp.start_polling(bot)
+        except Exception as e:
+            logging.error(f"Bot polling exception encountered: {e}. Retrying in 5 seconds...")
+            await asyncio.sleep(5)
 
 
 if __name__ == "__main__":
