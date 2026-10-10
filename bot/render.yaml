@@ -1,0 +1,11 @@
+services:
+  - type: worker
+    name: dragon-x-telegram-bot
+    runtime: python
+    plan: free
+    rootDir: bot
+    buildCommand: pip install -r requirements.txt
+    startCommand: python app.py
+    envVars:
+      - key: BOT_TOKEN
+        sync: false

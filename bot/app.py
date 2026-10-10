@@ -1,0 +1,290 @@
+import os
+import asyncio
+import logging
+from html import escape
+from aiohttp import web
+from aiogram import Bot, Dispatcher
+from aiogram.client.default import DefaultBotProperties
+from aiogram.filters import CommandStart
+from aiogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery
+from aiogram.enums import ParseMode
+
+logging.basicConfig(level=logging.INFO)
+
+# ── Config ───────────────────────────────────────────────────────────────────
+TOKEN        = os.getenv("BOT_TOKEN")
+BOT_USERNAME  = os.getenv("BOT_USERNAME", "")
+SUPPORT_HANDLE = "@Dgx464"
+SUPPORT_URL   = "https://t.me/Dgx464"
+WEBSITE_URL   = os.getenv("WEBSITE_URL", "")
+REVIEWS_URL   = os.getenv("REVIEWS_URL", WEBSITE_URL)
+CONVERTER_URL  = "https://t.me/Eva_obmen"
+LTC_ADDRESS  = "ltc1qr5xhqe9tdd5lekrxurfftdv9hhaaqche2urvhr"
+
+if not TOKEN:
+    raise ValueError("BOT_TOKEN environment variable is not set! Set it in Render → Environment.")
+
+bot = Bot(token=TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
+dp  = Dispatcher()
+
+
+# ── Keyboards ────────────────────────────────────────────────────────────────
+
+def home_keyboard():
+    # Always-present rows (callback_data only — never empty)
+    rows = [
+        [
+            InlineKeyboardButton(text="🛍 Купить товар",     callback_data="catalog"),
+            InlineKeyboardButton(text="💬 Поддержка",        callback_data="support")
+        ],
+        [
+            InlineKeyboardButton(text="📜 Правила",          callback_data="rules"),
+            InlineKeyboardButton(text="👥 Пригласить друга", callback_data="referral")
+        ],
+        [
+            InlineKeyboardButton(text="🔄 Конвертер LTC",    url=CONVERTER_URL)
+        ]
+    ]
+    # Only add URL buttons when the URL is actually configured
+    if WEBSITE_URL:
+        rows.insert(2, [InlineKeyboardButton(text="🌐 Наш сайт", url=WEBSITE_URL)])
+    if REVIEWS_URL:
+        rows.insert(3, [InlineKeyboardButton(text="⭐ Отзывы",   url=REVIEWS_URL)])
+    return InlineKeyboardMarkup(inline_keyboard=rows)
+
+
+
+def back_home():
+    return InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="🔙 Главное меню", callback_data="home")]
+    ])
+
+
+# ── Handlers ─────────────────────────────────────────────────────────────────
+
+@dp.message(CommandStart())
+async def start(message: Message):
+    user_id = message.from_user.id
+    referral_link = (
+        f"https://t.me/{BOT_USERNAME}?start=ref_{user_id}"
+        if BOT_USERNAME else "Ссылка будет доступна после настройки бота."
+    )
+    await message.answer(
+        "🐉 <b>Добро пожаловать в DRAGON-X!</b>\n\n"
+        "Выберите нужный раздел в меню ниже.\n\n"
+        "📊 Количество транзакций: данные пока не подключены\n"
+        "💰 Баланс: 0\n"
+        "🛍 Покупок: 0\n"
+        "🎁 Приглашено друзей: данные пока не подключены\n\n"
+        f"👥 <b>Пригласите друга</b>\n{escape(referral_link)}\n\n"
+        "Когда приглашённый пользователь выполнит условия "
+        "реферальной программы, бонус может быть начислен "
+        "согласно правилам.\n\n"
+        "📌 Статистика и бонусы будут отображаться после "
+        "подключения постоянного хранилища данных.",
+        reply_markup=home_keyboard()
+    )
+
+
+@dp.callback_query()
+async def menu(callback: CallbackQuery):
+    data = callback.data
+    await callback.answer()
+
+    # ── Home ─────────────────────────────────────────────────────────────────
+    if data == "home":
+        await callback.message.answer(
+            "🐉 <b>DRAGON-X</b> — Главное меню",
+            reply_markup=home_keyboard()
+        )
+
+    # ── Rules ─────────────────────────────────────────────────────────────────
+    elif data == "rules":
+        await callback.message.answer(
+            "📜 <b>Правила DRAGON-X</b>\n\n"
+            "• Предоставляйте достоверную информацию.\n"
+            "• Не отправляйте пароли и секретные ключи.\n"
+            "• Обращайтесь в поддержку при возникновении вопросов.\n"
+            "• Все операции должны соответствовать применимому законодательству.",
+            reply_markup=back_home()
+        )
+
+    # ── Referral ──────────────────────────────────────────────────────────────
+    elif data == "referral":
+        user_id = callback.from_user.id
+        link = (
+            f"https://t.me/{BOT_USERNAME}?start=ref_{user_id}"
+            if BOT_USERNAME else "Сначала настройте BOT_USERNAME в Render."
+        )
+        await callback.message.answer(
+            "👥 <b>Ваша реферальная ссылка</b>\n\n"
+            f"{escape(link)}\n\n"
+            "Условия начисления бонусов указаны в правилах.",
+            reply_markup=back_home()
+        )
+
+    # ── Support ───────────────────────────────────────────────────────────────
+    elif data == "support":
+        keyboard = InlineKeyboardMarkup(inline_keyboard=[
+            [InlineKeyboardButton(text=f"💬 Написать {SUPPORT_HANDLE}", url=SUPPORT_URL)],
+            [InlineKeyboardButton(text="📦 Оптовый запрос",              url=SUPPORT_URL)],
+            [InlineKeyboardButton(text="🔙 Главное меню",                callback_data="home")]
+        ])
+        await callback.message.answer(
+            "💬 <b>Поддержка DRAGON-X</b>\n\n"
+            f"Свяжитесь с нами в Telegram: <b>{SUPPORT_HANDLE}</b>\n"
+            "Мы ответим как можно скорее.",
+            reply_markup=keyboard
+        )
+
+    # ── Orders ────────────────────────────────────────────────────────────────
+    elif data == "orders":
+        await callback.message.answer(
+            "📋 У вас пока нет заказов.",
+            reply_markup=back_home()
+        )
+
+    # ── Catalogue ────────────────────────────────────────────────────────────
+    elif data == "catalog":
+        keyboard = InlineKeyboardMarkup(inline_keyboard=[
+            [InlineKeyboardButton(text="💊 Прегабалин", callback_data="category_medical")],
+            [InlineKeyboardButton(text="🔙 Главное меню", callback_data="home")]
+        ])
+        await callback.message.answer(
+            "🛍 <b>Каталог товаров DRAGON-X</b>\n\n"
+            "Выберите препарат для заказа:",
+            reply_markup=keyboard
+        )
+
+    # ── Product Selection -> Region Step ─────────────────────────────────────
+    elif data == "category_medical":
+        keyboard = InlineKeyboardMarkup(inline_keyboard=[
+            [InlineKeyboardButton(text="📍 Выбрать регион", callback_data="select_region")],
+            [InlineKeyboardButton(text="🔙 Каталог",          callback_data="catalog")]
+        ])
+        await callback.message.answer(
+            "💊 <b>Прегабалин (Pregabalin)</b>\n\n"
+            "Перейдите к выбору региона доставки и выдачи:",
+            reply_markup=keyboard
+        )
+
+    # ── 3rd Page: Region Selection (Show ONLY Tashkent) ──────────────────────
+    elif data == "select_region":
+        keyboard = InlineKeyboardMarkup(inline_keyboard=[
+            [InlineKeyboardButton(text="📍 Ташкент", callback_data="region_tashkent")],
+            [InlineKeyboardButton(text="🔙 Назад",     callback_data="category_medical")]
+        ])
+        await callback.message.answer(
+            "📍 <b>Выбор региона</b>\n\n"
+            "Доступный регион для заказа:\n"
+            "• <b>Ташкент</b>",
+            reply_markup=keyboard
+        )
+
+    # ── 4th Page: Price Section & Quantity Options (Tashkent) ────────────────
+    elif data == "region_tashkent" or data == "product_pregabalin":
+        keyboard = InlineKeyboardMarkup(inline_keyboard=[
+            [
+                InlineKeyboardButton(text="2 капс — 25$",   callback_data="buy_2"),
+                InlineKeyboardButton(text="3 капс — 35$",   callback_data="buy_3")
+            ],
+            [
+                InlineKeyboardButton(text="5 капс — 55$",   callback_data="buy_5"),
+                InlineKeyboardButton(text="10 капс — 108$", callback_data="buy_10")
+            ],
+            [
+                InlineKeyboardButton(text="20 капс — 210$", callback_data="buy_20"),
+                InlineKeyboardButton(text="50 капс — 510$", callback_data="buy_50")
+            ],
+            [
+                InlineKeyboardButton(text="100 капс — 1000$", callback_data="buy_100")
+            ],
+            [
+                InlineKeyboardButton(text=f"💬 Написать оператору ({SUPPORT_HANDLE})", url=SUPPORT_URL)
+            ],
+            [
+                InlineKeyboardButton(text="🔙 К выбору региона", callback_data="select_region"),
+                InlineKeyboardButton(text="🔙 Главное меню",     callback_data="home")
+            ]
+        ])
+        await callback.message.answer(
+            "💊 <b>Прегабалин (Pregabalin)</b>\n"
+            "📍 <b>Регион:</b> Ташкент\n\n"
+            "💰 <b>Прайс-лист / Варианты фасовки:</b>\n"
+            "• 2 capsule — <b>25$</b>\n"
+            "• 3 capsule — <b>35$</b>\n"
+            "• 5 capsule — <b>55$</b>\n"
+            "• 10 capsule — <b>108$</b>\n"
+            "• 20 capsule — <b>210$</b>\n"
+            "• 50 capsule — <b>510$</b>\n"
+            "• 100 capsule — <b>1000$</b>\n\n"
+            "💳 <b>Оплата принимается на LTC адрес:</b>\n"
+            f"<code>{LTC_ADDRESS}</code>\n\n"
+            "👇 Выберите нужную фасовку для оформления заказа:",
+            reply_markup=keyboard
+        )
+
+    # ── Order Confirmation for Quantity ──────────────────────────────────────
+    elif data.startswith("buy_"):
+        qty_map = {
+            "buy_2":   ("2 капсулы", "25$"),
+            "buy_3":   ("3 капсулы", "35$"),
+            "buy_5":   ("5 капсул", "55$"),
+            "buy_10":  ("10 капсул", "108$"),
+            "buy_20":  ("20 капсул", "210$"),
+            "buy_50":  ("50 капсул", "510$"),
+            "buy_100": ("100 капсул", "1000$"),
+        }
+        qty_info = qty_map.get(data, ("Капсулы", "уточняйте"))
+        keyboard = InlineKeyboardMarkup(inline_keyboard=[
+            [InlineKeyboardButton(text=f"💬 Оплатить и связаться {SUPPORT_HANDLE}", url=SUPPORT_URL)],
+            [InlineKeyboardButton(text="🔙 К прайс-листу", callback_data="region_tashkent")],
+            [InlineKeyboardButton(text="🔙 Главное меню",    callback_data="home")]
+        ])
+        await callback.message.answer(
+            "📦 <b>Оформление заказа — DRAGON-X</b>\n\n"
+            "📍 <b>Регион:</b> Ташкент\n"
+            "💊 <b>Препарат:</b> Прегабалин\n"
+            f"📊 <b>Объем:</b> {qty_info[0]}\n"
+            f"💵 <b>Сумма к оплате:</b> {qty_info[1]}\n\n"
+            "💳 <b>Реквизиты для оплаты LTC:</b>\n"
+            f"<code>{LTC_ADDRESS}</code>\n\n"
+            f"После перевода средств нажмите кнопку ниже для связи с оператором <b>{SUPPORT_HANDLE}</b>.",
+            reply_markup=keyboard
+        )
+
+    # ── Fallback ──────────────────────────────────────────────────────────────
+    else:
+        await callback.message.answer("❓ Неизвестный раздел.", reply_markup=back_home())
+
+
+# ── Health-check web server (satisfies Render's port requirement) ─────────────
+
+async def health_check(request):
+    return web.Response(text="OK - Dragon-X Bot is running 🐉")
+
+
+async def run_web_server():
+    port = int(os.getenv("PORT", 10000))
+    app  = web.Application()
+    app.router.add_get("/", health_check)
+    runner = web.AppRunner(app)
+    await runner.setup()
+    site = web.TCPSite(runner, "0.0.0.0", port)
+    await site.start()
+    logging.info(f"Health-check server running on port {port}")
+
+
+# ── Main: run bot + web server concurrently ───────────────────────────────────
+
+async def main():
+    await bot.delete_webhook(drop_pending_updates=True)
+    logging.info("Webhook deleted. Starting polling...")
+    await asyncio.gather(
+        run_web_server(),
+        dp.start_polling(bot)
+    )
+
+
+if __name__ == "__main__":
+    asyncio.run(main())
