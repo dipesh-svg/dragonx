@@ -813,8 +813,6 @@
     const configBtn = document.getElementById('configureTgBotBtn');
     const footerConfigBtn = document.getElementById('editBotConfigFooterBtn');
 
-    if (openTgModalBtn) openTgModalBtn.addEventListener('click', () => openTelegramModal());
-    if (navTgBtn) navTgBtn.addEventListener('click', (e) => { e.preventDefault(); openTelegramModal(); });
     if (closeTgModalBtn) closeTgModalBtn.addEventListener('click', () => closeTelegramModal());
     if (configBtn) configBtn.addEventListener('click', () => openTelegramModal(true));
     if (footerConfigBtn) footerConfigBtn.addEventListener('click', (e) => { e.preventDefault(); openTelegramModal(true); });
@@ -830,7 +828,6 @@
     const directBtn = document.getElementById('modalOpenDirectTgBtn');
     if (directBtn) {
       directBtn.addEventListener('click', (e) => {
-        e.preventDefault();
         openBotDirectLink();
       });
     }
@@ -843,19 +840,38 @@
     const tgSupportLink = document.getElementById('tgSupportLink');
     const customBotInput = document.getElementById('customBotUsername');
     const customSupportInput = document.getElementById('customSupportHandle');
+    const openTgModalBtn = document.getElementById('openTgBotModalBtn');
+    const navTgBtn = document.getElementById('navTelegramBtn');
+    const modalDirectBtn = document.getElementById('modalOpenDirectTgBtn');
 
     const b = AppState.currentBotConfig.username;
     const s = AppState.currentBotConfig.support;
+    const botUrl = `https://t.me/${b.replace('@', '')}`;
+    const supUrl = `https://t.me/${s.replace('@', '')}`;
 
     if (botLabel) botLabel.textContent = b;
     if (modalBotDisplay) modalBotDisplay.textContent = b;
     if (tgBotContact) {
       tgBotContact.textContent = b;
-      tgBotContact.href = `https://t.me/${b.replace('@', '')}`;
+      tgBotContact.href = botUrl;
+      tgBotContact.target = '_blank';
     }
     if (tgSupportLink) {
       tgSupportLink.textContent = s;
-      tgSupportLink.href = `https://t.me/${s.replace('@', '')}`;
+      tgSupportLink.href = supUrl;
+      tgSupportLink.target = '_blank';
+    }
+    if (openTgModalBtn) {
+      openTgModalBtn.href = botUrl;
+      openTgModalBtn.target = '_blank';
+    }
+    if (navTgBtn) {
+      navTgBtn.href = botUrl;
+      navTgBtn.target = '_blank';
+    }
+    if (modalDirectBtn) {
+      modalDirectBtn.href = botUrl;
+      modalDirectBtn.target = '_blank';
     }
     if (customBotInput) customBotInput.value = b;
     if (customSupportInput) customSupportInput.value = s;
@@ -975,8 +991,13 @@
 
     const payload = generateOrderPayloadText();
     const rawBot = AppState.currentBotConfig.username.replace('@', '');
-    const encoded = encodeURIComponent(payload);
-    const tgUrl = `https://t.me/${rawBot}?text=${encoded}`;
+    const tgUrl = `https://t.me/${rawBot}`;
+
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(payload).then(() => {
+        showToast('📋 Детали заказа скопированы! Открываем Telegram...', 'success');
+      }).catch(() => {});
+    }
 
     openOrderReceiptModal(payload, tgUrl);
   }
@@ -989,14 +1010,17 @@
 
     const payload = customPayload || generateOrderPayloadText();
     const rawBot = AppState.currentBotConfig.username.replace('@', '');
-    const url = customUrl || `https://t.me/${rawBot}?text=${encodeURIComponent(payload)}`;
+    const url = customUrl || `https://t.me/${rawBot}`;
 
     const textEl = document.getElementById('receiptRawText');
     const sendBtn = document.getElementById('sendReceiptToTgBtn');
     const modal = document.getElementById('receiptModal');
 
     if (textEl) textEl.textContent = payload;
-    if (sendBtn) sendBtn.href = url;
+    if (sendBtn) {
+      sendBtn.href = url;
+      sendBtn.target = '_blank';
+    }
 
     if (modal) modal.classList.remove('hidden');
     playBeep(520, 0.05);

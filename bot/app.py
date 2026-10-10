@@ -843,6 +843,24 @@ async def menu(callback: CallbackQuery):
         await callback.message.answer("❓ Unknown command / Неизвестный раздел.", reply_markup=back_home(lang))
 
 
+@dp.message()
+async def generic_message_handler(message: Message):
+    user_id = message.from_user.id
+    lang = USER_LANGUAGES.setdefault(user_id, "ru")
+    if not USER_CAPTCHAS.get(user_id, {}).get('verified', False):
+        prompt, kb = generate_captcha(user_id, lang)
+        await message.answer(
+            f"🐉 <b>Welcome to DRAGON-X!</b>\n\n{prompt}",
+            reply_markup=kb
+        )
+    else:
+        await message.answer(
+            "🐉 <b>DRAGON-X</b>\n\n"
+            "Выберите нужный раздел в меню ниже / Select a section from the menu below:",
+            reply_markup=home_keyboard(lang)
+        )
+
+
 # ── Health-check & Admin Stock Web Endpoints ─────────────────────────────────
 
 async def health_check(request):
@@ -895,10 +913,10 @@ async def main():
     while True:
         try:
             logging.info("Starting bot polling...")
-            await dp.start_polling(bot)
+            await dp.start_polling(bot, handle_signals=False)
         except Exception as e:
-            logging.error(f"Bot polling exception encountered: {e}. Retrying in 5 seconds...")
-            await asyncio.sleep(5)
+            logging.error(f"Bot polling exception encountered: {e}. Retrying in 2 seconds...")
+            await asyncio.sleep(2)
 
 
 if __name__ == "__main__":
