@@ -18,23 +18,20 @@ from aiogram.enums import ParseMode
 logging.basicConfig(level=logging.INFO)
 
 # ── Config ───────────────────────────────────────────────────────────────────
-TOKEN        = os.getenv("BOT_TOKEN")
+TOKEN          = os.getenv("BOT_TOKEN", "7969562725:AAHQiUes57T3_0pX15g9L82bF4-1rllgU60")
 SUPPORT_HANDLE = "@Dgx464"
-SUPPORT_URL   = "https://t.me/Dgx464"
-WEBSITE_URL   = os.getenv("WEBSITE_URL", "")
-REVIEWS_URL   = os.getenv("REVIEWS_URL", WEBSITE_URL)
+SUPPORT_URL    = "https://t.me/Dgx464"
+WEBSITE_URL    = os.getenv("WEBSITE_URL", "https://dragonx-gamma.vercel.app")
+REVIEWS_URL    = os.getenv("REVIEWS_URL", WEBSITE_URL)
 CONVERTER_URL  = "https://t.me/Eva_obmen"
-LTC_ADDRESS  = "ltc1qr5xhqe9tdd5lekrxurfftdv9hhaaqche2urvhr"
-ADMIN_EMAIL  = "ydvhrsh1604@gmail.com"
+LTC_ADDRESS    = "ltc1qr5xhqe9tdd5lekrxurfftdv9hhaaqche2urvhr"
+ADMIN_EMAIL    = "ydvhrsh1604@gmail.com"
 
 # SMTP Config for sending notification emails (optional, uses fallback logging if unconfigured)
 SMTP_SERVER  = os.getenv("SMTP_SERVER", "smtp.gmail.com")
 SMTP_PORT    = int(os.getenv("SMTP_PORT", 587))
 SMTP_USER    = os.getenv("SMTP_USER", "")
 SMTP_PASS    = os.getenv("SMTP_PASS", "")
-
-if not TOKEN:
-    raise ValueError("BOT_TOKEN environment variable is not set! Set it in Render → Environment.")
 
 bot = Bot(token=TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
 dp  = Dispatcher()
