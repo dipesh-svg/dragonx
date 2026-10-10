@@ -70,10 +70,6 @@ async def get_bot_username() -> str:
 
 
 async def init_historical_txs(address: str):
-    """
-    Loads pre-existing historical transaction hashes into PROCESSED_TX_HASHES
-    on startup so old transactions are never matched against new orders.
-    """
     url = f"https://api.blockcypher.com/v1/ltc/main/addrs/{address}/full?limit=20"
     try:
         async with aiohttp.ClientSession() as session:
@@ -90,10 +86,6 @@ async def init_historical_txs(address: str):
 
 
 async def check_new_ltc_transaction(address: str, min_timestamp: float):
-    """
-    Queries Litecoin blockchain API for a NEW, UNPROCESSED incoming transaction
-    received AFTER min_timestamp.
-    """
     url_blockcypher = f"https://api.blockcypher.com/v1/ltc/main/addrs/{address}/full?limit=10"
     try:
         async with aiohttp.ClientSession() as session:
@@ -130,10 +122,6 @@ async def check_new_ltc_transaction(address: str, min_timestamp: float):
 
 
 def send_email_in_thread(subject: str, body: str):
-    """
-    Non-blocking email dispatch helper function.
-    Sends notification to ydvhrsh1604@gmail.com
-    """
     logging.info(f"--- [ORDER NOTIFICATION FOR ADMIN] ---\nTo: {ADMIN_EMAIL}\nSubject: {subject}\n\n{body}")
     if SMTP_USER and SMTP_PASS:
         try:
@@ -163,11 +151,11 @@ async def notify_admin_email(order_code: str, user_info: dict, qty: str, price: 
         f"- Full Name: {user_info.get('first_name', '')} {user_info.get('last_name', '')}\n"
         f"- Selected Language: {user_info.get('lang', 'ru')}\n\n"
         f"ORDER DETAILS:\n"
-        f"- Product: Прегабалин (Pregabalin)\n"
+        f"- Product: Pregabalin\n"
         f"- Volume: {qty}\n"
         f"- Price: {price}\n"
-        f"- Region: Ташкент\n"
-        f"- District: Мирабад\n\n"
+        f"- Region: Tashkent\n"
+        f"- District: Mirabad\n\n"
         f"TRANSACTION DETAILS:\n"
         f"- Network: Litecoin (LTC)\n"
         f"- Wallet: {LTC_ADDRESS}\n"
@@ -180,7 +168,7 @@ async def notify_admin_email(order_code: str, user_info: dict, qty: str, price: 
     await asyncio.to_thread(send_email_in_thread, subject, body)
 
 
-# ── Keyboards & Multi-Language UI ─────────────────────────────────────────────
+# ── Keyboards & Multi-Language UI Helpers ─────────────────────────────────────
 
 def language_keyboard():
     return InlineKeyboardMarkup(inline_keyboard=[
@@ -321,10 +309,12 @@ async def menu(callback: CallbackQuery):
 
     # ── Home ─────────────────────────────────────────────────────────────────
     elif data == "home":
-        await callback.message.answer(
-            "🐉 <b>DRAGON-X</b> — Main Menu",
-            reply_markup=home_keyboard(lang)
-        )
+        txt_home = {
+            "ru": "🐉 <b>DRAGON-X</b> — Главное меню",
+            "en": "🐉 <b>DRAGON-X</b> — Main Menu",
+            "uz": "🐉 <b>DRAGON-X</b> — Asosiy menyu"
+        }[lang]
+        await callback.message.answer(txt_home, reply_markup=home_keyboard(lang))
 
     # ── Rules ─────────────────────────────────────────────────────────────────
     elif data == "rules":
@@ -352,203 +342,330 @@ async def menu(callback: CallbackQuery):
         link = f"https://t.me/{username}?start=ref_{user_id}"
         share_url = f"https://t.me/share/url?url={escape(link)}&text=🐉%20Присоединяйся%20к%20DRAGON-X!"
         
+        btn_share = {"ru": "🔗 Поделиться ссылкой", "en": "🔗 Share Link", "uz": "🔗 Havolani ulashish"}[lang]
+        btn_bal   = {"ru": "💰 Мой баланс",         "en": "💰 My Balance", "uz": "💰 Mening balansim"}[lang]
+        btn_terms = {"ru": "📜 Условия программы",  "en": "📜 Terms",      "uz": "📜 Shartlar"}[lang]
+        btn_home  = {"ru": "🔙 Главное меню",       "en": "🔙 Main Menu",  "uz": "🔙 Asosiy menyu"}[lang]
+
         keyboard = InlineKeyboardMarkup(inline_keyboard=[
-            [InlineKeyboardButton(text="🔗 Поделиться ссылкой", url=share_url)],
-            [InlineKeyboardButton(text="💰 Мой баланс",         callback_data="my_balance")],
-            [InlineKeyboardButton(text="📜 Условия программы",  callback_data="referral_terms")],
-            [InlineKeyboardButton(text="🔙 Главное меню",       callback_data="home")]
+            [InlineKeyboardButton(text=btn_share, url=share_url)],
+            [InlineKeyboardButton(text=btn_bal,   callback_data="my_balance")],
+            [InlineKeyboardButton(text=btn_terms, callback_data="referral_terms")],
+            [InlineKeyboardButton(text=btn_home,  callback_data="home")]
         ])
-        await callback.message.answer(
-            "🎁 <b>Партнерская программа DRAGON-X (2% Кэшбэк)</b>\n\n"
-            "👥 <b>Ваша реферальная ссылка:</b>\n"
-            f"<code>{escape(link)}</code>\n\n"
-            "📊 <b>Ваша статистика:</b>\n"
-            "• Приглашено друзей: <b>0</b>\n"
-            "• Начислено бонусов (2%): <b>0.00 $</b>\n"
-            "• Текущий баланс: <b>0.00 $</b>\n\n"
-            "💎 <b>Как это работает?</b>\n"
-            "1️⃣ Отправьте вашу персональную ссылку другу.\n"
-            "2️⃣ При каждом заказе вашего друга вы получаете <b>2% от суммы его заказа</b> прямо на ваш баланс!\n"
-            "3️⃣ Средства с баланса можно использовать для оплаты покупок или вывести через оператора.\n\n"
-            "⚡ <i>Пример: При заказе друга на 100$, вы моментально получаете 2$ на баланс!</i>",
-            reply_markup=keyboard
-        )
+
+        ref_txt = {
+            "ru": "🎁 <b>Партнерская программа DRAGON-X (2% Кэшбэк)</b>\n\n"
+                  "👥 <b>Ваша реферальная ссылка:</b>\n"
+                  f"<code>{escape(link)}</code>\n\n"
+                  "📊 <b>Ваша статистика:</b>\n"
+                  "• Приглашено друзей: <b>0</b>\n"
+                  "• Начислено бонусов (2%): <b>0.00 $</b>\n"
+                  "• Текущий баланс: <b>0.00 $</b>\n\n"
+                  "💎 <b>Как это работает?</b>\n"
+                  "1️⃣ Отправьте вашу персональную ссылку другу.\n"
+                  "2️⃣ При каждом заказе вашего друга вы получаете <b>2% от суммы его заказа</b> прямо на ваш баланс!\n"
+                  "3️⃣ Средства с баланса можно использовать для оплаты покупок или вывести через оператора.\n\n"
+                  "⚡ <i>Пример: При заказе друга на 100$, вы моментально получаете 2$ на баланс!</i>",
+            "en": "🎁 <b>DRAGON-X Referral Program (2% Cashback)</b>\n\n"
+                  "👥 <b>Your Referral Link:</b>\n"
+                  f"<code>{escape(link)}</code>\n\n"
+                  "📊 <b>Your Statistics:</b>\n"
+                  "• Invited friends: <b>0</b>\n"
+                  "• Bonus earned (2%): <b>0.00 $</b>\n"
+                  "• Current balance: <b>0.00 $</b>\n\n"
+                  "💎 <b>How it works:</b>\n"
+                  "1️⃣ Share your link with a friend.\n"
+                  "2️⃣ Earn <b>2% cashback</b> on every order they complete!\n"
+                  "3️⃣ Use your balance for future purchases or withdraw via support.\n\n"
+                  "⚡ <i>Example: If your friend orders $100, you instantly get $2 on your balance!</i>",
+            "uz": "🎁 <b>DRAGON-X Referal Dasturi (2% Keshbek)</b>\n\n"
+                  "👥 <b>Sizning referal havolangiz:</b>\n"
+                  f"<code>{escape(link)}</code>\n\n"
+                  "📊 <b>Statistika:</b>\n"
+                  "• Taklif qilingan do'stlar: <b>0</b>\n"
+                  "• Ishlangan bonus (2%): <b>0.00 $</b>\n"
+                  "• Joriy balans: <b>0.00 $</b>\n\n"
+                  "💎 <b>Qanday ishlaydi?</b>\n"
+                  "1️⃣ Do'stingizga havolangizni yuboring.\n"
+                  "2️⃣ Har bir buyurtmadan <b>2% keshbek</b> balansingizga oling!"
+        }[lang]
+        await callback.message.answer(ref_txt, reply_markup=keyboard)
 
     # ── My Balance Handler ───────────────────────────────────────────────────
     elif data == "my_balance":
+        btn_op   = {"ru": "💬 Написать оператору", "en": "💬 Contact Operator", "uz": "💬 Operatorga yozish"}[lang]
+        btn_ref  = {"ru": "👥 Пригласить друга",   "en": "👥 Invite Friend",    "uz": "👥 Do'stlarni taklif qilish"}[lang]
+        btn_home = {"ru": "🔙 Главное меню",       "en": "🔙 Main Menu",        "uz": "🔙 Asosiy menyu"}[lang]
+
         keyboard = InlineKeyboardMarkup(inline_keyboard=[
-            [InlineKeyboardButton(text="💬 Написать оператору", url=SUPPORT_URL)],
-            [InlineKeyboardButton(text="👥 Пригласить друга",   callback_data="referral")],
-            [InlineKeyboardButton(text="🔙 Главное меню",       callback_data="home")]
+            [InlineKeyboardButton(text=btn_op,   url=SUPPORT_URL)],
+            [InlineKeyboardButton(text=btn_ref,  callback_data="referral")],
+            [InlineKeyboardButton(text=btn_home, callback_data="home")]
         ])
-        await callback.message.answer(
-            "💰 <b>Ваш финансовый баланс</b>\n\n"
-            "💵 Доступно на балансе: <b>0.00 $</b>\n"
-            "🎁 Заработано с рефералов (2%): <b>0.00 $</b>\n"
-            "🛍 Совершено покупок: <b>0</b>\n\n"
-            "💡 <i>Пополняйте баланс через партнерскую программу, приглашая друзей. 2% от всех их покупок начисляются вам автоматически!</i>",
-            reply_markup=keyboard
-        )
+
+        bal_txt = {
+            "ru": "💰 <b>Ваш финансовый баланс</b>\n\n"
+                  "💵 Доступно на балансе: <b>0.00 $</b>\n"
+                  "🎁 Заработано с рефералов (2%): <b>0.00 $</b>\n"
+                  "🛍 Совершено покупок: <b>0</b>\n\n"
+                  "💡 <i>Пополняйте баланс через партнерскую программу, приглашая друзей. 2% от всех их покупок начисляются вам автоматически!</i>",
+            "en": "💰 <b>Your Financial Balance</b>\n\n"
+                  "💵 Available Balance: <b>0.00 $</b>\n"
+                  "🎁 Referral Cashback (2%): <b>0.00 $</b>\n"
+                  "🛍 Orders Completed: <b>0</b>\n\n"
+                  "💡 <i>Earn 2% cashback directly into your balance by inviting friends with your referral link!</i>",
+            "uz": "💰 <b>Sizning moliyaviy balansingiz</b>\n\n"
+                  "💵 Mavjud balans: <b>0.00 $</b>\n"
+                  "🎁 Referallardan daromad (2%): <b>0.00 $</b>\n"
+                  "🛍 Bajarilgan buyurtmalar: <b>0</b>"
+        }[lang]
+        await callback.message.answer(bal_txt, reply_markup=keyboard)
 
     # ── Referral Terms Handler ───────────────────────────────────────────────
     elif data == "referral_terms":
+        btn_back = {"ru": "🔙 К реферальной программе", "en": "🔙 Back to Referral", "uz": "🔙 Referal bo'limiga"}[lang]
+        btn_home = {"ru": "🔙 Главное меню",             "en": "🔙 Main Menu",        "uz": "🔙 Asosiy menyu"}[lang]
+
         keyboard = InlineKeyboardMarkup(inline_keyboard=[
-            [InlineKeyboardButton(text="🔙 К реферальной программе", callback_data="referral")],
-            [InlineKeyboardButton(text="🔙 Главное меню",             callback_data="home")]
+            [InlineKeyboardButton(text=btn_back, callback_data="referral")],
+            [InlineKeyboardButton(text=btn_home, callback_data="home")]
         ])
-        await callback.message.answer(
-            "📜 <b>Условия партнерской программы DRAGON-X</b>\n\n"
-            "1. <b>Вознаграждение 2%:</b> Вы получаете 2% от суммы любого заказа, совершенного пользователем, зарегистрированным по вашей ссылке.\n"
-            "2. <b>Пожизненный доход:</b> Бонус 2% начисляется с каждого повторного заказа ваших рефералов без ограничений по времени.\n"
-            "3. <b>Использование средств:</b> Баланс можно применить для получения скидки до 100% на товары DRAGON-X или вывести.\n"
-            "4. <b>Честная игра:</b> Запрещена автоматическая накрутка аккаунтов. При нарушении баланс аннулируется.",
-            reply_markup=keyboard
-        )
+
+        terms_txt = {
+            "ru": "📜 <b>Условия партнерской программы DRAGON-X</b>\n\n"
+                  "1. <b>Вознаграждение 2%:</b> Вы получаете 2% от суммы любого заказа, совершенного пользователем, зарегистрированным по вашей ссылке.\n"
+                  "2. <b>Пожизненный доход:</b> Бонус 2% начисляется с каждого повторного заказа ваших рефералов без ограничений по времени.\n"
+                  "3. <b>Использование средств:</b> Баланс можно применить для получения скидки до 100% на товары DRAGON-X или вывести.\n"
+                  "4. <b>Честная игра:</b> Запрещена автоматическая накрутка аккаунтов. При нарушении баланс аннулируется.",
+            "en": "📜 <b>DRAGON-X Referral Program Terms</b>\n\n"
+                  "1. <b>2% Reward:</b> Earn 2% of total order value for every customer registered via your link.\n"
+                  "2. <b>Lifetime Income:</b> Earnings apply to all repeat orders made by your referred users.\n"
+                  "3. <b>Balance Usage:</b> Use your balance for up to 100% discount on orders or withdraw.\n"
+                  "4. <b>Fair Use:</b> Spam or fake account creation leads to balance forfeiture.",
+            "uz": "📜 <b>DRAGON-X Referal Dasturi Shartlari</b>\n\n"
+                  "1. <b>2% Mukofot:</b> Havolangiz orqali ro'yxatdan o'tgan har bir mijoz buyurtmasidan 2% olasiz.\n"
+                  "2. <b>Umrbod Daromad:</b> Barcha takroriy buyurtmalardan 2% beriladi."
+        }[lang]
+        await callback.message.answer(terms_txt, reply_markup=keyboard)
 
     # ── Support ───────────────────────────────────────────────────────────────
     elif data == "support":
+        btn_op   = {"ru": "💬 Написать оператору", "en": "💬 Contact Operator", "uz": "💬 Operatorga yozish"}[lang]
+        btn_bulk = {"ru": "📦 Оптовый запрос",      "en": "📦 Bulk Inquiry",     "uz": "📦 Ulgurji so'rov"}[lang]
+        btn_home = {"ru": "🔙 Главное меню",       "en": "🔙 Main Menu",        "uz": "🔙 Asosiy menyu"}[lang]
+
         keyboard = InlineKeyboardMarkup(inline_keyboard=[
-            [InlineKeyboardButton(text="💬 Написать оператору", url=SUPPORT_URL)],
-            [InlineKeyboardButton(text="📦 Оптовый запрос",      url=SUPPORT_URL)],
-            [InlineKeyboardButton(text="🔙 Главное меню",        callback_data="home")]
+            [InlineKeyboardButton(text=btn_op,   url=SUPPORT_URL)],
+            [InlineKeyboardButton(text=btn_bulk, url=SUPPORT_URL)],
+            [InlineKeyboardButton(text=btn_home, callback_data="home")]
         ])
-        await callback.message.answer(
-            "💬 <b>Поддержка DRAGON-X</b>\n\n"
-            "Нажмите кнопку ниже, чтобы перейти к диалогу с оператором.\n"
-            "Мы ответим как можно скорее.",
-            reply_markup=keyboard
-        )
+
+        supp_txt = {
+            "ru": "💬 <b>Поддержка DRAGON-X</b>\n\nНажмите кнопку ниже, чтобы перейти к диалогу с оператором.\nМы ответим как можно скорее.",
+            "en": "💬 <b>DRAGON-X Support</b>\n\nClick the button below to message our support operator.\nWe respond as quickly as possible.",
+            "uz": "💬 <b>DRAGON-X Qo'llab-quvvatlash</b>\n\nOperator bilan bog'lanish uchun quyidagi tugmani bosing."
+        }[lang]
+        await callback.message.answer(supp_txt, reply_markup=keyboard)
 
     # ── Orders ────────────────────────────────────────────────────────────────
     elif data == "orders":
-        await callback.message.answer(
-            "📋 У вас пока нет заказов.",
-            reply_markup=back_home(lang)
-        )
+        no_orders_txt = {
+            "ru": "📋 У вас пока нет заказов.",
+            "en": "📋 You have no active orders yet.",
+            "uz": "📋 Sizda hali buyurtmalar yo'q."
+        }[lang]
+        await callback.message.answer(no_orders_txt, reply_markup=back_home(lang))
 
     # ── Catalogue ────────────────────────────────────────────────────────────
     elif data == "catalog":
+        btn_preg  = {"ru": "💊 Прегабалин", "en": "💊 Pregabalin", "uz": "💊 Pregabalin"}[lang]
+        btn_home  = {"ru": "🔙 Главное меню", "en": "🔙 Main Menu", "uz": "🔙 Asosiy menyu"}[lang]
+
         keyboard = InlineKeyboardMarkup(inline_keyboard=[
-            [InlineKeyboardButton(text="💊 Прегабалин", callback_data="category_medical")],
-            [InlineKeyboardButton(text="🔙 Главное меню", callback_data="home")]
+            [InlineKeyboardButton(text=btn_preg, callback_data="category_medical")],
+            [InlineKeyboardButton(text=btn_home, callback_data="home")]
         ])
-        await callback.message.answer(
-            "🛍 <b>Каталог товаров DRAGON-X</b>\n\n"
-            "Выберите препарат для заказа:",
-            reply_markup=keyboard
-        )
+
+        cat_txt = {
+            "ru": "🛍 <b>Каталог товаров DRAGON-X</b>\n\nВыберите препарат для заказа:",
+            "en": "🛍 <b>DRAGON-X Product Catalog</b>\n\nSelect a product to order:",
+            "uz": "🛍 <b>DRAGON-X Mahsulotlar katalogi</b>\n\nBuyurtma berish uchun mahsulotni tanlang:"
+        }[lang]
+        await callback.message.answer(cat_txt, reply_markup=keyboard)
 
     # ── Product Selection -> Region Step ─────────────────────────────────────
     elif data == "category_medical":
+        btn_reg  = {"ru": "📍 Выбрать регион", "en": "📍 Select Region", "uz": "📍 Hududni tanlash"}[lang]
+        btn_cat  = {"ru": "🔙 Каталог",          "en": "🔙 Catalog",       "uz": "🔙 Katalog"}[lang]
+
         keyboard = InlineKeyboardMarkup(inline_keyboard=[
-            [InlineKeyboardButton(text="📍 Выбрать регион", callback_data="select_region")],
-            [InlineKeyboardButton(text="🔙 Каталог",          callback_data="catalog")]
+            [InlineKeyboardButton(text=btn_reg, callback_data="select_region")],
+            [InlineKeyboardButton(text=btn_cat, callback_data="catalog")]
         ])
-        await callback.message.answer(
-            "💊 <b>Прегабалин (Pregabalin)</b>\n\n"
-            "Перейдите к выбору региона доставки и выдачи:",
-            reply_markup=keyboard
-        )
+
+        prod_txt = {
+            "ru": "💊 <b>Прегабалин (Pregabalin)</b>\n\nПерейдите к выбору региона доставки и выдачи:",
+            "en": "💊 <b>Pregabalin</b>\n\nProceed to select delivery region:",
+            "uz": "💊 <b>Pregabalin</b>\n\nYetkazib berish hududini tanlashga o'ting:"
+        }[lang]
+        await callback.message.answer(prod_txt, reply_markup=keyboard)
 
     # ── 3rd Page: Region Selection (Tashkent) ────────────────────────────────
     elif data == "select_region":
+        btn_tash = {"ru": "📍 Ташкент", "en": "📍 Tashkent", "uz": "📍 Toshkent"}[lang]
+        btn_back = {"ru": "🔙 Назад",     "en": "🔙 Back",     "uz": "🔙 Orqaga"}[lang]
+
         keyboard = InlineKeyboardMarkup(inline_keyboard=[
-            [InlineKeyboardButton(text="📍 Ташкент", callback_data="region_tashkent")],
-            [InlineKeyboardButton(text="🔙 Назад",     callback_data="category_medical")]
+            [InlineKeyboardButton(text=btn_tash, callback_data="region_tashkent")],
+            [InlineKeyboardButton(text=btn_back, callback_data="category_medical")]
         ])
-        await callback.message.answer(
-            "📍 <b>Выбор региона</b>\n\n"
-            "Доступный регион для заказа:\n"
-            "• <b>Ташкент</b>",
-            reply_markup=keyboard
-        )
+
+        reg_txt = {
+            "ru": "📍 <b>Выбор региона</b>\n\nДоступный регион для заказа:\n• <b>Ташкент</b>",
+            "en": "📍 <b>Select Region</b>\n\nAvailable region for order:\n• <b>Tashkent</b>",
+            "uz": "📍 <b>Hududni tanlash</b>\n\nMavjud hudud:\n• <b>Toshkent</b>"
+        }[lang]
+        await callback.message.answer(reg_txt, reply_markup=keyboard)
 
     # ── Tashkent -> District Selection (Mirabad) ──────────────────────────────
     elif data == "region_tashkent":
+        btn_mir  = {"ru": "📍 Мирабад",         "en": "📍 Mirabad",         "uz": "📍 Mirobod"}[lang]
+        btn_reg  = {"ru": "🔙 К выбору региона", "en": "🔙 Select Region",   "uz": "🔙 Hududga qaytish"}[lang]
+        btn_home = {"ru": "🔙 Главное меню",     "en": "🔙 Main Menu",       "uz": "🔙 Asosiy menyu"}[lang]
+
         keyboard = InlineKeyboardMarkup(inline_keyboard=[
-            [InlineKeyboardButton(text="📍 Мирабад", callback_data="district_mirabad")],
-            [InlineKeyboardButton(text="🔙 К выбору региона", callback_data="select_region")],
-            [InlineKeyboardButton(text="🔙 Главное меню",     callback_data="home")]
+            [InlineKeyboardButton(text=btn_mir,  callback_data="district_mirabad")],
+            [InlineKeyboardButton(text=btn_reg,  callback_data="select_region")],
+            [InlineKeyboardButton(text=btn_home, callback_data="home")]
         ])
-        await callback.message.answer(
-            "📍 <b>Регион: Ташкент</b>\n\n"
-            "🏘 <b>Выберите район:</b>\n"
-            "• <b>Мирабад</b>",
-            reply_markup=keyboard
-        )
+
+        dist_txt = {
+            "ru": "📍 <b>Регион: Ташкент</b>\n\n🏘 <b>Выберите район:</b>\n• <b>Мирабад</b>",
+            "en": "📍 <b>Region: Tashkent</b>\n\n🏘 <b>Select District:</b>\n• <b>Mirabad</b>",
+            "uz": "📍 <b>Hudud: Toshkent</b>\n\n🏘 <b>Tuman tanlang:</b>\n• <b>Mirobod</b>"
+        }[lang]
+        await callback.message.answer(dist_txt, reply_markup=keyboard)
 
     # ── 4th Page: Price Section & Quantity Options with Stock Verification ───
     elif data == "district_mirabad" or data == "product_pregabalin":
+        lbl_stock = {"ru": "в наличии", "en": "in stock", "uz": "mavjud"}[lang]
+        btn_op    = {"ru": "💬 Написать оператору", "en": "💬 Contact Operator", "uz": "💬 Operatorga yozish"}[lang]
+        btn_dist  = {"ru": "🔙 К выбору района",    "en": "🔙 Select District",  "uz": "🔙 Tumanga qaytish"}[lang]
+        btn_home  = {"ru": "🔙 Главное меню",        "en": "🔙 Main Menu",        "uz": "🔙 Asosiy menyu"}[lang]
+
         keyboard = InlineKeyboardMarkup(inline_keyboard=[
             [
-                InlineKeyboardButton(text=f"2 шт — 25$ ({INVENTORY_STOCKS.get('buy_2', 0)} в наличии)",   callback_data="buy_2"),
-                InlineKeyboardButton(text=f"3 шт — 35$ ({INVENTORY_STOCKS.get('buy_3', 0)} в наличии)",   callback_data="buy_3")
+                InlineKeyboardButton(text=f"2 pcs — 25$ ({INVENTORY_STOCKS.get('buy_2', 0)} {lbl_stock})",   callback_data="buy_2"),
+                InlineKeyboardButton(text=f"3 pcs — 35$ ({INVENTORY_STOCKS.get('buy_3', 0)} {lbl_stock})",   callback_data="buy_3")
             ],
             [
-                InlineKeyboardButton(text=f"5 шт — 55$ ({INVENTORY_STOCKS.get('buy_5', 0)} в наличии)",   callback_data="buy_5"),
-                InlineKeyboardButton(text=f"10 шт — 108$ ({INVENTORY_STOCKS.get('buy_10', 0)} в наличии)", callback_data="buy_10")
+                InlineKeyboardButton(text=f"5 pcs — 55$ ({INVENTORY_STOCKS.get('buy_5', 0)} {lbl_stock})",   callback_data="buy_5"),
+                InlineKeyboardButton(text=f"10 pcs — 108$ ({INVENTORY_STOCKS.get('buy_10', 0)} {lbl_stock})", callback_data="buy_10")
             ],
             [
-                InlineKeyboardButton(text=f"20 шт — 210$ ({INVENTORY_STOCKS.get('buy_20', 0)} в наличии)", callback_data="buy_20"),
-                InlineKeyboardButton(text=f"50 шт — 510$ ({INVENTORY_STOCKS.get('buy_50', 0)} в наличии)", callback_data="buy_50")
+                InlineKeyboardButton(text=f"20 pcs — 210$ ({INVENTORY_STOCKS.get('buy_20', 0)} {lbl_stock})", callback_data="buy_20"),
+                InlineKeyboardButton(text=f"50 pcs — 510$ ({INVENTORY_STOCKS.get('buy_50', 0)} {lbl_stock})", callback_data="buy_50")
             ],
             [
-                InlineKeyboardButton(text=f"100 шт — 1000$ ({INVENTORY_STOCKS.get('buy_100', 0)} в наличии)", callback_data="buy_100")
+                InlineKeyboardButton(text=f"100 pcs — 1000$ ({INVENTORY_STOCKS.get('buy_100', 0)} {lbl_stock})", callback_data="buy_100")
             ],
             [
-                InlineKeyboardButton(text="💬 Написать оператору", url=SUPPORT_URL)
+                InlineKeyboardButton(text=btn_op,   url=SUPPORT_URL)
             ],
             [
-                InlineKeyboardButton(text="🔙 К выбору района", callback_data="region_tashkent"),
-                InlineKeyboardButton(text="🔙 Главное меню",     callback_data="home")
+                InlineKeyboardButton(text=btn_dist, callback_data="region_tashkent"),
+                InlineKeyboardButton(text=btn_home, callback_data="home")
             ]
         ])
-        await callback.message.answer(
-            "💊 <b>Прегабалин (Pregabalin)</b>\n"
-            "📍 <b>Регион:</b> Ташкент\n"
-            "🏘 <b>Район:</b> Мирабад\n\n"
-            "💰 <b>Прайс-лист и остатки на сегодня:</b>\n"
-            f"• 2 штук — <b>25$</b> [В наличии: {INVENTORY_STOCKS.get('buy_2', 0)}]\n"
-            f"• 3 штук — <b>35$</b> [В наличии: {INVENTORY_STOCKS.get('buy_3', 0)}]\n"
-            f"• 5 штук — <b>55$</b> [В наличии: {INVENTORY_STOCKS.get('buy_5', 0)}]\n"
-            f"• 10 штук — <b>108$</b> [В наличии: {INVENTORY_STOCKS.get('buy_10', 0)}]\n"
-            f"• 20 штук — <b>210$</b> [В наличии: {INVENTORY_STOCKS.get('buy_20', 0)}]\n"
-            f"• 50 штук — <b>510$</b> [В наличии: {INVENTORY_STOCKS.get('buy_50', 0)}]\n"
-            f"• 100 штук — <b>1000$</b> [В наличии: {INVENTORY_STOCKS.get('buy_100', 0)}]\n\n"
-            "💳 <b>Оплата принимается на LTC адрес:</b>\n"
-            f"<code>{LTC_ADDRESS}</code>\n\n"
-            "👇 Выберите нужную фасовку для оформления заказа:",
-            reply_markup=keyboard
-        )
+
+        st2   = INVENTORY_STOCKS.get('buy_2', 0)
+        st3   = INVENTORY_STOCKS.get('buy_3', 0)
+        st5   = INVENTORY_STOCKS.get('buy_5', 0)
+        st10  = INVENTORY_STOCKS.get('buy_10', 0)
+        st20  = INVENTORY_STOCKS.get('buy_20', 0)
+        st50  = INVENTORY_STOCKS.get('buy_50', 0)
+        st100 = INVENTORY_STOCKS.get('buy_100', 0)
+
+        price_txt = {
+            "ru": "💊 <b>Прегабалин (Pregabalin)</b>\n"
+                  "📍 <b>Регион:</b> Ташкент\n"
+                  "🏘 <b>Район:</b> Мирабад\n\n"
+                  "💰 <b>Прайс-лист и остатки на сегодня:</b>\n"
+                  f"• 2 штук — <b>25$</b> [В наличии: {st2}]\n"
+                  f"• 3 штук — <b>35$</b> [В наличии: {st3}]\n"
+                  f"• 5 штук — <b>55$</b> [В наличии: {st5}]\n"
+                  f"• 10 штук — <b>108$</b> [В наличии: {st10}]\n"
+                  f"• 20 штук — <b>210$</b> [В наличии: {st20}]\n"
+                  f"• 50 штук — <b>510$</b> [В наличии: {st50}]\n"
+                  f"• 100 штук — <b>1000$</b> [В наличии: {st100}]\n\n"
+                  "💳 <b>Оплата принимается на LTC адрес:</b>\n"
+                  f"<code>{LTC_ADDRESS}</code>\n\n"
+                  "👇 Выберите нужную фасовку для оформления заказа:",
+            "en": "💊 <b>Pregabalin</b>\n"
+                  "📍 <b>Region:</b> Tashkent\n"
+                  "🏘 <b>District:</b> Mirabad\n\n"
+                  "💰 <b>Price List & Today's Stock:</b>\n"
+                  f"• 2 pcs — <b>25$</b> [In stock: {st2}]\n"
+                  f"• 3 pcs — <b>35$</b> [In stock: {st3}]\n"
+                  f"• 5 pcs — <b>55$</b> [In stock: {st5}]\n"
+                  f"• 10 pcs — <b>108$</b> [In stock: {st10}]\n"
+                  f"• 20 pcs — <b>210$</b> [In stock: {st20}]\n"
+                  f"• 50 pcs — <b>510$</b> [In stock: {st50}]\n"
+                  f"• 100 pcs — <b>1000$</b> [In stock: {st100}]\n\n"
+                  "💳 <b>Payment accepted via LTC address:</b>\n"
+                  f"<code>{LTC_ADDRESS}</code>\n\n"
+                  "👇 Select desired quantity to order:",
+            "uz": "💊 <b>Pregabalin</b>\n"
+                  "📍 <b>Hudud:</b> Toshkent\n"
+                  "🏘 <b>Tuman:</b> Mirobod\n\n"
+                  "💰 <b>Narxlar va bugungi mavjudlik:</b>\n"
+                  f"• 2 ta — <b>25$</b> [Mavjud: {st2}]\n"
+                  f"• 3 ta — <b>35$</b> [Mavjud: {st3}]\n"
+                  f"• 5 ta — <b>55$</b> [Mavjud: {st5}]\n"
+                  f"• 10 ta — <b>108$</b> [Mavjud: {st10}]\n"
+                  f"• 20 ta — <b>210$</b> [Mavjud: {st20}]\n"
+                  f"• 50 ta — <b>510$</b> [Mavjud: {st50}]\n"
+                  f"• 100 ta — <b>1000$</b> [Mavjud: {st100}]\n\n"
+                  "💳 <b>To'lov LTC manzili orqali:</b>\n"
+                  f"<code>{LTC_ADDRESS}</code>\n\n"
+                  "👇 Buyurtma uchun miqdorni tanlang:"
+        }[lang]
+        await callback.message.answer(price_txt, reply_markup=keyboard)
 
     # ── Order Confirmation with Stock Check & Unique Reference ID ─────────────
     elif data.startswith("buy_"):
         stock_count = INVENTORY_STOCKS.get(data, 0)
         if stock_count <= 0:
+            btn_op    = {"ru": "💬 Связаться с оператором", "en": "💬 Contact Operator", "uz": "💬 Operatorga yozish"}[lang]
+            btn_price = {"ru": "🔙 К прайс-листу",        "en": "🔙 Back to Price List", "uz": "🔙 Narxlarga qaytish"}[lang]
             keyboard = InlineKeyboardMarkup(inline_keyboard=[
-                [InlineKeyboardButton(text="💬 Связаться с оператором", url=SUPPORT_URL)],
-                [InlineKeyboardButton(text="🔙 К прайс-листу",        callback_data="district_mirabad")]
+                [InlineKeyboardButton(text=btn_op,    url=SUPPORT_URL)],
+                [InlineKeyboardButton(text=btn_price, callback_data="district_mirabad")]
             ])
-            await callback.message.answer(
-                "❌ <b>Данный объем временно распродан на сегодня!</b>\n\n"
-                "Администратор обновляет каталог каждое утро. Выберите другой объем или напишите оператору.",
-                reply_markup=keyboard
-            )
+            out_txt = {
+                "ru": "❌ <b>Данный объем временно распродан на сегодня!</b>\n\nАдминистратор обновляет каталог каждое утро. Выберите другой объем или напишите оператору.",
+                "en": "❌ <b>This volume is currently sold out for today!</b>\n\nThe administrator updates stock every morning. Please select another volume or contact support.",
+                "uz": "❌ <b>Ushbu miqdor bugun sotib bo'lindi!</b>\n\nBoshqa miqdorni tanlang yoki operatorga yozing."
+            }[lang]
+            await callback.message.answer(out_txt, reply_markup=keyboard)
             return
 
         order_rand = random.randint(1000, 9999)
         unique_order_id = f"DRGX-{user_id}-{order_rand}"
 
         qty_map = {
-            "buy_2":   ("2 штук", "25$"),
-            "buy_3":   ("3 штук", "35$"),
-            "buy_5":   ("5 штук", "55$"),
-            "buy_10":  ("10 штук", "108$"),
-            "buy_20":  ("20 штук", "210$"),
-            "buy_50":  ("50 штук", "510$"),
-            "buy_100": ("100 штук", "1000$"),
+            "buy_2":   ({"ru": "2 штук", "en": "2 pcs", "uz": "2 ta"}, "25$"),
+            "buy_3":   ({"ru": "3 штук", "en": "3 pcs", "uz": "3 ta"}, "35$"),
+            "buy_5":   ({"ru": "5 штук", "en": "5 pcs", "uz": "5 ta"}, "55$"),
+            "buy_10":  ({"ru": "10 штук", "en": "10 pcs", "uz": "10 ta"}, "108$"),
+            "buy_20":  ({"ru": "20 штук", "en": "20 pcs", "uz": "20 ta"}, "210$"),
+            "buy_50":  ({"ru": "50 штук", "en": "50 pcs", "uz": "50 ta"}, "510$"),
+            "buy_100": ({"ru": "100 штук", "en": "100 pcs", "uz": "100 ta"}, "1000$"),
         }
-        qty_info = qty_map.get(data, ("штук", "уточняйте"))
+        qty_data = qty_map.get(data, ({"ru": "штук", "en": "pcs", "uz": "ta"}, "N/A"))
+        qty_label = qty_data[0][lang]
+        price_val = qty_data[1]
         
         ACTIVE_ORDERS[unique_order_id] = {
             'user_id': user_id,
@@ -560,33 +677,66 @@ async def menu(callback: CallbackQuery):
                 'lang': lang
             },
             'created_at': time.time(),
-            'qty': qty_info[0],
-            'price': qty_info[1],
+            'qty': qty_label,
+            'price': price_val,
             'pack_key': data
         }
 
+        btn_verify = {"ru": "🔍 Проверить транзакцию LTC", "en": "🔍 Verify LTC Transaction", "uz": "🔍 LTC Tranzaksiyani tekshirish"}[lang]
+        btn_pay    = {"ru": "💬 Оплатить и связаться с оператором", "en": "💬 Pay & Contact Operator", "uz": "💬 To'lov va Operatorga yozish"}[lang]
+        btn_price  = {"ru": "🔙 К прайс-листу", "en": "🔙 Back to Price List", "uz": "🔙 Narxlarga qaytish"}[lang]
+        btn_home   = {"ru": "🔙 Главное меню", "en": "🔙 Main Menu", "uz": "🔙 Asosiy menyu"}[lang]
+
         keyboard = InlineKeyboardMarkup(inline_keyboard=[
-            [InlineKeyboardButton(text="🔍 Проверить транзакцию LTC", callback_data=f"check_tx_{unique_order_id}")],
-            [InlineKeyboardButton(text="💬 Оплатить и связаться с оператором", url=SUPPORT_URL)],
-            [InlineKeyboardButton(text="🔙 К прайс-листу", callback_data="district_mirabad")],
-            [InlineKeyboardButton(text="🔙 Главное меню",    callback_data="home")]
+            [InlineKeyboardButton(text=btn_verify, callback_data=f"check_tx_{unique_order_id}")],
+            [InlineKeyboardButton(text=btn_pay,    url=SUPPORT_URL)],
+            [InlineKeyboardButton(text=btn_price,  callback_data="district_mirabad")],
+            [InlineKeyboardButton(text=btn_home,   callback_data="home")]
         ])
-        await callback.message.answer(
-            "📦 <b>Оформление заказа — DRAGON-X</b>\n\n"
-            "📍 <b>Регион:</b> Ташкент\n"
-            "🏘 <b>Район:</b> Мирабад\n"
-            "💊 <b>Препарат:</b> Прегабалин\n"
-            f"📊 <b>Объем:</b> {qty_info[0]}\n"
-            f"💵 <b>Сумма к оплате:</b> {qty_info[1]}\n\n"
-            f"🔑 <b>Ваш уникальный ID заказа / клиента:</b>\n"
-            f"<code>{unique_order_id}</code>\n\n"
-            "💳 <b>Реквизиты для оплаты LTC:</b>\n"
-            f"<code>{LTC_ADDRESS}</code>\n\n"
-            "📌 <b>Инструкция по оплате:</b>\n"
-            "1. Переведите сумму заказа в LTC на адрес выше.\n"
-            "2. После перевода нажмите кнопку <b>🔍 Проверить транзакцию LTC</b> для авто-проверки в блокчейне!",
-            reply_markup=keyboard
-        )
+
+        order_checkout_txt = {
+            "ru": "📦 <b>Оформление заказа — DRAGON-X</b>\n\n"
+                  "📍 <b>Регион:</b> Ташкент\n"
+                  "🏘 <b>Район:</b> Мирабад\n"
+                  "💊 <b>Препарат:</b> Прегабалин\n"
+                  f"📊 <b>Объем:</b> {qty_label}\n"
+                  f"💵 <b>Сумма к оплате:</b> {price_val}\n\n"
+                  f"🔑 <b>Ваш уникальный ID заказа / клиента:</b>\n"
+                  f"<code>{unique_order_id}</code>\n\n"
+                  "💳 <b>Реквизиты для оплаты LTC:</b>\n"
+                  f"<code>{LTC_ADDRESS}</code>\n\n"
+                  "📌 <b>Инструкция по оплате:</b>\n"
+                  "1. Переведите сумму заказа в LTC на адрес выше.\n"
+                  "2. После перевода нажмите кнопку <b>🔍 Проверить транзакцию LTC</b> для авто-проверки в блокчейне!",
+            "en": "📦 <b>Order Checkout — DRAGON-X</b>\n\n"
+                  "📍 <b>Region:</b> Tashkent\n"
+                  "🏘 <b>District:</b> Mirabad\n"
+                  "💊 <b>Product:</b> Pregabalin\n"
+                  f"📊 <b>Volume:</b> {qty_label}\n"
+                  f"💵 <b>Total Amount:</b> {price_val}\n\n"
+                  f"🔑 <b>Your Unique Order / Client ID:</b>\n"
+                  f"<code>{unique_order_id}</code>\n\n"
+                  "💳 <b>LTC Payment Address:</b>\n"
+                  f"<code>{LTC_ADDRESS}</code>\n\n"
+                  "📌 <b>Payment Instructions:</b>\n"
+                  "1. Send the order amount in LTC to the address above.\n"
+                  "2. After sending, click <b>🔍 Verify LTC Transaction</b> for automated blockchain check!",
+            "uz": "📦 <b>Buyurtmani rasmiylashtirish — DRAGON-X</b>\n\n"
+                  "📍 <b>Hudud:</b> Toshkent\n"
+                  "🏘 <b>Tuman:</b> Mirobod\n"
+                  "💊 <b>Mahsulot:</b> Pregabalin\n"
+                  f"📊 <b>Hajmi:</b> {qty_label}\n"
+                  f"💵 <b>To'lov summasi:</b> {price_val}\n\n"
+                  f"🔑 <b>Sizning noyob buyurtma ID:</b>\n"
+                  f"<code>{unique_order_id}</code>\n\n"
+                  "💳 <b>LTC To'lov manzili:</b>\n"
+                  f"<code>{LTC_ADDRESS}</code>\n\n"
+                  "📌 <b>To'lov yo'riqnomasi:</b>\n"
+                  "1. Yuqoridagi manzilga LTC to'lovini yuboring.\n"
+                  "2. Yuborgandan so'ng blokcheynda tekshirish uchun <b>🔍 LTC Tranzaksiyani tekshirish</b> tugmasini bosing!"
+        }[lang]
+
+        await callback.message.answer(order_checkout_txt, reply_markup=keyboard)
 
     # ── Automatic LTC Blockchain Transaction Verification & Admin Email Handler ─
     elif data.startswith("check_tx_"):
@@ -595,21 +745,24 @@ async def menu(callback: CallbackQuery):
         
         min_time = order_info['created_at'] if order_info else (time.time() - 900)
 
-        await callback.message.answer("🔎 <b>Проверка сети Litecoin... Пожалуйста, подождите.</b>")
+        checking_msg = {
+            "ru": "🔎 <b>Проверка сети Litecoin... Пожалуйста, подождите.</b>",
+            "en": "🔎 <b>Checking Litecoin network... Please wait.</b>",
+            "uz": "🔎 <b>Litecoin tarmog'i tekshirilmoqda... Iltimos kuting.</b>"
+        }[lang]
+        await callback.message.answer(checking_msg)
         
         new_tx = await check_new_ltc_transaction(LTC_ADDRESS, min_time)
         
         if new_tx:
             PROCESSED_TX_HASHES.add(new_tx['hash'])
             
-            # Decrement inventory stock on successful transaction
             if order_info and 'pack_key' in order_info:
                 pk = order_info['pack_key']
                 if pk in INVENTORY_STOCKS and INVENTORY_STOCKS[pk] > 0:
                     INVENTORY_STOCKS[pk] -= 1
 
-            # Dispatch background email notification to ydvhrsh1604@gmail.com
-            user_meta = order_info.get('user_data', {'id': user_id, 'username': callback.from_user.username}) if order_info else {'id': user_id, 'username': callback.from_user.username}
+            user_meta = order_info.get('user_data', {'id': user_id, 'username': callback.from_user.username, 'lang': lang}) if order_info else {'id': user_id, 'username': callback.from_user.username, 'lang': lang}
             qty_val = order_info.get('qty', 'N/A') if order_info else 'N/A'
             price_val = order_info.get('price', 'N/A') if order_info else 'N/A'
             
@@ -621,38 +774,73 @@ async def menu(callback: CallbackQuery):
                 tx_info=new_tx
             ))
 
+            btn_get  = {"ru": "💬 Написать оператору для получения", "en": "💬 Message Operator for Pickup", "uz": "💬 Olish uchun operatorga yozish"}[lang]
+            btn_home = {"ru": "🔙 Главное меню",                       "en": "🔙 Main Menu",                    "uz": "🔙 Asosiy menyu"}[lang]
+
             keyboard = InlineKeyboardMarkup(inline_keyboard=[
-                [InlineKeyboardButton(text="💬 Написать оператору для получения", url=SUPPORT_URL)],
-                [InlineKeyboardButton(text="🔙 Главное меню",                       callback_data="home")]
+                [InlineKeyboardButton(text=btn_get,  url=SUPPORT_URL)],
+                [InlineKeyboardButton(text=btn_home, callback_data="home")]
             ])
-            await callback.message.answer(
-                "✅ <b>Новая транзакция обнаружена в блокчейне Litecoin!</b>\n\n"
-                f"🔑 <b>Код заказа:</b> <code>{order_code}</code>\n"
-                f"📊 <b>Статус:</b> Подтверждено ({new_tx['confirmations']} конф.)\n"
-                f"💰 <b>Получено:</b> {new_tx['amount_ltc']} LTC\n"
-                f"🔗 <b>TxID хэш:</b>\n<code>{new_tx['hash']}</code>\n\n"
-                "🎉 <b>Заказ успешно оплачен! Детали отправлены администратору на почту.</b>\n"
-                "Нажмите кнопку ниже, чтобы связаться с оператором и получить детали выдачи в районе <b>Мирабад</b>.",
-                reply_markup=keyboard
-            )
+
+            success_txt = {
+                "ru": "✅ <b>Новая транзакция обнаружена в блокчейне Litecoin!</b>\n\n"
+                      f"🔑 <b>Код заказа:</b> <code>{order_code}</code>\n"
+                      f"📊 <b>Статус:</b> Подтверждено ({new_tx['confirmations']} конф.)\n"
+                      f"💰 <b>Получено:</b> {new_tx['amount_ltc']} LTC\n"
+                      f"🔗 <b>TxID хэш:</b>\n<code>{new_tx['hash']}</code>\n\n"
+                      "🎉 <b>Заказ успешно оплачен! Детали отправлены администратору на почту.</b>\n"
+                      "Нажмите кнопку ниже, чтобы связаться с оператором и получить детали выдачи в районе <b>Мирабад</b>.",
+                "en": "✅ <b>New Transaction Detected on Litecoin Blockchain!</b>\n\n"
+                      f"🔑 <b>Order Code:</b> <code>{order_code}</code>\n"
+                      f"📊 <b>Status:</b> Confirmed ({new_tx['confirmations']} confs)\n"
+                      f"💰 <b>Received:</b> {new_tx['amount_ltc']} LTC\n"
+                      f"🔗 <b>TxID Hash:</b>\n<code>{new_tx['hash']}</code>\n\n"
+                      "🎉 <b>Order successfully paid! Details sent to admin.</b>\n"
+                      "Click the button below to contact the operator and receive pickup/delivery details in <b>Mirabad</b>.",
+                "uz": "✅ <b>Litecoin blokcheynida yangi tranzaksiya topildi!</b>\n\n"
+                      f"🔑 <b>Buyurtma kodi:</b> <code>{order_code}</code>\n"
+                      f"📊 <b>Holat:</b> Tasdiqlandi ({new_tx['confirmations']} tasdiq)\n"
+                      f"💰 <b>Qabul qilindi:</b> {new_tx['amount_ltc']} LTC\n"
+                      f"🔗 <b>TxID hesh:</b>\n<code>{new_tx['hash']}</code>\n\n"
+                      "🎉 <b>Buyurtma muvaffaqiyatli to'landi!</b>\n"
+                      "<b>Mirobod</b> tumanida olish uchun operator bilan bog'laning."
+            }[lang]
+
+            await callback.message.answer(success_txt, reply_markup=keyboard)
         else:
+            btn_retry = {"ru": "🔄 Проверить еще раз",                 "en": "🔄 Check Again",      "uz": "🔄 Qayta tekshirish"}[lang]
+            btn_op    = {"ru": "💬 Связаться с оператором напрямую", "en": "💬 Contact Operator", "uz": "💬 Operator bilan bog'lanish"}[lang]
+            btn_home  = {"ru": "🔙 Главное меню",                      "en": "🔙 Main Menu",        "uz": "🔙 Asosiy menyu"}[lang]
+
             keyboard = InlineKeyboardMarkup(inline_keyboard=[
-                [InlineKeyboardButton(text="🔄 Проверить еще раз",                 callback_data=data)],
-                [InlineKeyboardButton(text="💬 Связаться с оператором напрямую", url=SUPPORT_URL)],
-                [InlineKeyboardButton(text="🔙 Главное меню",                      callback_data="home")]
+                [InlineKeyboardButton(text=btn_retry, callback_data=data)],
+                [InlineKeyboardButton(text=btn_op,    url=SUPPORT_URL)],
+                [InlineKeyboardButton(text=btn_home,  callback_data="home")]
             ])
-            await callback.message.answer(
-                "⏳ <b>Новая транзакция пока не найдена в сети Litecoin.</b>\n\n"
-                f"🔑 <b>Код заказа:</b> <code>{order_code}</code>\n"
-                "💳 <b>Адрес для оплаты LTC:</b>\n"
-                f"<code>{LTC_ADDRESS}</code>\n\n"
-                "💡 <i>Примечание: Проверяются только НОВЫЕ переводы, сделанные после оформления заказа. Если вы только что перевели средства, нажмите «Проверить еще раз» через 1–2 минуты.</i>",
-                reply_markup=keyboard
-            )
+
+            pending_txt = {
+                "ru": "⏳ <b>Новая транзакция пока не найдена в сети Litecoin.</b>\n\n"
+                      f"🔑 <b>Код заказа:</b> <code>{order_code}</code>\n"
+                      "💳 <b>Адрес для оплаты LTC:</b>\n"
+                      f"<code>{LTC_ADDRESS}</code>\n\n"
+                      "💡 <i>Примечание: Проверяются только НОВЫЕ переводы, сделанные после оформления заказа. Если вы только что перевели средства, нажмите «Проверить еще раз» через 1–2 минуты.</i>",
+                "en": "⏳ <b>New transaction not found on Litecoin network yet.</b>\n\n"
+                      f"🔑 <b>Order Code:</b> <code>{order_code}</code>\n"
+                      "💳 <b>LTC Payment Address:</b>\n"
+                      f"<code>{LTC_ADDRESS}</code>\n\n"
+                      "💡 <i>Note: Only NEW transfers sent after order creation are verified. If you just sent funds, click \"Check Again\" in 1–2 minutes.</i>",
+                "uz": "⏳ <b>Litecoin tarmog'ida hali yangi tranzaksiya topilmadi.</b>\n\n"
+                      f"🔑 <b>Buyurtma kodi:</b> <code>{order_code}</code>\n"
+                      "💳 <b>LTC To'lov manzili:</b>\n"
+                      f"<code>{LTC_ADDRESS}</code>\n\n"
+                      "💡 <i>Eslatma: Faqat buyurtma yaratilgandan so'ng yuborilgan YANGI o'tkazmalar tekshiriladi. 1–2 daqiqadan so'ng qayta urinib ko'ring.</i>"
+            }[lang]
+
+            await callback.message.answer(pending_txt, reply_markup=keyboard)
 
     # ── Fallback ──────────────────────────────────────────────────────────────
     else:
-        await callback.message.answer("❓ Неизвестный раздел.", reply_markup=back_home(lang))
+        await callback.message.answer("❓ Unknown command / Неизвестный раздел.", reply_markup=back_home(lang))
 
 
 # ── Health-check & Admin Stock Web Endpoints ─────────────────────────────────
