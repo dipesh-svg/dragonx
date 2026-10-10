@@ -1,4 +1,6 @@
 import os
+import random
+import time
 import asyncio
 import logging
 from html import escape
@@ -13,7 +15,6 @@ logging.basicConfig(level=logging.INFO)
 
 # ── Config ───────────────────────────────────────────────────────────────────
 TOKEN        = os.getenv("BOT_TOKEN")
-BOT_USERNAME  = os.getenv("BOT_USERNAME", "")
 SUPPORT_HANDLE = "@Dgx464"
 SUPPORT_URL   = "https://t.me/Dgx464"
 WEBSITE_URL   = os.getenv("WEBSITE_URL", "")
@@ -27,11 +28,23 @@ if not TOKEN:
 bot = Bot(token=TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
 dp  = Dispatcher()
 
+bot_info_cache = None
+
+async def get_bot_username() -> str:
+    global bot_info_cache
+    if not bot_info_cache:
+        try:
+            bot_info_cache = await bot.get_me()
+        except Exception as e:
+            logging.error(f"Failed to fetch bot info: {e}")
+    if bot_info_cache and bot_info_cache.username:
+        return bot_info_cache.username
+    return os.getenv("BOT_USERNAME", "") or "DragonX_Bot"
+
 
 # ── Keyboards ────────────────────────────────────────────────────────────────
 
 def home_keyboard():
-    # Always-present rows (callback_data only — never empty)
     rows = [
         [
             InlineKeyboardButton(text="🛍 Купить товар",     callback_data="catalog"),
@@ -45,7 +58,6 @@ def home_keyboard():
             InlineKeyboardButton(text="🔄 Наш обмен",        url=CONVERTER_URL)
         ]
     ]
-    # Only add URL buttons when the URL is actually configured
     if WEBSITE_URL:
         rows.insert(2, [InlineKeyboardButton(text="🌐 Наш сайт", url=WEBSITE_URL)])
     if REVIEWS_URL:
@@ -64,17 +76,16 @@ def back_home():
 @dp.message(CommandStart())
 async def start(message: Message):
     user_id = message.from_user.id
-    referral_link = (
-        f"https://t.me/{BOT_USERNAME}?start=ref_{user_id}"
-        if BOT_USERNAME else "Ссылка будет доступна после настройки BOT_USERNAME."
-    )
+    username = await get_bot_username()
+    referral_link = f"https://t.me/{username}?start=ref_{user_id}"
+    
     await message.answer(
         "🐉 <b>Добро пожаловать в DRAGON-X!</b>\n\n"
         "Выберите нужный раздел в меню ниже.\n\n"
         "💰 <b>Ваш баланс:</b> 0.00 $\n"
         "🎁 <b>Реферальный бонус:</b> 2% от всех заказов друзей\n\n"
         f"👥 <b>Ваша реферальная ссылка:</b>\n<code>{escape(referral_link)}</code>\n\n"
-        "💡 <i>Приглашайте друзей по вашей ссылка и получайте 2% от суммы каждого их заказа прямо на ваш баланс!</i>",
+        "💡 <i>Приглашайте друзей по вашей ссылке и получайте 2% от суммы каждого их заказа прямо на ваш баланс!</i>",
         reply_markup=home_keyboard()
     )
 
@@ -105,11 +116,10 @@ async def menu(callback: CallbackQuery):
     # ── Referral (Invite a Friend - 2% Bonus) ─────────────────────────────────
     elif data == "referral":
         user_id = callback.from_user.id
-        link = (
-            f"https://t.me/{BOT_USERNAME}?start=ref_{user_id}"
-            if BOT_USERNAME else "Настройте BOT_USERNAME в Render."
-        )
+        username = await get_bot_username()
+        link = f"https://t.me/{username}?start=ref_{user_id}"
         share_url = f"https://t.me/share/url?url={escape(link)}&text=🐉%20Присоединяйся%20к%20DRAGON-X!"
+        
         keyboard = InlineKeyboardMarkup(inline_keyboard=[
             [InlineKeyboardButton(text="🔗 Поделиться ссылкой", url=share_url)],
             [InlineKeyboardButton(text="💰 Мой баланс",         callback_data="my_balance")],
@@ -279,8 +289,12 @@ async def menu(callback: CallbackQuery):
             reply_markup=keyboard
         )
 
-    # ── Order Confirmation for Quantity ──────────────────────────────────────
+    # ── Order Confirmation for Quantity with Unique Reference ID ──────────────
     elif data.startswith("buy_"):
+        user_id = callback.from_user.id
+        order_rand = random.randint(1000, 9999)
+        unique_order_id = f"DRGX-{user_id}-{order_rand}"
+
         qty_map = {
             "buy_2":   ("2 штук", "25$"),
             "buy_3":   ("3 штук", "35$"),
@@ -303,9 +317,11 @@ async def menu(callback: CallbackQuery):
             "💊 <b>Препарат:</b> Прегабалин\n"
             f"📊 <b>Объем:</b> {qty_info[0]}\n"
             f"💵 <b>Сумма к оплате:</b> {qty_info[1]}\n\n"
+            f"🔑 <b>Ваш уникальный ID заказа / клиента:</b>\n"
+            f"<code>{unique_order_id}</code>\n\n"
             "💳 <b>Реквизиты для оплаты LTC:</b>\n"
             f"<code>{LTC_ADDRESS}</code>\n\n"
-            "После перевода средств нажмите кнопку ниже для связи с оператором.",
+            "📌 <i>Укажите ваш уникальный ID заказа при связи с оператором для моментального подтверждения оплаты!</i>",
             reply_markup=keyboard
         )
 
@@ -335,7 +351,9 @@ async def run_web_server():
 
 async def main():
     await bot.delete_webhook(drop_pending_updates=True)
-    logging.info("Webhook deleted. Starting polling...")
+    logging.info("Webhook deleted. Fetching bot username...")
+    username = await get_bot_username()
+    logging.info(f"Bot info loaded: @{username}")
     await asyncio.gather(
         run_web_server(),
         dp.start_polling(bot)
