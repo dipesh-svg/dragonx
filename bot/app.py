@@ -41,6 +41,7 @@ ACTIVE_ORDERS = {}          # { order_code: {'user_id': int, 'created_at': float
 PROCESSED_TX_HASHES = set()
 USER_LANGUAGES = {}         # { user_id: 'ru' | 'en' | 'uz' }
 USER_CAPTCHAS = {}          # { user_id: {'ans': int, 'verified': bool} }
+USER_DISTRICTS = {}         # { user_id: {'ru': str, 'en': str, 'uz': str} }
 
 # Dynamic stock inventory managed via Admin Panel or Morning Update
 INVENTORY_STOCKS = {
@@ -136,31 +137,31 @@ def send_email_in_thread(subject: str, body: str):
             logging.error(f"SMTP email sending failed: {e}")
 
 
-async def notify_admin_email(order_code: str, user_info: dict, qty: str, price: str, tx_info: dict):
+async def notify_admin_email(order_code: str, user_info: dict, qty: str, price: str, tx_info: dict, district: str = "Чиланзор"):
     subject = f"🐉 [NEW PAID ORDER] Dragon-X Order {order_code} ({price})"
     body = (
-        f"=== SUCCESSFUL TRANSACTION CONFIRMED ===\n"
+        "=== SUCCESSFUL TRANSACTION CONFIRMED ===\n"
         f"Order ID: {order_code}\n"
         f"Timestamp: {datetime.datetime.now(datetime.timezone.utc).strftime('%Y-%m-%d %H:%M:%S UTC')}\n\n"
-        f"USER DETAILS:\n"
+        "USER DETAILS:\n"
         f"- Telegram ID: {user_info.get('id')}\n"
         f"- Username: @{user_info.get('username', 'N/A')}\n"
         f"- Full Name: {user_info.get('first_name', '')} {user_info.get('last_name', '')}\n"
         f"- Selected Language: {user_info.get('lang', 'ru')}\n\n"
-        f"ORDER DETAILS:\n"
-        f"- Product: Pregabalin\n"
+        "ORDER DETAILS:\n"
+        "- Product: Rega (Рега)\n"
         f"- Volume: {qty}\n"
         f"- Price: {price}\n"
-        f"- Region: Tashkent\n"
-        f"- District: Mirabad\n\n"
-        f"TRANSACTION DETAILS:\n"
-        f"- Network: Litecoin (LTC)\n"
+        "- Region: Tashkent\n"
+        f"- District: {district}\n\n"
+        "TRANSACTION DETAILS:\n"
+        "- Network: Litecoin (LTC)\n"
         f"- Wallet: {LTC_ADDRESS}\n"
         f"- TxID Hash: {tx_info.get('hash')}\n"
         f"- Amount Received: {tx_info.get('amount_ltc')} LTC\n"
         f"- Confirmations: {tx_info.get('confirmations')}\n\n"
-        f"REFERRAL REWARD:\n"
-        f"- 2% cashback credited to referrer balance.\n"
+        "REFERRAL REWARD:\n"
+        "- 2% cashback credited to referrer balance.\n"
     )
     await asyncio.to_thread(send_email_in_thread, subject, body)
 
@@ -476,18 +477,18 @@ async def menu(callback: CallbackQuery):
 
     # ── Catalogue ────────────────────────────────────────────────────────────
     elif data == "catalog":
-        btn_preg  = {"ru": "💊 Прегабалин", "en": "💊 Pregabalin", "uz": "💊 Pregabalin"}[lang]
+        btn_rega  = {"ru": "💊 Рега", "en": "💊 Rega", "uz": "💊 Rega"}[lang]
         btn_home  = {"ru": "🔙 Главное меню", "en": "🔙 Main Menu", "uz": "🔙 Asosiy menyu"}[lang]
 
         keyboard = InlineKeyboardMarkup(inline_keyboard=[
-            [InlineKeyboardButton(text=btn_preg, callback_data="category_medical")],
+            [InlineKeyboardButton(text=btn_rega, callback_data="category_medical")],
             [InlineKeyboardButton(text=btn_home, callback_data="home")]
         ])
 
         cat_txt = {
-            "ru": "🛍 <b>Каталог товаров DRAGON-X</b>\n\nВыберите препарат для заказа:",
-            "en": "🛍 <b>DRAGON-X Product Catalog</b>\n\nSelect a product to order:",
-            "uz": "🛍 <b>DRAGON-X Mahsulotlar katalogi</b>\n\nBuyurtma berish uchun mahsulotni tanlang:"
+            "ru": "🛍 <b>Каталог товаров DRAGON-X</b>\n\nВыберите препарат для заказа:\n• 💊 <b>Рега</b>",
+            "en": "🛍 <b>DRAGON-X Product Catalog</b>\n\nSelect a product to order:\n• 💊 <b>Rega</b>",
+            "uz": "🛍 <b>DRAGON-X Mahsulotlar katalogi</b>\n\nBuyurtma berish uchun mahsulotni tanlang:\n• 💊 <b>Rega</b>"
         }[lang]
         await callback.message.answer(cat_txt, reply_markup=keyboard)
 
@@ -502,9 +503,9 @@ async def menu(callback: CallbackQuery):
         ])
 
         prod_txt = {
-            "ru": "💊 <b>Прегабалин (Pregabalin)</b>\n\nПерейдите к выбору региона доставки и выдачи:",
-            "en": "💊 <b>Pregabalin</b>\n\nProceed to select delivery region:",
-            "uz": "💊 <b>Pregabalin</b>\n\nYetkazib berish hududini tanlashga o'ting:"
+            "ru": "💊 <b>Рега (Rega)</b>\n\nПерейдите к выбору региона доставки и выдачи:",
+            "en": "💊 <b>Rega</b>\n\nProceed to select delivery region:",
+            "uz": "💊 <b>Rega</b>\n\nYetkazib berish hududini tanlashga o'ting:"
         }[lang]
         await callback.message.answer(prod_txt, reply_markup=keyboard)
 
@@ -525,27 +526,40 @@ async def menu(callback: CallbackQuery):
         }[lang]
         await callback.message.answer(reg_txt, reply_markup=keyboard)
 
-    # ── Tashkent -> District Selection (Mirabad) ──────────────────────────────
+    # ── Tashkent -> District Selection (Чиланзор, Яшнабад, Ulugbek) ───────────
     elif data == "region_tashkent":
-        btn_mir  = {"ru": "📍 Мирабад",         "en": "📍 Mirabad",         "uz": "📍 Mirobod"}[lang]
+        btn_chil = {"ru": "📍 Чиланзор", "en": "📍 Chilanzar", "uz": "📍 Chilonzor"}[lang]
+        btn_yash = {"ru": "📍 Яшнабад",  "en": "📍 Yashnabad",  "uz": "📍 Yashnobod"}[lang]
+        btn_ulug = {"ru": "📍 Ulugbek",   "en": "📍 Ulugbek",   "uz": "📍 Ulug'bek"}[lang]
         btn_reg  = {"ru": "🔙 К выбору региона", "en": "🔙 Select Region",   "uz": "🔙 Hududga qaytish"}[lang]
         btn_home = {"ru": "🔙 Главное меню",     "en": "🔙 Main Menu",       "uz": "🔙 Asosiy menyu"}[lang]
 
         keyboard = InlineKeyboardMarkup(inline_keyboard=[
-            [InlineKeyboardButton(text=btn_mir,  callback_data="district_mirabad")],
+            [InlineKeyboardButton(text=btn_chil, callback_data="district_chilanzer")],
+            [InlineKeyboardButton(text=btn_yash, callback_data="district_yashnabad")],
+            [InlineKeyboardButton(text=btn_ulug, callback_data="district_ulugbek")],
             [InlineKeyboardButton(text=btn_reg,  callback_data="select_region")],
             [InlineKeyboardButton(text=btn_home, callback_data="home")]
         ])
 
         dist_txt = {
-            "ru": "📍 <b>Регион: Ташкент</b>\n\n🏘 <b>Выберите район:</b>\n• <b>Мирабад</b>",
-            "en": "📍 <b>Region: Tashkent</b>\n\n🏘 <b>Select District:</b>\n• <b>Mirabad</b>",
-            "uz": "📍 <b>Hudud: Toshkent</b>\n\n🏘 <b>Tuman tanlang:</b>\n• <b>Mirobod</b>"
+            "ru": "📍 <b>Регион: Ташкент</b>\n\n🏘 <b>Выберите район:</b>\n• <b>Чиланзор</b>\n• <b>Яшнабад</b>\n• <b>Ulugbek</b>",
+            "en": "📍 <b>Region: Tashkent</b>\n\n🏘 <b>Select District:</b>\n• <b>Chilanzar</b>\n• <b>Yashnabad</b>\n• <b>Ulugbek</b>",
+            "uz": "📍 <b>Hudud: Toshkent</b>\n\n🏘 <b>Tuman tanlang:</b>\n• <b>Chilonzor</b>\n• <b>Yashnobod</b>\n• <b>Ulug'bek</b>"
         }[lang]
         await callback.message.answer(dist_txt, reply_markup=keyboard)
 
     # ── 4th Page: Price Section & Quantity Options with Stock Verification ───
-    elif data == "district_mirabad" or data == "product_pregabalin":
+    elif data in ("district_chilanzer", "district_yashnabad", "district_ulugbek", "district_mirabad", "product_pregabalin"):
+        district_map = {
+            "district_chilanzer": {"ru": "Чиланзор", "en": "Chilanzar", "uz": "Chilonzor"},
+            "district_yashnabad": {"ru": "Яшнабад",  "en": "Yashnabad",  "uz": "Yashnobod"},
+            "district_ulugbek":   {"ru": "Ulugbek",   "en": "Ulugbek",   "uz": "Ulug'bek"},
+        }
+        if data in district_map:
+            USER_DISTRICTS[user_id] = district_map[data]
+
+        cur_district = USER_DISTRICTS.get(user_id, {"ru": "Чиланзор", "en": "Chilanzar", "uz": "Chilonzor"})[lang]
         lbl_stock = {"ru": "в наличии", "en": "in stock", "uz": "mavjud"}[lang]
         btn_op    = {"ru": "💬 Написать оператору", "en": "💬 Contact Operator", "uz": "💬 Operatorga yozish"}[lang]
         btn_dist  = {"ru": "🔙 К выбору района",    "en": "🔙 Select District",  "uz": "🔙 Tumanga qaytish"}[lang]
@@ -585,9 +599,9 @@ async def menu(callback: CallbackQuery):
         st100 = INVENTORY_STOCKS.get('buy_100', 0)
 
         price_txt = {
-            "ru": "💊 <b>Прегабалин (Pregabalin)</b>\n"
-                  "📍 <b>Регион:</b> Ташкент\n"
-                  "🏘 <b>Район:</b> Мирабад\n\n"
+            "ru": f"💊 <b>Рега (Rega)</b>\n"
+                  f"📍 <b>Регион:</b> Ташкент\n"
+                  f"🏘 <b>Район:</b> {cur_district}\n\n"
                   "💰 <b>Прайс-лист и остатки на сегодня:</b>\n"
                   f"• 2 штук — <b>25$</b> [В наличии: {st2}]\n"
                   f"• 3 штук — <b>35$</b> [В наличии: {st3}]\n"
@@ -599,9 +613,9 @@ async def menu(callback: CallbackQuery):
                   "💳 <b>Оплата принимается на LTC адрес:</b>\n"
                   f"<code>{LTC_ADDRESS}</code>\n\n"
                   "👇 Выберите нужную фасовку для оформления заказа:",
-            "en": "💊 <b>Pregabalin</b>\n"
-                  "📍 <b>Region:</b> Tashkent\n"
-                  "🏘 <b>District:</b> Mirabad\n\n"
+            "en": f"💊 <b>Rega</b>\n"
+                  f"📍 <b>Region:</b> Tashkent\n"
+                  f"🏘 <b>District:</b> {cur_district}\n\n"
                   "💰 <b>Price List & Today's Stock:</b>\n"
                   f"• 2 pcs — <b>25$</b> [In stock: {st2}]\n"
                   f"• 3 pcs — <b>35$</b> [In stock: {st3}]\n"
@@ -613,9 +627,9 @@ async def menu(callback: CallbackQuery):
                   "💳 <b>Payment accepted via LTC address:</b>\n"
                   f"<code>{LTC_ADDRESS}</code>\n\n"
                   "👇 Select desired quantity to order:",
-            "uz": "💊 <b>Pregabalin</b>\n"
-                  "📍 <b>Hudud:</b> Toshkent\n"
-                  "🏘 <b>Tuman:</b> Mirobod\n\n"
+            "uz": f"💊 <b>Rega</b>\n"
+                  f"📍 <b>Hudud:</b> Toshkent\n"
+                  f"🏘 <b>Tuman:</b> {cur_district}\n\n"
                   "💰 <b>Narxlar va bugungi mavjudlik:</b>\n"
                   f"• 2 ta — <b>25$</b> [Mavjud: {st2}]\n"
                   f"• 3 ta — <b>35$</b> [Mavjud: {st3}]\n"
@@ -632,13 +646,14 @@ async def menu(callback: CallbackQuery):
 
     # ── Order Confirmation with Stock Check & Unique Reference ID ─────────────
     elif data.startswith("buy_"):
+        cur_district = USER_DISTRICTS.get(user_id, {"ru": "Чиланзор", "en": "Chilanzar", "uz": "Chilonzor"})[lang]
         stock_count = INVENTORY_STOCKS.get(data, 0)
         if stock_count <= 0:
             btn_op    = {"ru": "💬 Связаться с оператором", "en": "💬 Contact Operator", "uz": "💬 Operatorga yozish"}[lang]
-            btn_price = {"ru": "🔙 К прайс-листу",        "en": "🔙 Back to Price List", "uz": "🔙 Narxlarga qaytish"}[lang]
+            btn_price = {"ru": "🔙 К выбору района",      "en": "🔙 Select District",    "uz": "🔙 Tumanga qaytish"}[lang]
             keyboard = InlineKeyboardMarkup(inline_keyboard=[
                 [InlineKeyboardButton(text=btn_op,    url=SUPPORT_URL)],
-                [InlineKeyboardButton(text=btn_price, callback_data="district_mirabad")]
+                [InlineKeyboardButton(text=btn_price, callback_data="region_tashkent")]
             ])
             out_txt = {
                 "ru": "❌ <b>Данный объем временно распродан на сегодня!</b>\n\nАдминистратор обновляет каталог каждое утро. Выберите другой объем или напишите оператору.",
@@ -676,7 +691,8 @@ async def menu(callback: CallbackQuery):
             'created_at': time.time(),
             'qty': qty_label,
             'price': price_val,
-            'pack_key': data
+            'pack_key': data,
+            'district': cur_district
         }
 
         btn_verify = {"ru": "🔍 Проверить транзакцию LTC", "en": "🔍 Verify LTC Transaction", "uz": "🔍 LTC Tranzaksiyani tekshirish"}[lang]
@@ -687,15 +703,15 @@ async def menu(callback: CallbackQuery):
         keyboard = InlineKeyboardMarkup(inline_keyboard=[
             [InlineKeyboardButton(text=btn_verify, callback_data=f"check_tx_{unique_order_id}")],
             [InlineKeyboardButton(text=btn_pay,    url=SUPPORT_URL)],
-            [InlineKeyboardButton(text=btn_price,  callback_data="district_mirabad")],
+            [InlineKeyboardButton(text=btn_price,  callback_data="region_tashkent")],
             [InlineKeyboardButton(text=btn_home,   callback_data="home")]
         ])
 
         order_checkout_txt = {
             "ru": "📦 <b>Оформление заказа — DRAGON-X</b>\n\n"
                   "📍 <b>Регион:</b> Ташкент\n"
-                  "🏘 <b>Район:</b> Мирабад\n"
-                  "💊 <b>Препарат:</b> Прегабалин\n"
+                  f"🏘 <b>Район:</b> {cur_district}\n"
+                  "💊 <b>Препарат:</b> Рега\n"
                   f"📊 <b>Объем:</b> {qty_label}\n"
                   f"💵 <b>Сумма к оплате:</b> {price_val}\n\n"
                   f"🔑 <b>Ваш уникальный ID заказа / клиента:</b>\n"
@@ -707,8 +723,8 @@ async def menu(callback: CallbackQuery):
                   "2. После перевода нажмите кнопку <b>🔍 Проверить транзакцию LTC</b> для авто-проверки в блокчейне!",
             "en": "📦 <b>Order Checkout — DRAGON-X</b>\n\n"
                   "📍 <b>Region:</b> Tashkent\n"
-                  "🏘 <b>District:</b> Mirabad\n"
-                  "💊 <b>Product:</b> Pregabalin\n"
+                  f"🏘 <b>District:</b> {cur_district}\n"
+                  "💊 <b>Product:</b> Rega\n"
                   f"📊 <b>Volume:</b> {qty_label}\n"
                   f"💵 <b>Total Amount:</b> {price_val}\n\n"
                   f"🔑 <b>Your Unique Order / Client ID:</b>\n"
@@ -720,8 +736,8 @@ async def menu(callback: CallbackQuery):
                   "2. After sending, click <b>🔍 Verify LTC Transaction</b> for automated blockchain check!",
             "uz": "📦 <b>Buyurtmani rasmiylashtirish — DRAGON-X</b>\n\n"
                   "📍 <b>Hudud:</b> Toshkent\n"
-                  "🏘 <b>Tuman:</b> Mirobod\n"
-                  "💊 <b>Mahsulot:</b> Pregabalin\n"
+                  f"🏘 <b>Tuman:</b> {cur_district}\n"
+                  "💊 <b>Mahsulot:</b> Rega\n"
                   f"📊 <b>Hajmi:</b> {qty_label}\n"
                   f"💵 <b>To'lov summasi:</b> {price_val}\n\n"
                   f"🔑 <b>Sizning noyob buyurtma ID:</b>\n"
@@ -762,13 +778,15 @@ async def menu(callback: CallbackQuery):
             user_meta = order_info.get('user_data', {'id': user_id, 'username': callback.from_user.username, 'lang': lang}) if order_info else {'id': user_id, 'username': callback.from_user.username, 'lang': lang}
             qty_val = order_info.get('qty', 'N/A') if order_info else 'N/A'
             price_val = order_info.get('price', 'N/A') if order_info else 'N/A'
+            order_district = order_info.get('district', 'Чиланзор') if order_info else 'Чиланзор'
             
             asyncio.create_task(notify_admin_email(
                 order_code=order_code,
                 user_info=user_meta,
                 qty=qty_val,
                 price=price_val,
-                tx_info=new_tx
+                tx_info=new_tx,
+                district=order_district
             ))
 
             btn_get  = {"ru": "💬 Написать оператору для получения", "en": "💬 Message Operator for Pickup", "uz": "💬 Olish uchun operatorga yozish"}[lang]
@@ -786,21 +804,21 @@ async def menu(callback: CallbackQuery):
                       f"💰 <b>Получено:</b> {new_tx['amount_ltc']} LTC\n"
                       f"🔗 <b>TxID хэш:</b>\n<code>{new_tx['hash']}</code>\n\n"
                       "🎉 <b>Заказ успешно оплачен! Детали отправлены администратору на почту.</b>\n"
-                      "Нажмите кнопку ниже, чтобы связаться с оператором и получить детали выдачи в районе <b>Мирабад</b>.",
+                      "Нажмите кнопку ниже, чтобы связаться с оператором и получить детали выдачи в районе <b>{order_district}</b>.",
                 "en": "✅ <b>New Transaction Detected on Litecoin Blockchain!</b>\n\n"
                       f"🔑 <b>Order Code:</b> <code>{order_code}</code>\n"
                       f"📊 <b>Status:</b> Confirmed ({new_tx['confirmations']} confs)\n"
                       f"💰 <b>Received:</b> {new_tx['amount_ltc']} LTC\n"
                       f"🔗 <b>TxID Hash:</b>\n<code>{new_tx['hash']}</code>\n\n"
                       "🎉 <b>Order successfully paid! Details sent to admin.</b>\n"
-                      "Click the button below to contact the operator and receive pickup/delivery details in <b>Mirabad</b>.",
+                      "Click the button below to contact the operator and receive pickup/delivery details in <b>{order_district}</b>.",
                 "uz": "✅ <b>Litecoin blokcheynida yangi tranzaksiya topildi!</b>\n\n"
                       f"🔑 <b>Buyurtma kodi:</b> <code>{order_code}</code>\n"
                       f"📊 <b>Holat:</b> Tasdiqlandi ({new_tx['confirmations']} tasdiq)\n"
                       f"💰 <b>Qabul qilindi:</b> {new_tx['amount_ltc']} LTC\n"
                       f"🔗 <b>TxID hesh:</b>\n<code>{new_tx['hash']}</code>\n\n"
                       "🎉 <b>Buyurtma muvaffaqiyatli to'landi!</b>\n"
-                      "<b>Mirobod</b> tumanida olish uchun operator bilan bog'laning."
+                      "<b>{order_district}</b> tumanida olish uchun operator bilan bog'laning."
             }[lang]
 
             await callback.message.answer(success_txt, reply_markup=keyboard)
