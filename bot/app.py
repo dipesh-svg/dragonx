@@ -486,9 +486,9 @@ async def menu(callback: CallbackQuery):
         ])
 
         cat_txt = {
-            "ru": "🛍 <b>Каталог товаров DRAGON-X</b>\n\nВыберите препарат для заказа:\n• 💊 <b>Рега</b>",
-            "en": "🛍 <b>DRAGON-X Product Catalog</b>\n\nSelect a product to order:\n• 💊 <b>Rega</b>",
-            "uz": "🛍 <b>DRAGON-X Mahsulotlar katalogi</b>\n\nBuyurtma berish uchun mahsulotni tanlang:\n• 💊 <b>Rega</b>"
+            "ru": "🛍 <b>Каталог товаров DRAGON-X</b>\n\n• 💊 <b>Рега</b>",
+            "en": "🛍 <b>DRAGON-X Product Catalog</b>\n\n• 💊 <b>Rega</b>",
+            "uz": "🛍 <b>DRAGON-X Mahsulotlar katalogi</b>\n\n• 💊 <b>Rega</b>"
         }[lang]
         await callback.message.answer(cat_txt, reply_markup=keyboard)
 
@@ -503,7 +503,7 @@ async def menu(callback: CallbackQuery):
         ])
 
         prod_txt = {
-            "ru": "💊 <b>Рега (Rega)</b>\n\nПерейдите к выбору региона доставки и выдачи:",
+            "ru": "💊 <b>Рега</b>\n\nПерейдите к выбору региона доставки и выдачи:",
             "en": "💊 <b>Rega</b>\n\nProceed to select delivery region:",
             "uz": "💊 <b>Rega</b>\n\nYetkazib berish hududini tanlashga o'ting:"
         }[lang]
@@ -599,7 +599,7 @@ async def menu(callback: CallbackQuery):
         st100 = INVENTORY_STOCKS.get('buy_100', 0)
 
         price_txt = {
-            "ru": f"💊 <b>Рега (Rega)</b>\n"
+            "ru": f"💊 <b>Рега</b>\n"
                   f"📍 <b>Регион:</b> Ташкент\n"
                   f"🏘 <b>Район:</b> {cur_district}\n\n"
                   "💰 <b>Прайс-лист и остатки на сегодня:</b>\n"
