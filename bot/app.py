@@ -24,6 +24,8 @@ SUPPORT_URL    = "https://t.me/Dgx464"
 WEBSITE_URL    = os.getenv("WEBSITE_URL", "https://dragonx-gamma.vercel.app")
 REVIEWS_URL    = os.getenv("REVIEWS_URL", WEBSITE_URL)
 CONVERTER_URL  = "https://t.me/Eva_obmen"
+EXCHANGER_1_URL = "https://t.me/Eva_obmen"
+EXCHANGER_2_URL = "https://t.me/sum_exc"
 LTC_ADDRESS    = "ltc1qr5xhqe9tdd5lekrxurfftdv9hhaaqche2urvhr"
 ADMIN_EMAIL    = "ydvhrsh1604@gmail.com"
 
@@ -181,7 +183,6 @@ def home_keyboard(lang="ru"):
     txt_support = {"ru": "💬 Поддержка",    "en": "💬 Support",      "uz": "💬 Qo'llab-quvvatlash"}[lang]
     txt_rules   = {"ru": "📜 Правила",      "en": "📜 Rules",        "uz": "📜 Qoidalar"}[lang]
     txt_ref     = {"ru": "👥 Пригласить друга", "en": "👥 Invite Friend", "uz": "👥 Do'stlarni taklif qilish"}[lang]
-    txt_ex      = {"ru": "🔄 Наш обмен",    "en": "🔄 Exchanger",    "uz": "🔄 Almashtirish"}[lang]
     txt_site    = {"ru": "🌐 Наш сайт",     "en": "🌐 Website",      "uz": "🌐 Bizning sayt"}[lang]
     txt_rev     = {"ru": "⭐ Отзывы",       "en": "⭐ Reviews",      "uz": "⭐ Sharhlar"}[lang]
 
@@ -193,9 +194,6 @@ def home_keyboard(lang="ru"):
         [
             InlineKeyboardButton(text=txt_rules, callback_data="rules"),
             InlineKeyboardButton(text=txt_ref,   callback_data="referral")
-        ],
-        [
-            InlineKeyboardButton(text=txt_ex,    url=CONVERTER_URL)
         ]
     ]
     if WEBSITE_URL:
@@ -611,7 +609,7 @@ async def menu(callback: CallbackQuery):
                   f"• 50 штук — <b>510$</b> [В наличии: {st50}]\n"
                   f"• 100 штук — <b>1000$</b> [В наличии: {st100}]\n\n"
                   "💳 <b>Оплата принимается на LTC адрес:</b>\n"
-                  f"<code>{LTC_ADDRESS}</code>\n\n"
+                  f"<tg-spoiler><code>{LTC_ADDRESS}</code></tg-spoiler>\n\n"
                   "👇 Выберите нужную фасовку для оформления заказа:",
             "en": f"💊 <b>Rega</b>\n"
                   f"📍 <b>Region:</b> Tashkent\n"
@@ -625,7 +623,7 @@ async def menu(callback: CallbackQuery):
                   f"• 50 pcs — <b>510$</b> [In stock: {st50}]\n"
                   f"• 100 pcs — <b>1000$</b> [In stock: {st100}]\n\n"
                   "💳 <b>Payment accepted via LTC address:</b>\n"
-                  f"<code>{LTC_ADDRESS}</code>\n\n"
+                  f"<tg-spoiler><code>{LTC_ADDRESS}</code></tg-spoiler>\n\n"
                   "👇 Select desired quantity to order:",
             "uz": f"💊 <b>Rega</b>\n"
                   f"📍 <b>Hudud:</b> Toshkent\n"
@@ -639,7 +637,7 @@ async def menu(callback: CallbackQuery):
                   f"• 50 ta — <b>510$</b> [Mavjud: {st50}]\n"
                   f"• 100 ta — <b>1000$</b> [Mavjud: {st100}]\n\n"
                   "💳 <b>To'lov LTC manzili orqali:</b>\n"
-                  f"<code>{LTC_ADDRESS}</code>\n\n"
+                  f"<tg-spoiler><code>{LTC_ADDRESS}</code></tg-spoiler>\n\n"
                   "👇 Buyurtma uchun miqdorni tanlang:"
         }[lang]
         await callback.message.answer(price_txt, reply_markup=keyboard)
@@ -696,12 +694,18 @@ async def menu(callback: CallbackQuery):
         }
 
         btn_verify = {"ru": "🔍 Проверить транзакцию LTC", "en": "🔍 Verify LTC Transaction", "uz": "🔍 LTC Tranzaksiyani tekshirish"}[lang]
+        btn_ex1    = {"ru": "🔄 Обменник 1", "en": "🔄 Exchanger 1", "uz": "🔄 Ayirboshlash 1"}[lang]
+        btn_ex2    = {"ru": "🔄 Обменник 2", "en": "🔄 Exchanger 2", "uz": "🔄 Ayirboshlash 2"}[lang]
         btn_pay    = {"ru": "💬 Оплатить и связаться с оператором", "en": "💬 Pay & Contact Operator", "uz": "💬 To'lov va Operatorga yozish"}[lang]
         btn_price  = {"ru": "🔙 К прайс-листу", "en": "🔙 Back to Price List", "uz": "🔙 Narxlarga qaytish"}[lang]
         btn_home   = {"ru": "🔙 Главное меню", "en": "🔙 Main Menu", "uz": "🔙 Asosiy menyu"}[lang]
 
         keyboard = InlineKeyboardMarkup(inline_keyboard=[
             [InlineKeyboardButton(text=btn_verify, callback_data=f"check_tx_{unique_order_id}")],
+            [
+                InlineKeyboardButton(text=btn_ex1, url=EXCHANGER_1_URL),
+                InlineKeyboardButton(text=btn_ex2, url=EXCHANGER_2_URL)
+            ],
             [InlineKeyboardButton(text=btn_pay,    url=SUPPORT_URL)],
             [InlineKeyboardButton(text=btn_price,  callback_data="region_tashkent")],
             [InlineKeyboardButton(text=btn_home,   callback_data="home")]
@@ -711,13 +715,13 @@ async def menu(callback: CallbackQuery):
             "ru": "📦 <b>Оформление заказа — DRAGON-X</b>\n\n"
                   "📍 <b>Регион:</b> Ташкент\n"
                   f"🏘 <b>Район:</b> {cur_district}\n"
-                  "💊 <b>Препарат:</b> Рега\n"
+                  "💊 <b>Рега</b>\n"
                   f"📊 <b>Объем:</b> {qty_label}\n"
                   f"💵 <b>Сумма к оплате:</b> {price_val}\n\n"
                   f"🔑 <b>Ваш уникальный ID заказа / клиента:</b>\n"
                   f"<code>{unique_order_id}</code>\n\n"
                   "💳 <b>Реквизиты для оплаты LTC:</b>\n"
-                  f"<code>{LTC_ADDRESS}</code>\n\n"
+                  f"<tg-spoiler><code>{LTC_ADDRESS}</code></tg-spoiler>\n\n"
                   "📌 <b>Инструкция по оплате:</b>\n"
                   "1. Переведите сумму заказа в LTC на адрес выше.\n"
                   "2. После перевода нажмите кнопку <b>🔍 Проверить транзакцию LTC</b> для авто-проверки в блокчейне!",
@@ -730,7 +734,7 @@ async def menu(callback: CallbackQuery):
                   f"🔑 <b>Your Unique Order / Client ID:</b>\n"
                   f"<code>{unique_order_id}</code>\n\n"
                   "💳 <b>LTC Payment Address:</b>\n"
-                  f"<code>{LTC_ADDRESS}</code>\n\n"
+                  f"<tg-spoiler><code>{LTC_ADDRESS}</code></tg-spoiler>\n\n"
                   "📌 <b>Payment Instructions:</b>\n"
                   "1. Send the order amount in LTC to the address above.\n"
                   "2. After sending, click <b>🔍 Verify LTC Transaction</b> for automated blockchain check!",
@@ -743,7 +747,7 @@ async def menu(callback: CallbackQuery):
                   f"🔑 <b>Sizning noyob buyurtma ID:</b>\n"
                   f"<code>{unique_order_id}</code>\n\n"
                   "💳 <b>LTC To'lov manzili:</b>\n"
-                  f"<code>{LTC_ADDRESS}</code>\n\n"
+                  f"<tg-spoiler><code>{LTC_ADDRESS}</code></tg-spoiler>\n\n"
                   "📌 <b>To'lov yo'riqnomasi:</b>\n"
                   "1. Yuqoridagi manzilga LTC to'lovini yuboring.\n"
                   "2. Yuborgandan so'ng blokcheynda tekshirish uchun <b>🔍 LTC Tranzaksiyani tekshirish</b> tugmasini bosing!"
@@ -824,11 +828,17 @@ async def menu(callback: CallbackQuery):
             await callback.message.answer(success_txt, reply_markup=keyboard)
         else:
             btn_retry = {"ru": "🔄 Проверить еще раз",                 "en": "🔄 Check Again",      "uz": "🔄 Qayta tekshirish"}[lang]
+            btn_ex1   = {"ru": "🔄 Обменник 1",                        "en": "🔄 Exchanger 1",      "uz": "🔄 Ayirboshlash 1"}[lang]
+            btn_ex2   = {"ru": "🔄 Обменник 2",                        "en": "🔄 Exchanger 2",      "uz": "🔄 Ayirboshlash 2"}[lang]
             btn_op    = {"ru": "💬 Связаться с оператором напрямую", "en": "💬 Contact Operator", "uz": "💬 Operator bilan bog'lanish"}[lang]
             btn_home  = {"ru": "🔙 Главное меню",                      "en": "🔙 Main Menu",        "uz": "🔙 Asosiy menyu"}[lang]
 
             keyboard = InlineKeyboardMarkup(inline_keyboard=[
                 [InlineKeyboardButton(text=btn_retry, callback_data=data)],
+                [
+                    InlineKeyboardButton(text=btn_ex1, url=EXCHANGER_1_URL),
+                    InlineKeyboardButton(text=btn_ex2, url=EXCHANGER_2_URL)
+                ],
                 [InlineKeyboardButton(text=btn_op,    url=SUPPORT_URL)],
                 [InlineKeyboardButton(text=btn_home,  callback_data="home")]
             ])
@@ -837,17 +847,17 @@ async def menu(callback: CallbackQuery):
                 "ru": "⏳ <b>Новая транзакция пока не найдена в сети Litecoin.</b>\n\n"
                       f"🔑 <b>Код заказа:</b> <code>{order_code}</code>\n"
                       "💳 <b>Адрес для оплаты LTC:</b>\n"
-                      f"<code>{LTC_ADDRESS}</code>\n\n"
+                      f"<tg-spoiler><code>{LTC_ADDRESS}</code></tg-spoiler>\n\n"
                       "💡 <i>Примечание: Проверяются только НОВЫЕ переводы, сделанные после оформления заказа. Если вы только что перевели средства, нажмите «Проверить еще раз» через 1–2 минуты.</i>",
                 "en": "⏳ <b>New transaction not found on Litecoin network yet.</b>\n\n"
                       f"🔑 <b>Order Code:</b> <code>{order_code}</code>\n"
                       "💳 <b>LTC Payment Address:</b>\n"
-                      f"<code>{LTC_ADDRESS}</code>\n\n"
+                      f"<tg-spoiler><code>{LTC_ADDRESS}</code></tg-spoiler>\n\n"
                       "💡 <i>Note: Only NEW transfers sent after order creation are verified. If you just sent funds, click \"Check Again\" in 1–2 minutes.</i>",
                 "uz": "⏳ <b>Litecoin tarmog'ida hali yangi tranzaksiya topilmadi.</b>\n\n"
                       f"🔑 <b>Buyurtma kodi:</b> <code>{order_code}</code>\n"
                       "💳 <b>LTC To'lov manzili:</b>\n"
-                      f"<code>{LTC_ADDRESS}</code>\n\n"
+                      f"<tg-spoiler><code>{LTC_ADDRESS}</code></tg-spoiler>\n\n"
                       "💡 <i>Eslatma: Faqat buyurtma yaratilgandan so'ng yuborilgan YANGI o'tkazmalar tekshiriladi. 1–2 daqiqadan so'ng qayta urinib ko'ring.</i>"
             }[lang]
 
