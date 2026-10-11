@@ -107,10 +107,10 @@
     zones: [],
     users: [],
     botConfig: {
-      username: '@DragonX_Capsules_Bot',
+      username: '@yuan_rndiBOT',
       token: '',
       chatId: '',
-      support: '@DragonX_Support'
+      support: '@Dgx464'
     },
     searchQuery: '',
     statusFilter: 'all'
@@ -389,14 +389,14 @@
     const openDirectLink = document.getElementById('openBotDirectAdminLink');
 
     const b = AdminState.botConfig;
-    if (botUserInp) botUserInp.value = b.username || '@DragonX_Capsules_Bot';
+    if (botUserInp) botUserInp.value = b.username || '@yuan_rndiBOT';
     if (botTokenInp) botTokenInp.value = b.token || '';
     if (botChatInp) botChatInp.value = b.chatId || '';
-    if (botSupInp) botSupInp.value = b.support || '@DragonX_Support';
+    if (botSupInp) botSupInp.value = b.support || '@Dgx464';
 
-    if (activeLabel) activeLabel.textContent = b.username || '@DragonX_Capsules_Bot';
+    if (activeLabel) activeLabel.textContent = b.username || '@yuan_rndiBOT';
     if (openDirectLink) {
-      const clean = (b.username || '@DragonX_Capsules_Bot').replace('@', '');
+      const clean = (b.username || '@yuan_rndiBOT').replace('@', '');
       openDirectLink.href = `https://t.me/${clean}`;
     }
   }
@@ -697,10 +697,10 @@
         if (botSup && !botSup.startsWith('@')) botSup = '@' + botSup;
 
         AdminState.botConfig = {
-          username: botUser || '@DragonX_Capsules_Bot',
+          username: botUser || '@yuan_rndiBOT',
           token: botToken,
           chatId: botChat,
-          support: botSup || '@DragonX_Support'
+          support: botSup || '@Dgx464'
         };
 
         localStorage.setItem(STORAGE_KEYS.BOT_CONFIG, JSON.stringify(AdminState.botConfig));
