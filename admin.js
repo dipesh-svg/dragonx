@@ -110,7 +110,7 @@
       username: '@yuan_rndiBOT',
       token: '',
       chatId: '',
-      support: '@Dgx464'
+      support: '@ashley_graves3'
     },
     searchQuery: '',
     statusFilter: 'all'
@@ -392,7 +392,7 @@
     if (botUserInp) botUserInp.value = b.username || '@yuan_rndiBOT';
     if (botTokenInp) botTokenInp.value = b.token || '';
     if (botChatInp) botChatInp.value = b.chatId || '';
-    if (botSupInp) botSupInp.value = b.support || '@Dgx464';
+    if (botSupInp) botSupInp.value = b.support || '@ashley_graves3';
 
     if (activeLabel) activeLabel.textContent = b.username || '@yuan_rndiBOT';
     if (openDirectLink) {
@@ -700,7 +700,7 @@
           username: botUser || '@yuan_rndiBOT',
           token: botToken,
           chatId: botChat,
-          support: botSup || '@Dgx464'
+          support: botSup || '@ashley_graves3'
         };
 
         localStorage.setItem(STORAGE_KEYS.BOT_CONFIG, JSON.stringify(AdminState.botConfig));
@@ -713,7 +713,7 @@
     const testTgBtn = document.getElementById('testTgNotificationBtn');
     if (testTgBtn) {
       testTgBtn.addEventListener('click', () => {
-        const botName = AdminState.botConfig.username || '@DragonX_Capsules_Bot';
+        const botName = AdminState.botConfig.username || '@yuan_rndiBOT';
         showToast(`Тестовое уведомление сформировано для ${botName}. Шлюз готов к приему заказов!`, 'info');
       });
     }

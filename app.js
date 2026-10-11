@@ -87,7 +87,7 @@
     soundEnabled: true,
     currentBotConfig: {
       username: '@yuan_rndiBOT',
-      support: '@Dgx464'
+      support: '@ashley_graves3'
     },
     mathProblem: { num1: 0, num2: 0, operator: '+', answer: 0 },
     heroSelectedPack: 60,
@@ -881,8 +881,8 @@
     const bInput = document.getElementById('customBotUsername');
     const sInput = document.getElementById('customSupportHandle');
 
-    let botName = bInput ? bInput.value.trim() : '@DragonX_Capsules_Bot';
-    let supName = sInput ? sInput.value.trim() : '@DragonX_Support';
+    let botName = bInput ? bInput.value.trim() : '@yuan_rndiBOT';
+    let supName = sInput ? sInput.value.trim() : '@ashley_graves3';
 
     if (!botName.startsWith('@')) botName = '@' + botName;
     if (supName && !supName.startsWith('@')) supName = '@' + supName;

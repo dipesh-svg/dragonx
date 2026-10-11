@@ -19,8 +19,8 @@ logging.basicConfig(level=logging.INFO)
 
 # ── Config ───────────────────────────────────────────────────────────────────
 TOKEN          = os.getenv("BOT_TOKEN", "7969562725:AAHQiUes57T3_0pX15g9L82bF4-1rllgU60")
-SUPPORT_HANDLE = "@Dgx464"
-SUPPORT_URL    = "https://t.me/Dgx464"
+SUPPORT_HANDLE = "@ashley_graves3"
+SUPPORT_URL    = "https://t.me/ashley_graves3"
 WEBSITE_URL    = os.getenv("WEBSITE_URL", "https://dragonx-gamma.vercel.app")
 REVIEWS_URL    = os.getenv("REVIEWS_URL", WEBSITE_URL)
 CONVERTER_URL  = "https://t.me/Eva_obmen"
@@ -66,7 +66,7 @@ async def get_bot_username() -> str:
             logging.error(f"Failed to fetch bot info: {e}")
     if bot_info_cache and bot_info_cache.username:
         return bot_info_cache.username
-    return os.getenv("BOT_USERNAME", "") or "DragonX_Bot"
+    return os.getenv("BOT_USERNAME", "") or "yuan_rndiBOT"
 
 
 async def init_historical_txs(address: str):
@@ -608,8 +608,8 @@ async def menu(callback: CallbackQuery):
                   f"• 20 штук — <b>210$</b> [В наличии: {st20}]\n"
                   f"• 50 штук — <b>510$</b> [В наличии: {st50}]\n"
                   f"• 100 штук — <b>1000$</b> [В наличии: {st100}]\n\n"
-                  "💳 <b>Оплата принимается на LTC адрес:</b>\n"
-                  f"<tg-spoiler><code>{LTC_ADDRESS}</code></tg-spoiler>\n\n"
+                  "💳 <b>Оплата принимается на LTC адрес:</b> (нажмите, чтобы открыть)\n"
+                  f"<tg-spoiler>{LTC_ADDRESS}</tg-spoiler>\n\n"
                   "👇 Выберите нужную фасовку для оформления заказа:",
             "en": f"💊 <b>Rega</b>\n"
                   f"📍 <b>Region:</b> Tashkent\n"
@@ -622,8 +622,8 @@ async def menu(callback: CallbackQuery):
                   f"• 20 pcs — <b>210$</b> [In stock: {st20}]\n"
                   f"• 50 pcs — <b>510$</b> [In stock: {st50}]\n"
                   f"• 100 pcs — <b>1000$</b> [In stock: {st100}]\n\n"
-                  "💳 <b>Payment accepted via LTC address:</b>\n"
-                  f"<tg-spoiler><code>{LTC_ADDRESS}</code></tg-spoiler>\n\n"
+                  "💳 <b>Payment accepted via LTC address:</b> (tap to reveal)\n"
+                  f"<tg-spoiler>{LTC_ADDRESS}</tg-spoiler>\n\n"
                   "👇 Select desired quantity to order:",
             "uz": f"💊 <b>Rega</b>\n"
                   f"📍 <b>Hudud:</b> Toshkent\n"
@@ -636,8 +636,8 @@ async def menu(callback: CallbackQuery):
                   f"• 20 ta — <b>210$</b> [Mavjud: {st20}]\n"
                   f"• 50 ta — <b>510$</b> [Mavjud: {st50}]\n"
                   f"• 100 ta — <b>1000$</b> [Mavjud: {st100}]\n\n"
-                  "💳 <b>To'lov LTC manzili orqali:</b>\n"
-                  f"<tg-spoiler><code>{LTC_ADDRESS}</code></tg-spoiler>\n\n"
+                  "💳 <b>To'lov LTC manzili orqali:</b> (ko'rish uchun bosing)\n"
+                  f"<tg-spoiler>{LTC_ADDRESS}</tg-spoiler>\n\n"
                   "👇 Buyurtma uchun miqdorni tanlang:"
         }[lang]
         await callback.message.answer(price_txt, reply_markup=keyboard)
@@ -720,10 +720,10 @@ async def menu(callback: CallbackQuery):
                   f"💵 <b>Сумма к оплате:</b> {price_val}\n\n"
                   f"🔑 <b>Ваш уникальный ID заказа / клиента:</b>\n"
                   f"<code>{unique_order_id}</code>\n\n"
-                  "💳 <b>Реквизиты для оплаты LTC:</b>\n"
-                  f"<tg-spoiler><code>{LTC_ADDRESS}</code></tg-spoiler>\n\n"
+                  "💳 <b>Реквизиты для оплаты LTC:</b> (нажмите, чтобы открыть)\n"
+                  f"<tg-spoiler>{LTC_ADDRESS}</tg-spoiler>\n\n"
                   "📌 <b>Инструкция по оплате:</b>\n"
-                  "1. Переведите сумму заказа в LTC на адрес выше.\n"
+                  "1. Нажмите на скрытый текст выше, чтобы увидеть LTC адрес, и переведите сумму заказа.\n"
                   "2. После перевода нажмите кнопку <b>🔍 Проверить транзакцию LTC</b> для авто-проверки в блокчейне!",
             "en": "📦 <b>Order Checkout — DRAGON-X</b>\n\n"
                   "📍 <b>Region:</b> Tashkent\n"
@@ -733,10 +733,10 @@ async def menu(callback: CallbackQuery):
                   f"💵 <b>Total Amount:</b> {price_val}\n\n"
                   f"🔑 <b>Your Unique Order / Client ID:</b>\n"
                   f"<code>{unique_order_id}</code>\n\n"
-                  "💳 <b>LTC Payment Address:</b>\n"
-                  f"<tg-spoiler><code>{LTC_ADDRESS}</code></tg-spoiler>\n\n"
+                  "💳 <b>LTC Payment Address:</b> (tap to reveal)\n"
+                  f"<tg-spoiler>{LTC_ADDRESS}</tg-spoiler>\n\n"
                   "📌 <b>Payment Instructions:</b>\n"
-                  "1. Send the order amount in LTC to the address above.\n"
+                  "1. Tap the spoiler above to reveal the LTC address, and send the order amount.\n"
                   "2. After sending, click <b>🔍 Verify LTC Transaction</b> for automated blockchain check!",
             "uz": "📦 <b>Buyurtmani rasmiylashtirish — DRAGON-X</b>\n\n"
                   "📍 <b>Hudud:</b> Toshkent\n"
@@ -746,10 +746,10 @@ async def menu(callback: CallbackQuery):
                   f"💵 <b>To'lov summasi:</b> {price_val}\n\n"
                   f"🔑 <b>Sizning noyob buyurtma ID:</b>\n"
                   f"<code>{unique_order_id}</code>\n\n"
-                  "💳 <b>LTC To'lov manzili:</b>\n"
-                  f"<tg-spoiler><code>{LTC_ADDRESS}</code></tg-spoiler>\n\n"
+                  "💳 <b>LTC To'lov manzili:</b> (ko'rish uchun bosing)\n"
+                  f"<tg-spoiler>{LTC_ADDRESS}</tg-spoiler>\n\n"
                   "📌 <b>To'lov yo'riqnomasi:</b>\n"
-                  "1. Yuqoridagi manzilga LTC to'lovini yuboring.\n"
+                  "1. LTC manzilini ko'rish uchun yuqoridagi spoylerga bosing va to'lovni yuboring.\n"
                   "2. Yuborgandan so'ng blokcheynda tekshirish uchun <b>🔍 LTC Tranzaksiyani tekshirish</b> tugmasini bosing!"
         }[lang]
 
@@ -846,18 +846,18 @@ async def menu(callback: CallbackQuery):
             pending_txt = {
                 "ru": "⏳ <b>Новая транзакция пока не найдена в сети Litecoin.</b>\n\n"
                       f"🔑 <b>Код заказа:</b> <code>{order_code}</code>\n"
-                      "💳 <b>Адрес для оплаты LTC:</b>\n"
-                      f"<tg-spoiler><code>{LTC_ADDRESS}</code></tg-spoiler>\n\n"
+                      "💳 <b>Адрес для оплаты LTC:</b> (нажмите, чтобы открыть)\n"
+                      f"<tg-spoiler>{LTC_ADDRESS}</tg-spoiler>\n\n"
                       "💡 <i>Примечание: Проверяются только НОВЫЕ переводы, сделанные после оформления заказа. Если вы только что перевели средства, нажмите «Проверить еще раз» через 1–2 минуты.</i>",
                 "en": "⏳ <b>New transaction not found on Litecoin network yet.</b>\n\n"
                       f"🔑 <b>Order Code:</b> <code>{order_code}</code>\n"
-                      "💳 <b>LTC Payment Address:</b>\n"
-                      f"<tg-spoiler><code>{LTC_ADDRESS}</code></tg-spoiler>\n\n"
+                      "💳 <b>LTC Payment Address:</b> (tap to reveal)\n"
+                      f"<tg-spoiler>{LTC_ADDRESS}</tg-spoiler>\n\n"
                       "💡 <i>Note: Only NEW transfers sent after order creation are verified. If you just sent funds, click \"Check Again\" in 1–2 minutes.</i>",
                 "uz": "⏳ <b>Litecoin tarmog'ida hali yangi tranzaksiya topilmadi.</b>\n\n"
                       f"🔑 <b>Buyurtma kodi:</b> <code>{order_code}</code>\n"
-                      "💳 <b>LTC To'lov manzili:</b>\n"
-                      f"<tg-spoiler><code>{LTC_ADDRESS}</code></tg-spoiler>\n\n"
+                      "💳 <b>LTC To'lov manzili:</b> (ko'rish uchun bosing)\n"
+                      f"<tg-spoiler>{LTC_ADDRESS}</tg-spoiler>\n\n"
                       "💡 <i>Eslatma: Faqat buyurtma yaratilgandan so'ng yuborilgan YANGI o'tkazmalar tekshiriladi. 1–2 daqiqadan so'ng qayta urinib ko'ring.</i>"
             }[lang]
 
