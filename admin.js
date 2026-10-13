@@ -16,6 +16,7 @@
   const STORAGE_KEYS = {
     ADMIN_SESSION: 'dragonx_admin_session_v1',
     ORDERS: 'dragonx_orders_db_v2',
+    DELETED_ORDERS: 'dragonx_deleted_orders_v2',
     USERS: 'dragonx_users_v2',
     BOT_CONFIG: 'dragonx_bot_config_v2',
     DELIVERY_ZONES: 'dragonx_delivery_zones_v2',
@@ -248,6 +249,7 @@
     isAuthenticated: false,
     activeTab: 'tabOrders',
     orders: [],
+    deletedOrderIds: new Set(),
     zones: [],
     users: [],
     botConfig: { ...DEFAULT_BOT_CONFIG },
@@ -359,19 +361,20 @@
 
 
     // 2. Orders Local Storage
+    loadDeletedOrderIdsLocally();
     try {
       const savedOrders = localStorage.getItem(STORAGE_KEYS.ORDERS);
       if (savedOrders) {
         const parsed = JSON.parse(savedOrders);
         const legacyMockIds = new Set(['DRGX-20261013-7914', 'DRGX-20261013-9102', 'DRGX-20261013-1153']);
-        const cleaned = parsed.filter(o => !legacyMockIds.has(o.id));
-        AdminState.orders = cleaned.length > 0 ? cleaned : [...SEED_ORDERS];
+        const cleaned = parsed.filter(o => !legacyMockIds.has(o.id) && !AdminState.deletedOrderIds.has(o.id));
+        AdminState.orders = cleaned.length > 0 ? cleaned : SEED_ORDERS.filter(o => !AdminState.deletedOrderIds.has(o.id));
       } else {
-        AdminState.orders = [...SEED_ORDERS];
+        AdminState.orders = SEED_ORDERS.filter(o => !AdminState.deletedOrderIds.has(o.id));
       }
       saveOrdersLocally();
     } catch (e) {
-      AdminState.orders = [...SEED_ORDERS];
+      AdminState.orders = SEED_ORDERS.filter(o => !AdminState.deletedOrderIds.has(o.id));
     }
 
     // 3. Zones Local Storage
@@ -397,6 +400,25 @@
       }
     } catch (e) {
       buildUsersFromOrders();
+    }
+  }
+
+  function saveDeletedOrderIdsLocally() {
+    try {
+      localStorage.setItem(STORAGE_KEYS.DELETED_ORDERS, JSON.stringify([...AdminState.deletedOrderIds]));
+    } catch (e) {}
+  }
+
+  function loadDeletedOrderIdsLocally() {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEYS.DELETED_ORDERS);
+      if (saved) {
+        AdminState.deletedOrderIds = new Set(JSON.parse(saved));
+      } else {
+        AdminState.deletedOrderIds = new Set();
+      }
+    } catch (e) {
+      AdminState.deletedOrderIds = new Set();
     }
   }
 
@@ -553,8 +575,12 @@
   function mergeBotOrders(botOrders) {
     if (!Array.isArray(botOrders) || botOrders.length === 0) return;
 
+    const deletedSet = AdminState.deletedOrderIds || new Set();
     const botMap = new Map();
     botOrders.forEach(bo => {
+      const oid = bo.id || bo.order_id;
+      if (!oid || deletedSet.has(oid)) return;
+
       const orderDate = bo.createdAt || 
         (bo.createdTimestamp ? new Date(bo.createdTimestamp * 1000).toISOString() : 
         (bo.created_at ? new Date(bo.created_at * 1000).toISOString() : new Date().toISOString()));
@@ -567,7 +593,7 @@
       const cryptoVal = parseFloat(bo.cryptoAmount || bo.ltc_amount || (totalVal / 65).toFixed(3));
 
       const normalized = {
-        id: bo.id || bo.order_id,
+        id: oid,
         createdAt: orderDate,
         customerId: bo.customerId || bo.customer_id || (bo.userId ? `DRGX-${bo.userId}` : (bo.user_id ? `DRGX-${bo.user_id}` : 'DRGX-TG-USER')),
         customerName: bo.customerName || bo.customer_name || (bo.userId ? `Клиент #${bo.userId}` : 'Покупатель Telegram'),
@@ -582,7 +608,7 @@
         status: bo.status || 'pending',
         deliveryLocation: bo.deliveryLocation || bo.location || 'Локация выдается в боте',
         coordinates: bo.coordinates || DISTRICT_COORDS[bo.district] || '41.2721, 69.2045',
-        trackingCode: bo.trackingCode || bo.tracking_code || `DRGX-TRK-${(bo.id||'').slice(-4)}`,
+        trackingCode: bo.trackingCode || bo.tracking_code || `DRGX-TRK-${(oid||'').slice(-4)}`,
         pickedUpAt: bo.pickedUpAt || (bo.picked_up_at ? new Date(bo.picked_up_at * 1000).toISOString() : null),
         notes: bo.notes || ''
       };
@@ -599,7 +625,7 @@
 
     const legacyMockIds = new Set(['DRGX-20261013-7914', 'DRGX-20261013-9102', 'DRGX-20261013-1153']);
     AdminState.orders.forEach(lo => {
-      if (!processedIds.has(lo.id) && !legacyMockIds.has(lo.id)) {
+      if (!processedIds.has(lo.id) && !legacyMockIds.has(lo.id) && !deletedSet.has(lo.id)) {
         merged.push(lo);
         processedIds.add(lo.id);
       }
@@ -612,9 +638,71 @@
     saveOrdersLocally();
   }
 
+  let activeEventSource = null;
+
+  function initSSE() {
+    if (!window.EventSource) return;
+    if (activeEventSource) {
+      try { activeEventSource.close(); } catch (e) {}
+      activeEventSource = null;
+    }
+    const apiUrl = (AdminState.botApiUrl || detectDefaultApiUrl()).replace(/\/+$/, '');
+    try {
+      const es = new EventSource(`${apiUrl}/api/events`);
+      activeEventSource = es;
+
+      es.addEventListener('order_created', (e) => {
+        try {
+          const ord = JSON.parse(e.data);
+          if (ord && ord.id) {
+            mergeBotOrders([ord]);
+            renderAll();
+            showToast(`⚡ Новый заказ из Telegram: ${ord.id}!`, 'info');
+          }
+        } catch (err) {}
+      });
+
+      es.addEventListener('order_updated', (e) => {
+        try {
+          const ord = JSON.parse(e.data);
+          if (ord && ord.id) {
+            mergeBotOrders([ord]);
+            renderAll();
+          }
+        } catch (err) {}
+      });
+
+      es.addEventListener('order_deleted', (e) => {
+        try {
+          const { order_id } = JSON.parse(e.data);
+          if (order_id) {
+            if (!AdminState.deletedOrderIds) AdminState.deletedOrderIds = new Set();
+            AdminState.deletedOrderIds.add(order_id);
+            saveDeletedOrderIdsLocally();
+            AdminState.orders = AdminState.orders.filter(o => o.id !== order_id);
+            saveOrdersLocally();
+            renderAll();
+          }
+        } catch (err) {}
+      });
+
+      es.addEventListener('stock_updated', (e) => {
+        try {
+          const { packages } = JSON.parse(e.data);
+          if (Array.isArray(packages)) {
+            updateLiveStockValues(packages);
+          }
+        } catch (err) {}
+      });
+    } catch (err) {
+      console.warn('SSE initialization failed:', err);
+    }
+  }
+
   function startAutoSync() {
     if (AdminState.syncIntervalId) clearInterval(AdminState.syncIntervalId);
     syncWithBotAPI(true);
+    initSSE();
     AdminState.syncIntervalId = setInterval(() => {
       syncWithBotAPI(true);
     }, 8000);
@@ -1515,6 +1603,7 @@
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          id: orderId,
           order_id: orderId,
           picked_up_at: Math.floor(Date.now() / 1000),
           notes: 'Отмечено оператором в панели управления'
@@ -1559,13 +1648,15 @@
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          id: orderId,
           order_id: orderId,
           status: status,
           district: district,
           coordinates: coords,
           delivery_location: address,
           notes: notes,
-          notify_customer: notifyCustomer
+          notify_customer: notifyCustomer,
+          notifyCustomer: notifyCustomer
         })
       });
 
@@ -1630,19 +1721,37 @@
     modal.classList.remove('hidden');
   }
 
-  function deleteOrder(orderId) {
-    if (confirm(`Вы уверены, что хотите удалить заказ ${orderId}?`)) {
-      AdminState.orders = AdminState.orders.filter(o => o.id !== orderId);
-      saveOrdersLocally();
-      renderAll();
-      showToast(`Заказ ${orderId} удален из базы.`, 'info');
+  async function deleteOrder(orderId) {
+    if (!orderId) return;
+    if (!confirm(`Вы уверены, что хотите безвозвратно удалить заказ ${orderId} из базы данных и бота?`)) {
+      return;
+    }
 
-      const apiUrl = (AdminState.botApiUrl || detectDefaultApiUrl()).replace(/\/+$/, '');
-      fetch(`${apiUrl}/api/orders/delete`, {
+    if (!AdminState.deletedOrderIds) AdminState.deletedOrderIds = new Set();
+    AdminState.deletedOrderIds.add(orderId);
+    saveDeletedOrderIdsLocally();
+
+    AdminState.orders = AdminState.orders.filter(o => o.id !== orderId);
+    saveOrdersLocally();
+    renderAll();
+    closeAllModals();
+    showToast(`🗑️ Заказ ${orderId} удален. Синхронизация с сервером...`, 'info');
+
+    const apiUrl = (AdminState.botApiUrl || detectDefaultApiUrl()).replace(/\/+$/, '');
+    try {
+      const resp = await fetch(`${apiUrl}/api/orders/delete`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ order_id: orderId })
-      }).catch(() => {});
+        body: JSON.stringify({ id: orderId, order_id: orderId })
+      });
+      if (resp.ok) {
+        showToast(`✅ Заказ ${orderId} удален из бота и базы Neon DB!`, 'success');
+      } else {
+        showToast(`Заказ удален из панели управления.`, 'info');
+      }
+    } catch (e) {
+      console.warn('API delete error:', e);
+      showToast(`Заказ удален из панели управления.`, 'info');
     }
   }
 
@@ -1889,6 +1998,16 @@
           notes,
           notifyCustomer: notify
         });
+      });
+    }
+
+    const delModalBtn = document.getElementById('deleteOrderFromModalBtn');
+    if (delModalBtn) {
+      delModalBtn.addEventListener('click', () => {
+        const orderId = document.getElementById('modalEditOrderId')?.value;
+        if (orderId) {
+          deleteOrder(orderId);
+        }
       });
     }
 

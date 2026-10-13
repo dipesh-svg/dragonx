@@ -641,8 +641,11 @@ def save_orders(specific_order_id=None):
     except Exception as e:
         logging.error(f"Error saving {DB_FILE}: {e}")
     try:
-        loop = asyncio.get_event_loop()
-        if loop.is_running() and db_pool:
+        try:
+            loop = asyncio.get_running_loop()
+        except RuntimeError:
+            loop = asyncio.get_event_loop()
+        if loop and loop.is_running() and db_pool:
             if specific_order_id and specific_order_id in ACTIVE_ORDERS:
                 loop.create_task(db_upsert_order(ACTIVE_ORDERS[specific_order_id]))
             else:
@@ -1495,7 +1498,13 @@ async def menu(callback: CallbackQuery):
                 order_info['tx_info'] = new_tx
                 order_info['updated_at'] = time.time()
 
-            save_orders()
+            save_orders(order_code)
+            try:
+                loop = asyncio.get_running_loop()
+                if order_code in ACTIVE_ORDERS:
+                    loop.create_task(broadcast_event("order_updated", ACTIVE_ORDERS[order_code]))
+            except Exception:
+                pass
 
             asyncio.create_task(notify_admin_email(
                 order_code=order_code,
@@ -1763,10 +1772,52 @@ async def get_orders_api(request):
     return cors_response(orders_list)
 
 
+SSE_CLIENTS = set()
+
+async def sse_events_api(request):
+    response = web.StreamResponse(
+        status=200,
+        reason='OK',
+        headers={
+            'Content-Type': 'text/event-stream',
+            'Cache-Control': 'no-cache, no-transform',
+            'Connection': 'keep-alive',
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Headers': '*',
+        }
+    )
+    await response.prepare(request)
+    SSE_CLIENTS.add(response)
+    try:
+        await response.write(f"event: connected\ndata: {json.dumps({'time': time.time(), 'status': 'connected'})}\n\n".encode('utf-8'))
+        while True:
+            await asyncio.sleep(20)
+            await response.write(b": ping\n\n")
+    except (asyncio.CancelledError, ConnectionResetError, Exception):
+        pass
+    finally:
+        SSE_CLIENTS.discard(response)
+    return response
+
+
+async def broadcast_event(event_name: str, payload: dict):
+    if not SSE_CLIENTS:
+        return
+    msg = f"event: {event_name}\ndata: {json.dumps(payload, ensure_ascii=False)}\n\n".encode('utf-8')
+    dead = set()
+    for client in list(SSE_CLIENTS):
+        try:
+            await client.write(msg)
+        except Exception:
+            dead.add(client)
+    for c in dead:
+        SSE_CLIENTS.discard(c)
+
+
 async def create_order_api(request):
     try:
         data = await request.json()
-        order_id = data.get('id') or f"DRGX-ADM-{random.randint(1000, 9999)}"
+        order_id = data.get('id') or data.get('order_id') or f"DRGX-ADM-{random.randint(1000, 9999)}"
         district = data.get('district') or 'Чиланзор'
         def_coords = "41.2721, 69.2045" if "Чиланзор" in district else ("41.2985, 69.3241" if "Яшнабад" in district else "41.3412, 69.4520")
 
@@ -1788,16 +1839,23 @@ async def create_order_api(request):
             'total_amount': total_amount,
             'currency': 'USD',
             'district': district,
-            'location': data.get('location') or data.get('deliveryLocation') or f"Ташкент, {district}",
-            'coordinates': data.get('coordinates') or def_coords,
+            'location': data.get('location') or data.get('deliveryLocation') or data.get('delivery_location') or f"Ташкент, {district}",
+            'coordinates': data.get('coordinates') or data.get('coords') or def_coords,
             'status': data.get('status') or 'paid',
             'pickup_status': 'ready' if data.get('status') == 'drop_ready' else 'waiting',
-            'tracking_code': data.get('trackingCode') or f"DRGX-TRK-{random.randint(1000, 9999)}",
+            'tracking_code': data.get('trackingCode') or data.get('tracking_code') or f"DRGX-TRK-{random.randint(1000, 9999)}",
             'notes': data.get('notes') or 'Создан через панель оператора',
             'updated_at': time.time()
         }
         ACTIVE_ORDERS[order_id] = order_record
-        save_orders()
+        save_orders(order_id)
+        
+        try:
+            loop = asyncio.get_running_loop()
+            loop.create_task(broadcast_event("order_created", order_record))
+        except Exception:
+            pass
+
         return cors_response({"status": "success", "order": order_record})
     except Exception as e:
         return cors_response({"status": "error", "message": str(e)}, status=400)
@@ -1806,7 +1864,7 @@ async def create_order_api(request):
 async def update_order_api(request):
     try:
         data = await request.json()
-        order_id = data.get('id')
+        order_id = data.get('id') or data.get('order_id')
         if not order_id or order_id not in ACTIVE_ORDERS:
             return cors_response({"status": "error", "message": f"Order {order_id} not found"}, status=404)
 
@@ -1824,14 +1882,22 @@ async def update_order_api(request):
             order['location'] = data['location']
         if 'deliveryLocation' in data:
             order['location'] = data['deliveryLocation']
+        if 'delivery_location' in data:
+            order['location'] = data['delivery_location']
+            
         if 'coordinates' in data:
             order['coordinates'] = data['coordinates']
+        if 'coords' in data:
+            order['coordinates'] = data['coords']
+            
         if 'district' in data:
             order['district'] = data['district']
         if 'notes' in data:
             order['notes'] = data['notes']
         if 'trackingCode' in data:
             order['tracking_code'] = data['trackingCode']
+        if 'tracking_code' in data:
+            order['tracking_code'] = data['tracking_code']
         if 'totalAmount' in data:
             try:
                 order['total_amount'] = float(data['totalAmount'])
@@ -1842,10 +1908,10 @@ async def update_order_api(request):
             order['qty'] = data['qty']
 
         order['updated_at'] = time.time()
-        save_orders()
+        save_orders(order_id)
 
         # Send Telegram Notification to user if requested
-        notify_requested = data.get('notifyCustomer', False)
+        notify_requested = data.get('notifyCustomer') or data.get('notify_customer', False)
         user_id = order.get('user_id')
 
         if notify_requested and user_id:
@@ -1882,6 +1948,12 @@ async def update_order_api(request):
             except Exception as tg_err:
                 logging.warning(f"Could not dispatch Telegram update to {user_id}: {tg_err}")
 
+        try:
+            loop = asyncio.get_running_loop()
+            loop.create_task(broadcast_event("order_updated", order))
+        except Exception:
+            pass
+
         return cors_response({"status": "success", "order": order})
     except Exception as e:
         return cors_response({"status": "error", "message": str(e)}, status=400)
@@ -1890,18 +1962,18 @@ async def update_order_api(request):
 async def pickup_order_api(request):
     try:
         data = await request.json()
-        order_id = data.get('id')
+        order_id = data.get('id') or data.get('order_id')
         if not order_id or order_id not in ACTIVE_ORDERS:
             return cors_response({"status": "error", "message": f"Order {order_id} not found"}, status=404)
 
         order = ACTIVE_ORDERS[order_id]
         order['status'] = 'picked_up'
         order['pickup_status'] = 'picked_up'
-        order['picked_up_at'] = time.time()
+        order['picked_up_at'] = float(data.get('picked_up_at') or time.time())
         order['updated_at'] = time.time()
         if data.get('notes'):
             order['notes'] = data['notes']
-        save_orders()
+        save_orders(order_id)
 
         # Notify Customer in Telegram
         user_id = order.get('user_id')
@@ -1918,6 +1990,12 @@ async def pickup_order_api(request):
             except Exception as tg_err:
                 logging.warning(f"Could not notify user {user_id} of pickup: {tg_err}")
 
+        try:
+            loop = asyncio.get_running_loop()
+            loop.create_task(broadcast_event("order_updated", order))
+        except Exception:
+            pass
+
         return cors_response({"status": "success", "order": order})
     except Exception as e:
         return cors_response({"status": "error", "message": str(e)}, status=400)
@@ -1925,17 +2003,52 @@ async def pickup_order_api(request):
 
 async def delete_order_api(request):
     try:
-        data = await request.json()
-        order_id = data.get('id')
+        data = await request.json() if request.can_read_body else {}
+        order_id = data.get('id') or data.get('order_id')
+        if not order_id:
+            return cors_response({"status": "error", "message": "Missing order_id or id"}, status=400)
+        
+        existed = False
         if order_id in ACTIVE_ORDERS:
             del ACTIVE_ORDERS[order_id]
             save_orders()
-            if db_pool:
-                asyncio.create_task(db_delete_order(order_id))
-            return cors_response({"status": "success"})
-        return cors_response({"status": "not_found"}, status=404)
+            existed = True
+            
+        if db_pool:
+            try:
+                await db_delete_order(order_id)
+                existed = True
+            except Exception as dbe:
+                logging.error(f"Error deleting order from Neon: {dbe}")
+                
+        try:
+            loop = asyncio.get_running_loop()
+            loop.create_task(broadcast_event("order_deleted", {"order_id": order_id}))
+        except Exception:
+            pass
+            
+        logging.info(f"Order {order_id} deleted via Admin API (was_in_memory={existed})")
+        return cors_response({"status": "success", "order_id": order_id, "deleted": True})
     except Exception as e:
+        logging.error(f"Error in delete_order_api: {e}")
         return cors_response({"status": "error", "message": str(e)}, status=400)
+
+
+async def delete_order_param_api(request):
+    order_id = request.match_info.get('order_id')
+    if not order_id:
+        return cors_response({"status": "error", "message": "Missing order_id"}, status=400)
+    if order_id in ACTIVE_ORDERS:
+        del ACTIVE_ORDERS[order_id]
+        save_orders()
+    if db_pool:
+        await db_delete_order(order_id)
+    try:
+        loop = asyncio.get_running_loop()
+        loop.create_task(broadcast_event("order_deleted", {"order_id": order_id}))
+    except Exception:
+        pass
+    return cors_response({"status": "success", "order_id": order_id})
 
 
 async def get_stats_api(request):
@@ -2092,6 +2205,7 @@ async def run_web_server():
     app.router.add_get("/", health_check)
     app.router.add_get("/api/ping", health_check)
     app.router.add_get("/api/health", health_check)
+    app.router.add_get("/api/events", sse_events_api)
     app.router.add_get("/api/config", get_config_api)
     app.router.add_post("/api/config", update_config_api)
     app.router.add_post("/api/broadcast", broadcast_api)
@@ -2100,6 +2214,7 @@ async def run_web_server():
     app.router.add_post("/api/orders/update", update_order_api)
     app.router.add_post("/api/orders/pickup", pickup_order_api)
     app.router.add_post("/api/orders/delete", delete_order_api)
+    app.router.add_delete("/api/orders/{order_id}", delete_order_param_api)
     app.router.add_get("/api/stats", get_stats_api)
     app.router.add_get("/api/stock", get_stock_api)
     app.router.add_post("/api/stock", update_stock_api)

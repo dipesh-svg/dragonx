@@ -822,10 +822,14 @@
             </label>
           </div>
 
-          <div class="btn-row">
-            <button type="submit" id="saveOrderDetailsBtn" class="btn-primary glow-btn full-w">
+          <div class="btn-row" style="display: flex; gap: 0.75rem;">
+            <button type="submit" id="saveOrderDetailsBtn" class="btn-primary glow-btn" style="flex: 1;">
               <i class="fa-solid fa-floppy-disk"></i>
               <span>Сохранить Изменения Заказа</span>
+            </button>
+            <button type="button" id="deleteOrderFromModalBtn" class="btn-ghost" style="color: var(--accent-red); border-color: rgba(239, 68, 68, 0.4); min-width: 130px;">
+              <i class="fa-solid fa-trash-can"></i>
+              <span>Удалить Заказ</span>
             </button>
           </div>
         </form>
@@ -1099,6 +1103,6 @@
   <div id="toastContainer" class="toast-container"></div>
 
   <!-- Scripts -->
-  <script src="admin.js?v=20261013_v8"></script>
+  <script src="admin.js?v=20261013_v9"></script>
 </body>
 </html>
