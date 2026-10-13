@@ -1253,6 +1253,7 @@ async def health_check(request):
     return cors_response({
         "status": "ok",
         "bot": f"@{username}",
+        "version": "2026.10.13-master",
         "orders_count": len(ACTIVE_ORDERS),
         "server_time": time.time(),
         "message": "Dragon-X Bot & Real-Time Dispatch Gateway is running 🐉"
