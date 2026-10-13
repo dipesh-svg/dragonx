@@ -177,6 +177,7 @@
     stock: { 'buy_2': 50, 'buy_3': 40, 'buy_5': 30, 'buy_10': 20, 'buy_20': 15, 'buy_50': 10, 'buy_100': 5 },
     botApiUrl: 'https://dragonx.onrender.com',
     isApiOnline: false,
+    isInitialConfigLoaded: false,
     lastSyncTime: null,
     syncIntervalId: null,
     searchQuery: '',
@@ -394,19 +395,25 @@
           AdminState.isApiOnline = true;
           AdminState.lastSyncTime = new Date();
 
-          // 2. Fetch Live Bot Config if available
-          try {
-            const cfgResp = await fetch(`${apiUrl}/api/config`);
-            if (cfgResp.ok) {
-              const cfgData = await cfgResp.json();
-              if (cfgData && cfgData.config) {
-                AdminState.botConfig = Object.assign(AdminState.botConfig, cfgData.config);
-                saveBotConfigLocally();
-                renderTelegramTab();
-                renderBotCatalogTab();
+          // 2. Fetch Live Bot Config if available (only on initial load or explicit manual sync)
+          if (!silent || !AdminState.isInitialConfigLoaded) {
+            try {
+              const cfgResp = await fetch(`${apiUrl}/api/config`);
+              if (cfgResp.ok) {
+                const cfgData = await cfgResp.json();
+                if (cfgData && cfgData.config) {
+                  const isEditing = document.activeElement && (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA');
+                  if (!isEditing) {
+                    AdminState.botConfig = Object.assign(AdminState.botConfig, cfgData.config);
+                    saveBotConfigLocally();
+                    renderTelegramTab();
+                    renderBotCatalogTab();
+                  }
+                  AdminState.isInitialConfigLoaded = true;
+                }
               }
-            }
-          } catch (e) {}
+            } catch (e) {}
+          }
 
           // Update UI Status Indicators
           if (syncPill) syncPill.className = 'status-pill status-sync online';
@@ -424,7 +431,7 @@
           renderOrdersTable();
           buildUsersFromOrders();
           renderClientsTable();
-          renderBotCatalogTab();
+          // Note: renderBotCatalogTab() is NOT called on background poll to prevent reverting user typing!
 
           if (!silent) {
             showToast(`Синхронизация успешна! Получено ${ordersArray.length} заказов из бота (${elapsed}ms).`, 'success');
@@ -1856,6 +1863,96 @@
         showToast('База клиентов обновлена!', 'info');
       });
     }
+
+    // Live Auto-Save Listeners for Tables & Fields (Prevents inputs reverting on scroll/blur)
+    setupLiveInputListeners();
+  }
+
+  function setupLiveInputListeners() {
+    const pkgTable = document.getElementById('botPackagesTable');
+    if (pkgTable) {
+      pkgTable.addEventListener('input', (e) => {
+        const row = e.target.closest('tr');
+        if (!row) return;
+        const idx = parseInt(row.dataset.pkgIdx, 10);
+        if (isNaN(idx) || !AdminState.botConfig.packages || !AdminState.botConfig.packages[idx]) return;
+
+        if (e.target.classList.contains('pkg-stock-inp')) {
+          AdminState.botConfig.packages[idx].stock = parseInt(e.target.value, 10) || 0;
+        } else if (e.target.classList.contains('pkg-price-inp')) {
+          AdminState.botConfig.packages[idx].price_usd = parseFloat(e.target.value) || 0;
+        } else if (e.target.classList.contains('pkg-qty-inp')) {
+          AdminState.botConfig.packages[idx].qty_num = parseInt(e.target.value, 10) || 0;
+        } else if (e.target.classList.contains('pkg-lbl-inp')) {
+          AdminState.botConfig.packages[idx].label_ru = e.target.value;
+        } else if (e.target.classList.contains('pkg-key-inp')) {
+          AdminState.botConfig.packages[idx].key = e.target.value;
+        }
+        saveBotConfigLocally();
+      });
+
+      pkgTable.addEventListener('change', (e) => {
+        if (e.target.classList.contains('pkg-active-inp')) {
+          const row = e.target.closest('tr');
+          if (!row) return;
+          const idx = parseInt(row.dataset.pkgIdx, 10);
+          if (!isNaN(idx) && AdminState.botConfig.packages && AdminState.botConfig.packages[idx]) {
+            AdminState.botConfig.packages[idx].active = e.target.checked;
+            saveBotConfigLocally();
+          }
+        }
+      });
+    }
+
+    const distTable = document.getElementById('botDistrictsTable');
+    if (distTable) {
+      distTable.addEventListener('input', (e) => {
+        const row = e.target.closest('tr');
+        if (!row) return;
+        const idx = parseInt(row.dataset.distIdx, 10);
+        if (isNaN(idx) || !AdminState.botConfig.districts || !AdminState.botConfig.districts[idx]) return;
+
+        if (e.target.classList.contains('dist-name-inp')) {
+          AdminState.botConfig.districts[idx].name = e.target.value;
+        } else if (e.target.classList.contains('dist-coords-inp')) {
+          AdminState.botConfig.districts[idx].coords = e.target.value;
+        } else if (e.target.classList.contains('dist-id-inp')) {
+          AdminState.botConfig.districts[idx].id = e.target.value;
+        }
+        saveBotConfigLocally();
+      });
+
+      distTable.addEventListener('change', (e) => {
+        if (e.target.classList.contains('dist-active-inp')) {
+          const row = e.target.closest('tr');
+          if (!row) return;
+          const idx = parseInt(row.dataset.distIdx, 10);
+          if (!isNaN(idx) && AdminState.botConfig.districts && AdminState.botConfig.districts[idx]) {
+            AdminState.botConfig.districts[idx].active = e.target.checked;
+            saveBotConfigLocally();
+          }
+        }
+      });
+    }
+
+    const liveInputs = [
+      { id: 'cfgBotProductName', key: 'product_name' },
+      { id: 'cfgBotLtcWallet', key: 'ltc_address' },
+      { id: 'cfgBotExchanger1', key: 'exchanger_1_url' },
+      { id: 'cfgBotExchanger2', key: 'exchanger_2_url' },
+      { id: 'cfgBotSupportHandle', key: 'support_handle' },
+      { id: 'cfgBotMaintenanceText', key: 'maintenance_text' }
+    ];
+
+    liveInputs.forEach(({ id, key }) => {
+      const el = document.getElementById(id);
+      if (el) {
+        el.addEventListener('input', (e) => {
+          AdminState.botConfig[key] = e.target.value.trim();
+          saveBotConfigLocally();
+        });
+      }
+    });
   }
 
   // =========================================================================
