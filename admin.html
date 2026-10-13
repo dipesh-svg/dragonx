@@ -332,7 +332,7 @@
 
           <div class="notice-box-cyan">
             <i class="fa-solid fa-robot"></i>
-            <span>Шлюз REST API синхронизирует статус заказов (оплата LTC, выдача координат, статус «Забран») между ботом и панелью в реальном времени.</span>
+            <span>Шлюз REST API синхронизирует статус заказов (оплата LTC, выдача координат, статус «Забран») и позволяет операторам менять любые параметры бота в реальном времени.</span>
           </div>
 
           <form id="adminTgBotForm" class="adm-form" onsubmit="return false;">
@@ -344,43 +344,92 @@
               <span class="field-hint">Адрес бэкенда для синхронизации заказов и обновления статусов в реальном времени</span>
             </div>
 
-            <div class="form-group">
-              <label for="adminBotUsername">Username Telegram Бота:</label>
-              <div class="input-with-icon">
-                <input type="text" id="adminBotUsername" placeholder="@yuan_rndiBOT" value="@yuan_rndiBOT" class="form-input font-mono">
+            <div class="price-input-row">
+              <div class="form-group">
+                <label for="adminBotUsername">Username Telegram Бота:</label>
+                <div class="input-with-icon">
+                  <input type="text" id="adminBotUsername" placeholder="@yuan_rndiBOT" value="@yuan_rndiBOT" class="form-input font-mono">
+                </div>
               </div>
-              <span class="field-hint">Имя бота, в который переходят клиенты при заказе</span>
-            </div>
 
-            <div class="form-group">
-              <label for="adminOperatorHandle">VIP Оператор Поддержки в Telegram:</label>
-              <input type="text" id="adminOperatorHandle" placeholder="@ashley_graves3" value="@ashley_graves3" class="form-input font-mono">
-            </div>
-
-            <div class="form-group">
-              <label for="adminBotToken">Telegram Bot Token (опционально, для уведомлений):</label>
-              <div class="input-with-icon">
-                <input type="text" id="adminBotToken" placeholder="7969562725:AAHQiUes57T3_0pX15g9L82bF4-1rllgU60" class="form-input font-mono">
+              <div class="form-group">
+                <label for="adminOperatorHandle">VIP Оператор Поддержки:</label>
+                <input type="text" id="adminOperatorHandle" placeholder="@ashley_graves3" value="@ashley_graves3" class="form-input font-mono">
               </div>
             </div>
 
-            <div class="btn-row">
-              <button type="submit" id="saveTgSettingsBtn" class="btn-primary glow-btn">
-                <i class="fa-solid fa-floppy-disk"></i>
-                <span>Сохранить Настройки</span>
+            <!-- LTC Payment Wallet Address in Bot -->
+            <div class="form-group">
+              <label for="adminBotLtcAddress"><i class="fa-solid fa-wallet text-gold"></i> Кошелек Приема Оплаты Litecoin (LTC) в Боте:</label>
+              <input type="text" id="adminBotLtcAddress" placeholder="ltc1qr5xhqe9tdd5lekrxurfftdv9hhaaqche2urvhr" value="ltc1qr5xhqe9tdd5lekrxurfftdv9hhaaqche2urvhr" class="form-input font-mono">
+              <span class="field-hint">Этот адрес отображается под спойлером при оформлении заказа в боте</span>
+            </div>
+
+            <!-- Exchangers in Bot -->
+            <div class="price-input-row">
+              <div class="form-group">
+                <label for="adminBotExchanger1"><i class="fa-solid fa-arrow-right-arrow-left"></i> Обменник 1 (URL):</label>
+                <input type="text" id="adminBotExchanger1" placeholder="https://t.me/Eva_obmen" value="https://t.me/Eva_obmen" class="form-input font-mono">
+              </div>
+
+              <div class="form-group">
+                <label for="adminBotExchanger2"><i class="fa-solid fa-arrow-right-arrow-left"></i> Обменник 2 (URL):</label>
+                <input type="text" id="adminBotExchanger2" placeholder="https://t.me/sum_exc" value="https://t.me/sum_exc" class="form-input font-mono">
+              </div>
+            </div>
+
+            <!-- Maintenance Mode Switch -->
+            <div class="switch-toggle-row">
+              <div>
+                <strong><i class="fa-solid fa-power-off"></i> Режим Технического Обслуживания (Maintenance):</strong>
+                <p style="font-size: 0.78rem; color: var(--text-muted); margin: 0.2rem 0 0 0;">При включении бот временно приостанавливает заказы и направляет клиентов к оператору.</p>
+              </div>
+              <label class="switch-toggle">
+                <input type="checkbox" id="adminBotMaintenanceToggle">
+                <span class="switch-slider"></span>
+              </label>
+            </div>
+
+            <div class="form-group" id="maintenanceTextGroup" style="display: none;">
+              <label for="adminBotMaintenanceText">Текст сообщения при тех. обслуживании:</label>
+              <input type="text" id="adminBotMaintenanceText" value="⚠️ Бот временно находится на техническом обслуживании. Свяжитесь с оператором: @ashley_graves3" class="form-input">
+            </div>
+
+            <div class="btn-row" style="margin-top: 1.25rem;">
+              <button type="submit" id="saveTgSettingsBtn" class="btn-primary glow-btn btn-push-bot full-w">
+                <i class="fa-solid fa-rocket"></i>
+                <span>Применить & Отправить Все Настройки в Бот (Push to Bot)</span>
               </button>
-              <button type="button" id="testBotApiBtn" class="btn-ghost">
+            </div>
+
+            <div class="btn-row" style="margin-top: 0.75rem;">
+              <button type="button" id="testBotApiBtn" class="btn-ghost full-w">
                 <i class="fa-solid fa-bolt"></i>
                 <span>Тест Связи с Bot API</span>
               </button>
             </div>
           </form>
+
+          <!-- Mass Broadcast to Telegram Users Console -->
+          <div class="broadcast-box">
+            <h4><i class="fa-solid fa-bullhorn text-purple"></i> Массовая Рассылка Клиентам Бота:</h4>
+            <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.75rem;">
+              Отправить мгновенное сообщение / уведомление (акция, обновление прайса, поступление) всем пользователям, зарегистрированным в боте.
+            </p>
+            <div class="form-group">
+              <textarea id="broadcastMessageInput" rows="3" placeholder="Введите текст объявления для клиентов в боте (поддерживается HTML разметка)..." class="form-input"></textarea>
+            </div>
+            <button type="button" id="sendBroadcastBtn" class="btn-broadcast glow-btn full-w">
+              <i class="fa-solid fa-paper-plane"></i>
+              <span>Отправить Рассылку Всем Пользователям в Боте</span>
+            </button>
+          </div>
         </div>
 
         <!-- Right: Bot Status & Interactive Commands Simulator -->
         <div class="tg-status-card glass-panel">
-          <h3>Статус Шлюза & Команды Бота</h3>
-          <p class="section-sub">Протокол управления заказами и локациями через Telegram</p>
+          <h3>Статус Шлюза & Консоль Бота</h3>
+          <p class="section-sub">Протокол управления заказами, реквизитами и локациями</p>
 
           <div class="bot-status-indicator-box glass-panel-inner">
             <div class="b-status-row">
@@ -393,7 +442,11 @@
             </div>
             <div class="b-status-row">
               <span>Прием платежей:</span>
-              <span class="font-mono text-cyan">Litecoin (LTC) Network</span>
+              <span class="font-mono text-cyan" id="displayActiveLtcWallet">LTC Network</span>
+            </div>
+            <div class="b-status-row">
+              <span>Режим работы:</span>
+              <span class="font-mono text-green" id="displayBotModeLabel">Активен (Заказы включены)</span>
             </div>
             <div class="b-status-row">
               <span>Задержка API (Ping):</span>
@@ -402,10 +455,10 @@
           </div>
 
           <div class="bot-commands-reference">
-            <h4>Команды управления, доступные для бота:</h4>
+            <h4>Команды управления, доступные клиентам:</h4>
             <div class="cmd-item">
               <code>/start</code>
-              <span>Запуск бота, выбор языка и капча</span>
+              <span>Запуск бота, выбор языка, проверка безопасности (капча)</span>
             </div>
             <div class="cmd-item">
               <code>/track</code>
@@ -467,64 +520,103 @@
     <!-- TAB 5: PRICING & STOCK MANAGEMENT -->
     <!-- ======================================================== -->
     <div id="tabPrices" class="admin-tab-pane hidden">
-      <div class="pricing-card glass-panel" style="max-width: 860px; margin: 0 auto;">
-        <h3>Управление Фасовками Рега & Складскими Остатками</h3>
-        <p style="color: var(--text-muted); margin-bottom: 1.5rem;">Настройка актуальной стоимости в USD ($) и лимитов наличия в Telegram боте</p>
-
-        <!-- Dynamic Stock Inventory Form -->
-        <div class="stock-mgmt-card glass-panel-inner" style="padding: 1.5rem; margin-bottom: 1.75rem;">
-          <h4 style="margin-bottom: 0.85rem; color: var(--accent-cyan);"><i class="fa-solid fa-boxes-stacked"></i> Складские Остатки на Сегодня (Синхронизируются с ботом):</h4>
-          <p style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 1.25rem;">Когда остаток равен 0, бот сообщает клиенту, что фасовка распродана.</p>
-          
-          <div class="stock-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 1rem;">
-            <div class="form-group">
-              <label>2 шт ($25):</label>
-              <input type="number" id="stockBuy2" value="50" min="0" class="form-input font-mono">
-            </div>
-            <div class="form-group">
-              <label>3 шт ($35):</label>
-              <input type="number" id="stockBuy3" value="40" min="0" class="form-input font-mono">
-            </div>
-            <div class="form-group">
-              <label>5 шт ($55):</label>
-              <input type="number" id="stockBuy5" value="30" min="0" class="form-input font-mono">
-            </div>
-            <div class="form-group">
-              <label>10 шт ($108):</label>
-              <input type="number" id="stockBuy10" value="20" min="0" class="form-input font-mono">
-            </div>
-            <div class="form-group">
-              <label>20 шт ($210):</label>
-              <input type="number" id="stockBuy20" value="15" min="0" class="form-input font-mono">
-            </div>
-            <div class="form-group">
-              <label>50 шт ($510):</label>
-              <input type="number" id="stockBuy50" value="10" min="0" class="form-input font-mono">
-            </div>
-            <div class="form-group">
-              <label>100 шт ($1000):</label>
-              <input type="number" id="stockBuy100" value="5" min="0" class="form-input font-mono">
-            </div>
+      <div class="pricing-card glass-panel" style="max-width: 950px; margin: 0 auto;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; flex-wrap: wrap; gap: 1rem;">
+          <div>
+            <h3>Управление Каталогом, Фасовками, Ценами & Районами Бота</h3>
+            <p style="color: var(--text-muted); font-size: 0.88rem;">Полный контроль: изменение товара, прайса, добавление фасовок и районов без разработчиков</p>
           </div>
-
-          <button type="button" id="saveStockBtn" class="btn-primary glow-btn full-w" style="margin-top: 1.25rem;">
-            <i class="fa-solid fa-floppy-disk"></i>
-            <span>Обновить Остатки на Складе в Боте</span>
+          <button type="button" id="saveAllBotCatalogTopBtn" class="btn-primary glow-btn btn-push-bot">
+            <i class="fa-solid fa-rocket"></i>
+            <span>Применить в Боте (Push to Bot)</span>
           </button>
         </div>
 
-        <!-- Price Configuration Overview -->
-        <div class="glass-panel-inner" style="padding: 1.5rem;">
-          <h4 style="margin-bottom: 0.85rem;"><i class="fa-solid fa-tag"></i> Действующий Прейскурант (Ташкент):</h4>
-          <div class="price-list-preview" style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; font-size: 0.9rem;">
-            <div>• 2 штук — <strong>25$</strong></div>
-            <div>• 3 штук — <strong>35$</strong></div>
-            <div>• 5 штук — <strong>55$</strong></div>
-            <div>• 10 штук — <strong>108$</strong></div>
-            <div>• 20 штук — <strong>210$</strong></div>
-            <div>• 50 штук — <strong>510$</strong></div>
-            <div>• 100 штук — <strong>1000$</strong></div>
+        <!-- 1. Product Name in Bot -->
+        <div class="bot-config-section">
+          <h4><i class="fa-solid fa-capsules text-cyan"></i> 1. Товар & Название Каталога в Боте:</h4>
+          <p style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 0.85rem;">
+            Имя товара, которое бот показывает клиентам на всех страницах и в чеке (по умолчанию: <strong>Рега</strong>).
+          </p>
+          <div class="form-group" style="max-width: 380px;">
+            <label for="cfgBotProductName">Название товара / препарата:</label>
+            <input type="text" id="cfgBotProductName" value="Рега" placeholder="Рега" class="form-input font-bold text-cyan" style="font-size: 1.05rem;">
           </div>
+        </div>
+
+        <!-- 2. Dynamic Packages & Prices in Bot -->
+        <div class="bot-config-section">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.85rem; flex-wrap: wrap; gap: 0.5rem;">
+            <h4><i class="fa-solid fa-tags text-gold"></i> 2. Фасовки, Цены ($) и Складские Остатки:</h4>
+            <button type="button" id="addNewPackageBtn" class="btn-ghost btn-xs">
+              <i class="fa-solid fa-plus"></i>
+              <span>Добавить фасовку</span>
+            </button>
+          </div>
+          <p style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 0.75rem;">
+            Управляйте стоимостью в USD ($), количеством капсул/штук и остатком. Все изменения моментально применяются в боте.
+          </p>
+
+          <div class="table-responsive">
+            <table class="editor-sub-table" id="botPackagesTable">
+              <thead>
+                <tr>
+                  <th style="width: 110px;">Ключ</th>
+                  <th style="width: 100px;">Кол-во (шт)</th>
+                  <th>Отображение в Боте</th>
+                  <th style="width: 110px;">Цена ($)</th>
+                  <th style="width: 110px;">Склад (остаток)</th>
+                  <th style="width: 80px; text-align: center;">Вкл</th>
+                  <th style="width: 60px; text-align: center;">Удал.</th>
+                </tr>
+              </thead>
+              <tbody id="botPackagesTableBody">
+                <!-- Injected dynamically via admin.js -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- 3. Dynamic Districts in Bot -->
+        <div class="bot-config-section">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.85rem; flex-wrap: wrap; gap: 0.5rem;">
+            <h4><i class="fa-solid fa-map-location-dot text-cyan"></i> 3. Районы Доставки в Боте:</h4>
+            <button type="button" id="addNewDistrictBtn" class="btn-ghost btn-xs">
+              <i class="fa-solid fa-plus"></i>
+              <span>Добавить район</span>
+            </button>
+          </div>
+          <p style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 0.75rem;">
+            Районы, которые бот предлагает клиентам на этапе выбора локации. Координаты подставляются автоматически.
+          </p>
+
+          <div class="table-responsive">
+            <table class="editor-sub-table" id="botDistrictsTable">
+              <thead>
+                <tr>
+                  <th style="width: 140px;">ID района</th>
+                  <th>Название Района</th>
+                  <th>GPS Координаты по умолчанию</th>
+                  <th style="width: 80px; text-align: center;">Вкл</th>
+                  <th style="width: 60px; text-align: center;">Удал.</th>
+                </tr>
+              </thead>
+              <tbody id="botDistrictsTableBody">
+                <!-- Injected dynamically via admin.js -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Main Push Changes to Bot Button -->
+        <div style="margin-top: 1.5rem;">
+          <button type="button" id="saveAllBotCatalogBtn" class="btn-primary glow-btn btn-push-bot full-w" style="padding: 1.15rem !important;">
+            <i class="fa-solid fa-rocket"></i>
+            <span>СОХРАНИТЬ & ПРИМЕНИТЬ ВСЕ ИЗМЕНЕНИЯ В БОТЕ (PUSH CHANGES TO BOT)</span>
+          </button>
+          <p style="text-align: center; color: var(--text-dim); font-size: 0.78rem; margin-top: 0.5rem;">
+            Данные сохраняются в постоянный файл bot_config.json на сервере и вступают в силу немедленно без перезагрузки.
+          </p>
         </div>
       </div>
     </div>

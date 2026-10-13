@@ -1,7 +1,7 @@
 /**
- * DRAGON-X PHARMA - OPERATOR DISPATCH & TRACKING CONSOLE
+ * DRAGON-X PHARMA - OPERATOR DISPATCH & BOT MASTER CONTROL CONSOLE
  * Secure Admin Gateway: ID = damascus@123 | PASS = vegadragon24
- * Real-time Telegram Bot API Synchronization • GPS Tracking • Order Pickup Console
+ * Real-time Telegram Bot API Synchronization • Master Dynamic Catalog & Pricing • GPS Tracking
  */
 
 (function () {
@@ -135,15 +135,35 @@
     }
   ];
 
-  // Default Stock Quantities
-  const DEFAULT_STOCK = {
-    '2': 45,
-    '3': 38,
-    '5': 24,
-    '10': 18,
-    '20': 12,
-    '50': 10,
-    '100': 5
+  // Default Bot Config
+  const DEFAULT_BOT_CONFIG = {
+    product_name: 'Рега',
+    username: '@yuan_rndiBOT',
+    support_handle: '@ashley_graves3',
+    support_url: 'https://t.me/ashley_graves3',
+    website_url: 'https://dragonx-gamma.vercel.app',
+    reviews_url: 'https://dragonx-gamma.vercel.app',
+    exchanger_1_name: '🔄 Обменник 1 (Eva)',
+    exchanger_1_url: 'https://t.me/Eva_obmen',
+    exchanger_2_name: '🔄 Обменник 2 (Sum Exc)',
+    exchanger_2_url: 'https://t.me/sum_exc',
+    ltc_address: 'ltc1qr5xhqe9tdd5lekrxurfftdv9hhaaqche2urvhr',
+    maintenance_mode: false,
+    maintenance_text: '⚠️ Бот временно находится на техническом обслуживании. Свяжитесь с оператором: @ashley_graves3',
+    districts: [
+      { id: 'district_chilanzer', name: 'Чиланзор', coords: '41.2721, 69.2045', active: true },
+      { id: 'district_yashnabad', name: 'Яшнабад', coords: '41.2985, 69.3241', active: true },
+      { id: 'district_ulugbek', name: 'Ulugbek', coords: '41.3412, 69.4520', active: true }
+    ],
+    packages: [
+      { key: 'buy_2', qty_num: 2, label_ru: '2 штук', price_usd: 25, stock: 50, active: true },
+      { key: 'buy_3', qty_num: 3, label_ru: '3 штук', price_usd: 35, stock: 40, active: true },
+      { key: 'buy_5', qty_num: 5, label_ru: '5 штук', price_usd: 55, stock: 30, active: true },
+      { key: 'buy_10', qty_num: 10, label_ru: '10 штук', price_usd: 108, stock: 20, active: true },
+      { key: 'buy_20', qty_num: 20, label_ru: '20 штук', price_usd: 210, stock: 15, active: true },
+      { key: 'buy_50', qty_num: 50, label_ru: '50 штук', price_usd: 510, stock: 10, active: true },
+      { key: 'buy_100', qty_num: 100, label_ru: '100 штук', price_usd: 1000, stock: 5, active: true }
+    ]
   };
 
   // Admin App State
@@ -153,23 +173,17 @@
     orders: [],
     zones: [],
     users: [],
-    stock: { ...DEFAULT_STOCK },
+    botConfig: { ...DEFAULT_BOT_CONFIG },
+    stock: { 'buy_2': 50, 'buy_3': 40, 'buy_5': 30, 'buy_10': 20, 'buy_20': 15, 'buy_50': 10, 'buy_100': 5 },
     botApiUrl: 'https://dragon-x-telegram-bot.onrender.com',
     isApiOnline: false,
     lastSyncTime: null,
     syncIntervalId: null,
-    botConfig: {
-      username: '@yuan_rndiBOT',
-      token: '',
-      chatId: '',
-      support: '@ashley_graves3'
-    },
     searchQuery: '',
     statusFilter: 'all',
     activeTrackingOrderId: null
   };
 
-  // Determine Default Bot API Gateway URL
   function detectDefaultApiUrl() {
     if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
       return 'http://localhost:10000';
@@ -229,8 +243,6 @@
 
     loadData();
     renderAll();
-
-    // Start Real-time synchronization
     startAutoSync();
   }
 
@@ -242,7 +254,7 @@
   }
 
   // =========================================================================
-  // 2. DATA MANAGEMENT & REAL-TIME BOT SYNCHRONIZATION
+  // 2. DATA MANAGEMENT & LOCAL STORAGE
   // =========================================================================
   function loadData() {
     // 1. Bot Config & API Gateway URL
@@ -250,12 +262,14 @@
       const savedBot = localStorage.getItem(STORAGE_KEYS.BOT_CONFIG);
       if (savedBot) {
         const parsed = JSON.parse(savedBot);
-        AdminState.botConfig = Object.assign(AdminState.botConfig, parsed);
+        AdminState.botConfig = Object.assign({ ...DEFAULT_BOT_CONFIG }, parsed);
         if (parsed.apiUrl) AdminState.botApiUrl = parsed.apiUrl;
       } else {
+        AdminState.botConfig = { ...DEFAULT_BOT_CONFIG };
         AdminState.botApiUrl = detectDefaultApiUrl();
       }
     } catch (e) {
+      AdminState.botConfig = { ...DEFAULT_BOT_CONFIG };
       AdminState.botApiUrl = detectDefaultApiUrl();
     }
 
@@ -285,17 +299,7 @@
       AdminState.zones = [...SEED_ZONES];
     }
 
-    // 4. Stock Local Storage
-    try {
-      const savedStock = localStorage.getItem(STORAGE_KEYS.STOCK_CONFIG);
-      if (savedStock) {
-        AdminState.stock = Object.assign({ ...DEFAULT_STOCK }, JSON.parse(savedStock));
-      }
-    } catch (e) {
-      AdminState.stock = { ...DEFAULT_STOCK };
-    }
-
-    // 5. Users List
+    // 4. Users List
     try {
       const savedUsers = localStorage.getItem(STORAGE_KEYS.USERS);
       if (savedUsers) {
@@ -316,8 +320,8 @@
     localStorage.setItem(STORAGE_KEYS.DELIVERY_ZONES, JSON.stringify(AdminState.zones));
   }
 
-  function saveStockLocally() {
-    localStorage.setItem(STORAGE_KEYS.STOCK_CONFIG, JSON.stringify(AdminState.stock));
+  function saveBotConfigLocally() {
+    localStorage.setItem(STORAGE_KEYS.BOT_CONFIG, JSON.stringify(AdminState.botConfig));
   }
 
   function buildUsersFromOrders() {
@@ -343,9 +347,9 @@
     localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(AdminState.users));
   }
 
-  /**
-   * Real-time Bot REST API Synchronization
-   */
+  // =========================================================================
+  // 3. REAL-TIME BOT REST API SYNCHRONIZATION
+  // =========================================================================
   async function syncWithBotAPI(silent = false) {
     const syncPill = document.getElementById('adminSyncPill');
     const syncLabel = document.getElementById('adminSyncLabel');
@@ -361,10 +365,10 @@
     const startTime = performance.now();
 
     try {
-      // 1. Fetch Orders from Bot
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 7000);
 
+      // 1. Fetch Orders
       const resp = await fetch(`${apiUrl}/api/orders`, {
         method: 'GET',
         headers: { 'Accept': 'application/json' },
@@ -377,25 +381,27 @@
       if (resp.ok) {
         const data = await resp.json();
         if (data && data.success && Array.isArray(data.orders)) {
-          // Merge Bot orders with local orders (preserving any local un-synced)
           mergeBotOrders(data.orders);
           AdminState.isApiOnline = true;
           AdminState.lastSyncTime = new Date();
 
-          // Update Stock if available
-          if (data.stock) {
-            AdminState.stock = Object.assign(AdminState.stock, data.stock);
-            saveStockLocally();
-            populateStockInputs();
-          }
+          // 2. Fetch Live Bot Config if available
+          try {
+            const cfgResp = await fetch(`${apiUrl}/api/config`);
+            if (cfgResp.ok) {
+              const cfgData = await cfgResp.json();
+              if (cfgData && cfgData.config) {
+                AdminState.botConfig = Object.assign(AdminState.botConfig, cfgData.config);
+                saveBotConfigLocally();
+                renderTelegramTab();
+                renderBotCatalogTab();
+              }
+            }
+          } catch (e) {}
 
           // Update UI Status Indicators
-          if (syncPill) {
-            syncPill.className = 'status-pill status-sync online';
-          }
-          if (syncLabel) {
-            syncLabel.textContent = `🟢 Бот API: ОНЛАЙН (${elapsed}ms)`;
-          }
+          if (syncPill) syncPill.className = 'status-pill status-sync online';
+          if (syncLabel) syncLabel.textContent = `🟢 Бот API: ОНЛАЙН (${elapsed}ms)`;
           if (gatewayBadge) {
             gatewayBadge.className = 'badge-status-online';
             gatewayBadge.innerHTML = `<i class="fa-solid fa-circle"></i> ОНЛАЙН (Синхронизировано)`;
@@ -416,17 +422,13 @@
           return true;
         }
       }
-      throw new Error(`API returned status ${resp.status}`);
+      throw new Error(`API status ${resp.status}`);
     } catch (err) {
-      console.warn('Bot API Sync fallback to local DB:', err.message);
+      console.warn('Bot API offline/cache mode:', err.message);
       AdminState.isApiOnline = false;
 
-      if (syncPill) {
-        syncPill.className = 'status-pill status-sync offline';
-      }
-      if (syncLabel) {
-        syncLabel.textContent = `🟡 Автономно (Локальный кэш)`;
-      }
+      if (syncPill) syncPill.className = 'status-pill status-sync offline';
+      if (syncLabel) syncLabel.textContent = `🟡 Автономно (Локальный кэш)`;
       if (gatewayBadge) {
         gatewayBadge.className = 'badge-status-offline';
         gatewayBadge.innerHTML = `<i class="fa-solid fa-circle"></i> АВТОНОМНО (Локальная база)`;
@@ -451,7 +453,6 @@
 
     const botMap = new Map();
     botOrders.forEach(bo => {
-      // Normalize bot order schema
       const normalized = {
         id: bo.id || bo.order_id,
         createdAt: bo.createdAt || (bo.created_at ? new Date(bo.created_at * 1000).toISOString() : new Date().toISOString()),
@@ -459,7 +460,7 @@
         customerName: bo.customerName || bo.customer_name || 'Покупатель Telegram',
         telegram: bo.telegram || (bo.username ? `@${bo.username.replace('@','')}` : ''),
         district: bo.district || 'Чиланзор',
-        item: bo.item || 'Рега',
+        item: bo.item || AdminState.botConfig.product_name || 'Рега',
         volume: bo.volume || `${bo.quantity || 2} шт`,
         totalAmount: parseFloat(bo.totalAmount || bo.price_usd || 25),
         currency: 'USD',
@@ -475,17 +476,14 @@
       botMap.set(normalized.id, normalized);
     });
 
-    // Merge into local list (preserving orders created locally that might not yet be in bot)
     const merged = [];
     const processedIds = new Set();
 
-    // 1. Bot orders take precedence as source of truth
     botMap.forEach((botOrder, id) => {
       merged.push(botOrder);
       processedIds.add(id);
     });
 
-    // 2. Keep local orders that don't collide
     AdminState.orders.forEach(lo => {
       if (!processedIds.has(lo.id)) {
         merged.push(lo);
@@ -499,16 +497,14 @@
 
   function startAutoSync() {
     if (AdminState.syncIntervalId) clearInterval(AdminState.syncIntervalId);
-    // Initial sync
     syncWithBotAPI(true);
-    // Poll every 8 seconds
     AdminState.syncIntervalId = setInterval(() => {
       syncWithBotAPI(true);
     }, 8000);
   }
 
   // =========================================================================
-  // 3. RENDERING ENGINE
+  // 4. RENDERING ENGINE
   // =========================================================================
   function renderAll() {
     renderMetrics();
@@ -516,7 +512,7 @@
     renderZonesList();
     renderTelegramTab();
     renderClientsTable();
-    populateStockInputs();
+    renderBotCatalogTab();
   }
 
   function renderMetrics() {
@@ -558,11 +554,7 @@
     if (!tbody) return;
 
     let filtered = AdminState.orders.filter(order => {
-      // Status filter
-      if (AdminState.statusFilter !== 'all' && order.status !== AdminState.statusFilter) {
-        return false;
-      }
-      // Search query
+      if (AdminState.statusFilter !== 'all' && order.status !== AdminState.statusFilter) return false;
       if (AdminState.searchQuery) {
         const q = AdminState.searchQuery.toLowerCase();
         const idMatch = (order.id || '').toLowerCase().includes(q);
@@ -588,12 +580,14 @@
       return;
     }
 
+    const prodName = AdminState.botConfig.product_name || 'Рега';
+
     tbody.innerHTML = filtered.map(ord => {
       const dateStr = new Date(ord.createdAt).toLocaleDateString('ru-RU', {
         day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit'
       });
 
-      const volumeSummary = ord.volume ? `Рега (${ord.volume})` : 'Рега (2 шт)';
+      const volumeSummary = ord.volume ? `${prodName} (${ord.volume})` : `${prodName} (2 шт)`;
       const districtDisplay = ord.district || 'Чиланзор';
       const tgLink = ord.telegram && ord.telegram.startsWith('@') 
         ? `<a href="https://t.me/${ord.telegram.replace('@', '')}" target="_blank" class="font-mono text-cyan" style="text-decoration:none;">${escapeHtml(ord.telegram)}</a>`
@@ -691,20 +685,50 @@
   }
 
   function renderTelegramTab() {
+    const b = AdminState.botConfig;
+
     const apiUrlInp = document.getElementById('adminBotApiUrl');
     const botUserInp = document.getElementById('adminBotUsername');
-    const botTokenInp = document.getElementById('adminBotToken');
     const botSupInp = document.getElementById('adminOperatorHandle');
+    const ltcInp = document.getElementById('adminBotLtcAddress');
+    const ex1Inp = document.getElementById('adminBotExchanger1');
+    const ex2Inp = document.getElementById('adminBotExchanger2');
+    const maintToggle = document.getElementById('adminBotMaintenanceToggle');
+    const maintText = document.getElementById('adminBotMaintenanceText');
+    const maintGroup = document.getElementById('maintenanceTextGroup');
+
     const activeLabel = document.getElementById('displayActiveBotHandle');
+    const activeLtc = document.getElementById('displayActiveLtcWallet');
+    const modeLabel = document.getElementById('displayBotModeLabel');
     const openDirectLink = document.getElementById('openBotDirectAdminLink');
 
-    const b = AdminState.botConfig;
     if (apiUrlInp) apiUrlInp.value = AdminState.botApiUrl || detectDefaultApiUrl();
     if (botUserInp) botUserInp.value = b.username || '@yuan_rndiBOT';
-    if (botTokenInp) botTokenInp.value = b.token || '';
-    if (botSupInp) botSupInp.value = b.support || '@ashley_graves3';
+    if (botSupInp) botSupInp.value = b.support_handle || '@ashley_graves3';
+    if (ltcInp) ltcInp.value = b.ltc_address || 'ltc1qr5xhqe9tdd5lekrxurfftdv9hhaaqche2urvhr';
+    if (ex1Inp) ex1Inp.value = b.exchanger_1_url || 'https://t.me/Eva_obmen';
+    if (ex2Inp) ex2Inp.value = b.exchanger_2_url || 'https://t.me/sum_exc';
+
+    if (maintToggle) {
+      maintToggle.checked = !!b.maintenance_mode;
+      if (maintGroup) maintGroup.style.display = b.maintenance_mode ? 'block' : 'none';
+    }
+    if (maintText) maintText.value = b.maintenance_text || '⚠️ Бот временно находится на техническом обслуживании.';
 
     if (activeLabel) activeLabel.textContent = b.username || '@yuan_rndiBOT';
+    if (activeLtc) {
+      const addr = b.ltc_address || 'ltc1qr5xhqe9tdd5lekrxurfftdv9hhaaqche2urvhr';
+      activeLtc.textContent = `${addr.slice(0, 10)}...${addr.slice(-6)}`;
+    }
+    if (modeLabel) {
+      if (b.maintenance_mode) {
+        modeLabel.textContent = '⚠️ Техническое обслуживание';
+        modeLabel.className = 'font-mono text-red';
+      } else {
+        modeLabel.textContent = '🟢 Активен (Заказы включены)';
+        modeLabel.className = 'font-mono text-green';
+      }
+    }
     if (openDirectLink) {
       const clean = (b.username || '@yuan_rndiBOT').replace('@', '');
       openDirectLink.href = `https://t.me/${clean}`;
@@ -742,28 +766,253 @@
     }).join('');
   }
 
-  function populateStockInputs() {
-    const s = AdminState.stock;
-    if (!s) return;
-    const ids = {
-      '2': 'stockBuy2',
-      '3': 'stockBuy3',
-      '5': 'stockBuy5',
-      '10': 'stockBuy10',
-      '20': 'stockBuy20',
-      '50': 'stockBuy50',
-      '100': 'stockBuy100'
-    };
-    Object.keys(ids).forEach(pack => {
-      const el = document.getElementById(ids[pack]);
-      if (el && s[pack] !== undefined) {
-        el.value = s[pack];
-      }
+  // =========================================================================
+  // 5. MASTER BOT CATALOG & PACKAGES EDITOR (TAB 5)
+  // =========================================================================
+  function renderBotCatalogTab() {
+    const prodNameInp = document.getElementById('cfgBotProductName');
+    if (prodNameInp) {
+      prodNameInp.value = AdminState.botConfig.product_name || 'Рега';
+    }
+
+    // 1. Packages Table
+    const pkgTbody = document.getElementById('botPackagesTableBody');
+    if (pkgTbody) {
+      const pkgs = AdminState.botConfig.packages || [];
+      pkgTbody.innerHTML = pkgs.map((pkg, idx) => `
+        <tr data-pkg-idx="${idx}">
+          <td><input type="text" class="pkg-key-inp font-mono" value="${escapeHtml(pkg.key || `buy_${pkg.qty_num}`)}"></td>
+          <td><input type="number" class="pkg-qty-inp font-mono" value="${pkg.qty_num || 2}" min="1"></td>
+          <td><input type="text" class="pkg-lbl-inp" value="${escapeHtml(pkg.label_ru || `${pkg.qty_num} штук`)}"></td>
+          <td><input type="number" class="pkg-price-inp font-mono text-gold" value="${pkg.price_usd || 25}" min="1"></td>
+          <td><input type="number" class="pkg-stock-inp font-mono text-cyan" value="${pkg.stock !== undefined ? pkg.stock : 50}" min="0"></td>
+          <td style="text-align: center;">
+            <input type="checkbox" class="pkg-active-inp" ${pkg.active !== false ? 'checked' : ''} style="width: 17px; height: 17px; accent-color: var(--accent-cyan);">
+          </td>
+          <td style="text-align: center;">
+            <button type="button" class="action-icon-btn action-delete-btn" onclick="window.AdminOps.deletePackageRow(${idx})" title="Удалить позицию">
+              <i class="fa-solid fa-trash-can"></i>
+            </button>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    // 2. Districts Table
+    const distTbody = document.getElementById('botDistrictsTableBody');
+    if (distTbody) {
+      const dists = AdminState.botConfig.districts || [];
+      distTbody.innerHTML = dists.map((dist, idx) => `
+        <tr data-dist-idx="${idx}">
+          <td><input type="text" class="dist-id-inp font-mono" value="${escapeHtml(dist.id || `district_${idx}`)}"></td>
+          <td><input type="text" class="dist-name-inp font-bold" value="${escapeHtml(dist.name || '')}"></td>
+          <td><input type="text" class="dist-coords-inp font-mono text-cyan" value="${escapeHtml(dist.coords || '41.2721, 69.2045')}"></td>
+          <td style="text-align: center;">
+            <input type="checkbox" class="dist-active-inp" ${dist.active !== false ? 'checked' : ''} style="width: 17px; height: 17px; accent-color: var(--accent-cyan);">
+          </td>
+          <td style="text-align: center;">
+            <button type="button" class="action-icon-btn action-delete-btn" onclick="window.AdminOps.deleteDistrictRow(${idx})" title="Удалить район">
+              <i class="fa-solid fa-trash-can"></i>
+            </button>
+          </td>
+        </tr>
+      `).join('');
+    }
+  }
+
+  function addNewPackageRow() {
+    const pkgs = AdminState.botConfig.packages || [];
+    const nextQty = pkgs.length > 0 ? (pkgs[pkgs.length - 1].qty_num * 2) : 2;
+    pkgs.push({
+      key: `buy_${nextQty}`,
+      qty_num: nextQty,
+      label_ru: `${nextQty} штук`,
+      price_usd: nextQty * 12,
+      stock: 20,
+      active: true
     });
+    AdminState.botConfig.packages = pkgs;
+    renderBotCatalogTab();
+    showToast('Добавлена новая строка фасовки. Не забудьте нажать «Применить в Боте»!', 'info');
+  }
+
+  function deletePackageRow(idx) {
+    const pkgs = AdminState.botConfig.packages || [];
+    if (pkgs.length <= 1) {
+      showToast('Должна остаться хотя бы одна активная фасовка!', 'error');
+      return;
+    }
+    pkgs.splice(idx, 1);
+    AdminState.botConfig.packages = pkgs;
+    renderBotCatalogTab();
+    showToast('Позиция удалена из списка.', 'info');
+  }
+
+  function addNewDistrictRow() {
+    const dists = AdminState.botConfig.districts || [];
+    dists.push({
+      id: `district_${Date.now().toString().slice(-4)}`,
+      name: 'Новый Район',
+      coords: '41.2985, 69.3241',
+      active: true
+    });
+    AdminState.botConfig.districts = dists;
+    renderBotCatalogTab();
+    showToast('Добавлен новый район. Укажите название и координаты и нажмите «Применить в Боте»!', 'info');
+  }
+
+  function deleteDistrictRow(idx) {
+    const dists = AdminState.botConfig.districts || [];
+    if (dists.length <= 1) {
+      showToast('Должен остаться хотя бы один активный район!', 'error');
+      return;
+    }
+    dists.splice(idx, 1);
+    AdminState.botConfig.districts = dists;
+    renderBotCatalogTab();
+    showToast('Район удален из списка.', 'info');
+  }
+
+  /**
+   * PUSH COMPLETE CONFIG TO RUNNING TELEGRAM BOT VIA REST API
+   */
+  async function pushBotConfigToAPI() {
+    // 1. Gather Catalog & Packages
+    const prodNameInp = document.getElementById('cfgBotProductName');
+    if (prodNameInp) {
+      AdminState.botConfig.product_name = prodNameInp.value.trim() || 'Рега';
+    }
+
+    const pkgRows = document.querySelectorAll('#botPackagesTableBody tr');
+    const updatedPkgs = [];
+    const updatedStocks = {};
+
+    pkgRows.forEach(row => {
+      const key = row.querySelector('.pkg-key-inp')?.value.trim() || 'buy_item';
+      const qty = parseInt(row.querySelector('.pkg-qty-inp')?.value, 10) || 2;
+      const lbl = row.querySelector('.pkg-lbl-inp')?.value.trim() || `${qty} штук`;
+      const price = parseFloat(row.querySelector('.pkg-price-inp')?.value) || 25;
+      const stock = parseInt(row.querySelector('.pkg-stock-inp')?.value, 10) || 0;
+      const active = row.querySelector('.pkg-active-inp')?.checked !== false;
+
+      updatedPkgs.push({
+        key,
+        qty_num: qty,
+        label_ru: lbl,
+        label_en: `${qty} pcs`,
+        label_uz: `${qty} ta`,
+        price_usd: price,
+        stock,
+        active
+      });
+      updatedStocks[key] = stock;
+    });
+
+    if (updatedPkgs.length > 0) {
+      AdminState.botConfig.packages = updatedPkgs;
+      AdminState.stock = updatedStocks;
+    }
+
+    // 2. Gather Districts
+    const distRows = document.querySelectorAll('#botDistrictsTableBody tr');
+    const updatedDists = [];
+
+    distRows.forEach(row => {
+      const id = row.querySelector('.dist-id-inp')?.value.trim() || 'dist';
+      const name = row.querySelector('.dist-name-inp')?.value.trim() || 'Район';
+      const coords = row.querySelector('.dist-coords-inp')?.value.trim() || '41.2721, 69.2045';
+      const active = row.querySelector('.dist-active-inp')?.checked !== false;
+
+      updatedDists.push({ id, name, coords, active });
+    });
+
+    if (updatedDists.length > 0) {
+      AdminState.botConfig.districts = updatedDists;
+    }
+
+    // 3. Gather Settings from Tab 3
+    const botUserInp = document.getElementById('adminBotUsername');
+    const botSupInp = document.getElementById('adminOperatorHandle');
+    const ltcInp = document.getElementById('adminBotLtcAddress');
+    const ex1Inp = document.getElementById('adminBotExchanger1');
+    const ex2Inp = document.getElementById('adminBotExchanger2');
+    const maintToggle = document.getElementById('adminBotMaintenanceToggle');
+    const maintText = document.getElementById('adminBotMaintenanceText');
+
+    if (botUserInp) AdminState.botConfig.username = botUserInp.value.trim() || '@yuan_rndiBOT';
+    if (botSupInp) AdminState.botConfig.support_handle = botSupInp.value.trim() || '@ashley_graves3';
+    if (ltcInp) AdminState.botConfig.ltc_address = ltcInp.value.trim() || 'ltc1qr5xhqe9tdd5lekrxurfftdv9hhaaqche2urvhr';
+    if (ex1Inp) AdminState.botConfig.exchanger_1_url = ex1Inp.value.trim() || 'https://t.me/Eva_obmen';
+    if (ex2Inp) AdminState.botConfig.exchanger_2_url = ex2Inp.value.trim() || 'https://t.me/sum_exc';
+    if (maintToggle) AdminState.botConfig.maintenance_mode = maintToggle.checked;
+    if (maintText) AdminState.botConfig.maintenance_text = maintText.value.trim();
+
+    saveBotConfigLocally();
+    renderTelegramTab();
+    renderOrdersTable();
+
+    // 4. Send POST /api/config to bot REST API
+    const apiUrl = (AdminState.botApiUrl || detectDefaultApiUrl()).replace(/\/+$/, '');
+    try {
+      showToast('Отправка обновлений в Telegram бот...', 'info');
+      const resp = await fetch(`${apiUrl}/api/config`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(AdminState.botConfig)
+      });
+
+      if (resp.ok) {
+        const resData = await resp.json();
+        showToast(`🚀 Все изменения успешно отправлены и применены в боте ${AdminState.botConfig.username}!`, 'success');
+        return true;
+      }
+      throw new Error(`Bot returned status ${resp.status}`);
+    } catch (e) {
+      console.warn('Bot config API push failed:', e.message);
+      showToast('Настройки сохранены локально. Бот применит их при следующем подключении.', 'info');
+      return false;
+    }
+  }
+
+  /**
+   * MASS BROADCAST CONSOLE
+   */
+  async function sendBroadcastMessage() {
+    const textInp = document.getElementById('broadcastMessageInput');
+    const text = textInp ? textInp.value.trim() : '';
+
+    if (!text) {
+      showToast('Введите текст рассылки для клиентов!', 'error');
+      return;
+    }
+
+    if (!confirm('Вы уверены, что хотите отправить это сообщение ВСЕМ клиентам в боте?')) {
+      return;
+    }
+
+    const apiUrl = (AdminState.botApiUrl || detectDefaultApiUrl()).replace(/\/+$/, '');
+    try {
+      showToast('Отправка рассылки клиентам...', 'info');
+      const resp = await fetch(`${apiUrl}/api/broadcast`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: text })
+      });
+
+      if (resp.ok) {
+        const data = await resp.json();
+        showToast(`📢 Рассылка доставлена ${data.sent_count || 0} клиентам в боте!`, 'success');
+        textInp.value = '';
+      } else {
+        showToast('Ошибка отправки рассылки ботом.', 'error');
+      }
+    } catch (e) {
+      showToast('Не удалось связаться с API бота для рассылки.', 'error');
+    }
   }
 
   // =========================================================================
-  // 4. TRACK LOCATION & PICKUP STASH CONSOLE MODAL
+  // 6. TRACK LOCATION & PICKUP STASH CONSOLE MODAL
   // =========================================================================
   function trackLocation(orderId) {
     const ord = AdminState.orders.find(o => o.id === orderId);
@@ -776,19 +1025,17 @@
     const modal = document.getElementById('orderLocationModal');
     if (!modal) return;
 
-    // Set order headers
     document.getElementById('locModalOrderId').value = ord.id;
     document.getElementById('locModalOrderNumber').textContent = ord.id;
     document.getElementById('locModalStatusBadge').className = `ord-status ${getStatusBadgeClass(ord.status)}`;
     document.getElementById('locModalStatusBadge').textContent = getStatusText(ord.status);
 
-    const clientSummary = `Клиент: ${ord.telegram || ord.customerName || 'Аноним'} • Товар: Рега (${ord.volume || '2 шт'}) — ${(parseFloat(ord.totalAmount) || 0).toFixed(2)}$`;
+    const prodName = AdminState.botConfig.product_name || 'Рега';
+    const clientSummary = `Клиент: ${ord.telegram || ord.customerName || 'Аноним'} • Товар: ${prodName} (${ord.volume || '2 шт'}) — ${(parseFloat(ord.totalAmount) || 0).toFixed(2)}$`;
     document.getElementById('locModalClientSummary').textContent = clientSummary;
 
-    // Update 5-Step Stepper
     updateStepperView(ord.status);
 
-    // Pickup Banner visibility
     const pickupBanner = document.getElementById('locModalPickupBanner');
     if (pickupBanner) {
       if (ord.status === 'picked_up') {
@@ -815,12 +1062,10 @@
       }
     }
 
-    // Coords & Radar Display
     const district = ord.district || 'Чиланзор';
     const coords = ord.coordinates || DISTRICT_COORDS[district] || '41.2721, 69.2045';
     updateRadarMapWidget(district, coords);
 
-    // Populate Form Inputs
     const districtSelect = document.getElementById('locModalDistrict');
     if (districtSelect) districtSelect.value = district;
 
@@ -907,20 +1152,16 @@
     const pinLabel = document.getElementById('radarPinLabel');
     if (pinLabel) pinLabel.textContent = `Ташкент • ${district}`;
 
-    // Clean coordinates for Map URLs
     const parts = coords.split(',').map(p => p.trim());
     const lat = parts[0] || '41.2721';
     const lon = parts[1] || '69.2045';
 
-    // Google Maps link
     const gBtn = document.getElementById('openGoogleMapsBtn');
     if (gBtn) gBtn.href = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(coords)}`;
 
-    // Yandex Maps link
     const yBtn = document.getElementById('openYandexMapsBtn');
     if (yBtn) yBtn.href = `https://yandex.com/maps/?ll=${lon},${lat}&z=16&text=${encodeURIComponent(coords)}`;
 
-    // OpenStreetMap link
     const oBtn = document.getElementById('openOsmBtn');
     if (oBtn) oBtn.href = `https://www.openstreetmap.org/?mlat=${lat}&mlon=${lon}#map=16/${lat}/${lon}`;
   }
@@ -946,7 +1187,7 @@
   }
 
   // =========================================================================
-  // 5. 1-CLICK MARK AS PICKED UP (SYNC WITH BOT & DB)
+  // 7. 1-CLICK MARK AS PICKED UP
   // =========================================================================
   async function markOrderPickedUp(orderId) {
     const ord = AdminState.orders.find(o => o.id === orderId);
@@ -957,14 +1198,12 @@
     saveOrdersLocally();
     renderAll();
 
-    // If modal is open, refresh modal view
     if (AdminState.activeTrackingOrderId === orderId) {
       trackLocation(orderId);
     }
 
     showToast(`Заказ ${orderId} отмечен как ЗАБРАН (Picked Up)!`, 'success');
 
-    // Notify Telegram Bot via REST API
     const apiUrl = (AdminState.botApiUrl || detectDefaultApiUrl()).replace(/\/+$/, '');
     try {
       const resp = await fetch(`${apiUrl}/api/orders/pickup`, {
@@ -978,7 +1217,7 @@
       });
 
       if (resp.ok) {
-        showToast(`Бот @yuan_rndiBOT синхронизировал статус заказа ${orderId}: Picked Up!`, 'success');
+        showToast(`Бот ${AdminState.botConfig.username} синхронизировал статус заказа ${orderId}: Picked Up!`, 'success');
       }
     } catch (e) {
       console.warn('Bot pickup API offline, stored locally:', e.message);
@@ -986,7 +1225,7 @@
   }
 
   // =========================================================================
-  // 6. SAVE LOCATION & EDIT ORDERS (SYNC WITH BOT REST API)
+  // 8. SAVE LOCATION & ORDER DETAILS
   // =========================================================================
   async function saveLocationDetails(formData) {
     const { orderId, district, coords, address, status, tracking, notes, notifyCustomer } = formData;
@@ -1009,7 +1248,6 @@
 
     showToast(`Локация и координаты для заказа ${orderId} сохранены!`, 'success');
 
-    // Sync to Bot REST API
     const apiUrl = (AdminState.botApiUrl || detectDefaultApiUrl()).replace(/\/+$/, '');
     try {
       const resp = await fetch(`${apiUrl}/api/orders/update`, {
@@ -1034,7 +1272,6 @@
     }
   }
 
-  // Full Order Details Modal view
   function viewOrderDetails(orderId) {
     const ord = AdminState.orders.find(o => o.id === orderId);
     if (!ord) return;
@@ -1059,13 +1296,13 @@
 
     document.getElementById('modalOrderTotal').textContent = `${(parseFloat(ord.totalAmount) || 0).toFixed(2)} $`;
 
-    // Items Breakdown
     const itemsContainer = document.getElementById('modalItemsList');
     if (itemsContainer) {
       const vol = ord.volume || '2 шт';
+      const prodName = AdminState.botConfig.product_name || 'Рега';
       itemsContainer.innerHTML = `
         <div class="modal-item-row" style="display:flex; justify-content:space-between; padding:0.6rem 0; border-bottom:1px solid rgba(255,255,255,0.06);">
-          <span>Рега (${escapeHtml(vol)}) • Район: <strong>${escapeHtml(ord.district || 'Чиланзор')}</strong></span>
+          <span>${escapeHtml(prodName)} (${escapeHtml(vol)}) • Район: <strong>${escapeHtml(ord.district || 'Чиланзор')}</strong></span>
           <span class="font-mono text-cyan">${(parseFloat(ord.totalAmount) || 0).toFixed(2)} $</span>
         </div>
         ${ord.cryptoAmount ? `
@@ -1077,7 +1314,6 @@
       `;
     }
 
-    // Populate Form
     document.getElementById('modalEditOrderId').value = ord.id;
     document.getElementById('modalEditStatus').value = ord.status || 'paid';
     document.getElementById('modalEditDistrict').value = ord.district || 'Чиланзор';
@@ -1096,7 +1332,6 @@
       renderAll();
       showToast(`Заказ ${orderId} удален из базы.`, 'info');
 
-      // Also call Bot API delete
       const apiUrl = (AdminState.botApiUrl || detectDefaultApiUrl()).replace(/\/+$/, '');
       fetch(`${apiUrl}/api/orders/delete`, {
         method: 'POST',
@@ -1107,6 +1342,7 @@
   }
 
   function createManualOrder(data) {
+    const prodName = AdminState.botConfig.product_name || 'Рега';
     const newOrd = {
       id: 'DRGX-' + new Date().toISOString().slice(0,10).replace(/-/g,'') + '-' + Math.floor(1000 + Math.random() * 9000),
       createdAt: new Date().toISOString(),
@@ -1114,7 +1350,7 @@
       customerName: data.customerName.trim(),
       telegram: data.telegram.trim(),
       district: data.district,
-      item: 'Рега',
+      item: prodName,
       volume: data.packVolume,
       totalAmount: data.unitPrice,
       currency: 'USD',
@@ -1133,7 +1369,6 @@
     closeAllModals();
     showToast(`Новый заказ ${newOrd.id} успешно создан!`, 'success');
 
-    // Sync to Bot API
     const apiUrl = (AdminState.botApiUrl || detectDefaultApiUrl()).replace(/\/+$/, '');
     fetch(`${apiUrl}/api/orders`, {
       method: 'POST',
@@ -1142,43 +1377,13 @@
     }).catch(() => {});
   }
 
-  async function saveStockToBot() {
-    const s = {
-      '2': parseInt(document.getElementById('stockBuy2')?.value, 10) || 0,
-      '3': parseInt(document.getElementById('stockBuy3')?.value, 10) || 0,
-      '5': parseInt(document.getElementById('stockBuy5')?.value, 10) || 0,
-      '10': parseInt(document.getElementById('stockBuy10')?.value, 10) || 0,
-      '20': parseInt(document.getElementById('stockBuy20')?.value, 10) || 0,
-      '50': parseInt(document.getElementById('stockBuy50')?.value, 10) || 0,
-      '100': parseInt(document.getElementById('stockBuy100')?.value, 10) || 0
-    };
-
-    AdminState.stock = s;
-    saveStockLocally();
-    showToast('Складские остатки Рега сохранены локально!', 'success');
-
-    const apiUrl = (AdminState.botApiUrl || detectDefaultApiUrl()).replace(/\/+$/, '');
-    try {
-      const resp = await fetch(`${apiUrl}/api/stock`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(s)
-      });
-      if (resp.ok) {
-        showToast('Остатки товара Рега синхронизированы в Telegram боте!', 'success');
-      }
-    } catch (e) {
-      console.warn('Stock update to bot failed:', e.message);
-    }
-  }
-
   function closeAllModals() {
     document.querySelectorAll('.modal-overlay').forEach(m => m.classList.add('hidden'));
     AdminState.activeTrackingOrderId = null;
   }
 
   // =========================================================================
-  // 7. TOAST NOTIFICATIONS & UTILS
+  // 9. TOAST NOTIFICATIONS & UTILS
   // =========================================================================
   function showToast(message, type = 'info') {
     const container = document.getElementById('toastContainer');
@@ -1212,7 +1417,7 @@
   }
 
   // =========================================================================
-  // 8. EVENT LISTENERS SETUP
+  // 10. EVENT LISTENERS
   // =========================================================================
   function setupEventListeners() {
     // 1. Admin Login Form
@@ -1226,7 +1431,6 @@
       });
     }
 
-    // Toggle Password Visibility
     const togglePwdBtn = document.getElementById('toggleAdminPwdBtn');
     if (togglePwdBtn) {
       togglePwdBtn.addEventListener('click', () => {
@@ -1237,11 +1441,9 @@
       });
     }
 
-    // Logout Button
     const logoutBtn = document.getElementById('adminLogoutBtn');
     if (logoutBtn) logoutBtn.addEventListener('click', handleAdminLogout);
 
-    // Manual Sync Button in Header
     const manualSyncBtn = document.getElementById('adminManualSyncBtn');
     if (manualSyncBtn) {
       manualSyncBtn.addEventListener('click', () => {
@@ -1291,7 +1493,6 @@
       btn.addEventListener('click', closeAllModals);
     });
 
-    // Close on overlay click
     document.querySelectorAll('.modal-overlay').forEach(modal => {
       modal.addEventListener('click', (e) => {
         if (e.target === modal) closeAllModals();
@@ -1342,7 +1543,6 @@
       });
     });
 
-    // When district selector changes in modal, auto update coords if empty
     const locModalDistrict = document.getElementById('locModalDistrict');
     if (locModalDistrict) {
       locModalDistrict.addEventListener('change', (e) => {
@@ -1355,7 +1555,6 @@
       });
     }
 
-    // Copy Coordinates Button
     const copyCoordsBtn = document.getElementById('copyCoordsBtn');
     if (copyCoordsBtn) {
       copyCoordsBtn.addEventListener('click', () => {
@@ -1393,7 +1592,7 @@
       });
     }
 
-    // Open Manual New Order Modal
+    // Manual New Order Modal Trigger
     const openNewOrdBtn = document.getElementById('openNewOrderModalBtn');
     if (openNewOrdBtn) {
       openNewOrdBtn.addEventListener('click', () => {
@@ -1402,7 +1601,7 @@
       });
     }
 
-    // Manual New Order Form Submit
+    // Manual Order Form Submit
     const manualOrderForm = document.getElementById('createManualOrderForm');
     if (manualOrderForm) {
       manualOrderForm.addEventListener('submit', (e) => {
@@ -1456,33 +1655,21 @@
       });
     }
 
-    // Telegram Bot Settings Form
+    // Maintenance Toggle Listener in Tab 3
+    const maintToggle = document.getElementById('adminBotMaintenanceToggle');
+    if (maintToggle) {
+      maintToggle.addEventListener('change', (e) => {
+        const grp = document.getElementById('maintenanceTextGroup');
+        if (grp) grp.style.display = e.target.checked ? 'block' : 'none';
+      });
+    }
+
+    // Telegram Bot Settings Form Submit
     const tgForm = document.getElementById('adminTgBotForm');
     if (tgForm) {
       tgForm.addEventListener('submit', (e) => {
         e.preventDefault();
-        let apiUrl = document.getElementById('adminBotApiUrl').value.trim();
-        let botUser = document.getElementById('adminBotUsername').value.trim();
-        let botToken = document.getElementById('adminBotToken').value.trim();
-        let botSup = document.getElementById('adminOperatorHandle').value.trim();
-
-        if (botUser && !botUser.startsWith('@')) botUser = '@' + botUser;
-        if (botSup && !botSup.startsWith('@')) botSup = '@' + botSup;
-
-        AdminState.botApiUrl = apiUrl || detectDefaultApiUrl();
-        AdminState.botConfig = {
-          apiUrl: AdminState.botApiUrl,
-          username: botUser || '@yuan_rndiBOT',
-          token: botToken,
-          support: botSup || '@ashley_graves3'
-        };
-
-        localStorage.setItem(STORAGE_KEYS.BOT_CONFIG, JSON.stringify(AdminState.botConfig));
-        renderTelegramTab();
-        showToast('Настройки шлюза и Telegram бота успешно сохранены!', 'success');
-
-        // Test connection immediately
-        syncWithBotAPI(false);
+        pushBotConfigToAPI();
       });
     }
 
@@ -1500,10 +1687,32 @@
       });
     }
 
-    // Save Stock Inventory Button
-    const saveStockBtn = document.getElementById('saveStockBtn');
-    if (saveStockBtn) {
-      saveStockBtn.addEventListener('click', saveStockToBot);
+    // Broadcast Button
+    const broadcastBtn = document.getElementById('sendBroadcastBtn');
+    if (broadcastBtn) {
+      broadcastBtn.addEventListener('click', sendBroadcastMessage);
+    }
+
+    // Tab 5: Add New Package Row
+    const addPkgBtn = document.getElementById('addNewPackageBtn');
+    if (addPkgBtn) {
+      addPkgBtn.addEventListener('click', addNewPackageRow);
+    }
+
+    // Tab 5: Add New District Row
+    const addDistBtn = document.getElementById('addNewDistrictBtn');
+    if (addDistBtn) {
+      addDistBtn.addEventListener('click', addNewDistrictRow);
+    }
+
+    // Tab 5: Push Master Changes to Bot
+    const saveCatalogBtn = document.getElementById('saveAllBotCatalogBtn');
+    if (saveCatalogBtn) {
+      saveCatalogBtn.addEventListener('click', pushBotConfigToAPI);
+    }
+    const saveCatalogTopBtn = document.getElementById('saveAllBotCatalogTopBtn');
+    if (saveCatalogTopBtn) {
+      saveCatalogTopBtn.addEventListener('click', pushBotConfigToAPI);
     }
 
     // Refresh Clients Button
@@ -1518,13 +1727,18 @@
   }
 
   // =========================================================================
-  // 9. PUBLIC API FOR INLINE ACTIONS
+  // 11. PUBLIC API FOR INLINE ACTIONS
   // =========================================================================
   window.AdminOps = {
     trackLocation,
     markOrderPickedUp,
     viewOrderDetails,
     deleteOrder,
+    addNewPackageRow,
+    deletePackageRow,
+    addNewDistrictRow,
+    deleteDistrictRow,
+    pushBotConfigToAPI,
     quickTgContact: function (tgHandle, orderId) {
       if (tgHandle && tgHandle.startsWith('@')) {
         const clean = tgHandle.replace('@', '');

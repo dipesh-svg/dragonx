@@ -20,15 +20,119 @@ logging.basicConfig(level=logging.INFO)
 
 # ── Config ───────────────────────────────────────────────────────────────────
 TOKEN          = os.getenv("BOT_TOKEN", "7969562725:AAHQiUes57T3_0pX15g9L82bF4-1rllgU60")
-SUPPORT_HANDLE = "@ashley_graves3"
-SUPPORT_URL    = "https://t.me/ashley_graves3"
-WEBSITE_URL    = os.getenv("WEBSITE_URL", "https://dragonx-gamma.vercel.app")
-REVIEWS_URL    = os.getenv("REVIEWS_URL", WEBSITE_URL)
-CONVERTER_URL  = "https://t.me/Eva_obmen"
-EXCHANGER_1_URL = "https://t.me/Eva_obmen"
-EXCHANGER_2_URL = "https://t.me/sum_exc"
-LTC_ADDRESS    = "ltc1qr5xhqe9tdd5lekrxurfftdv9hhaaqche2urvhr"
 ADMIN_EMAIL    = "ydvhrsh1604@gmail.com"
+
+CONFIG_FILE = os.path.join(os.path.dirname(__file__), "bot_config.json")
+BOT_CONFIG = {}
+KNOWN_USER_IDS = set()
+
+DEFAULT_BOT_CONFIG = {
+    "product_name": "Рега",
+    "support_handle": "@ashley_graves3",
+    "support_url": "https://t.me/ashley_graves3",
+    "website_url": os.getenv("WEBSITE_URL", "https://dragonx-gamma.vercel.app"),
+    "reviews_url": os.getenv("REVIEWS_URL", "https://dragonx-gamma.vercel.app"),
+    "exchanger_1_name": "🔄 Обменник 1 (Eva)",
+    "exchanger_1_url": "https://t.me/Eva_obmen",
+    "exchanger_2_name": "🔄 Обменник 2 (Sum Exc)",
+    "exchanger_2_url": "https://t.me/sum_exc",
+    "ltc_address": "ltc1qr5xhqe9tdd5lekrxurfftdv9hhaaqche2urvhr",
+    "maintenance_mode": False,
+    "maintenance_text": "⚠️ Бот временно находится на техническом обслуживании. Свяжитесь с оператором: @ashley_graves3",
+    "districts": [
+        {"id": "district_chilanzer", "name": "Чиланзор", "coords": "41.2721, 69.2045", "active": True},
+        {"id": "district_yashnabad", "name": "Яшнабад", "coords": "41.2985, 69.3241", "active": True},
+        {"id": "district_ulugbek", "name": "Ulugbek", "coords": "41.3412, 69.4520", "active": True}
+    ],
+    "packages": [
+        {"key": "buy_2", "qty_num": 2, "label_ru": "2 штук", "label_en": "2 pcs", "label_uz": "2 ta", "price_usd": 25, "stock": 50, "active": True},
+        {"key": "buy_3", "qty_num": 3, "label_ru": "3 штук", "label_en": "3 pcs", "label_uz": "3 ta", "price_usd": 35, "stock": 40, "active": True},
+        {"key": "buy_5", "qty_num": 5, "label_ru": "5 штук", "label_en": "5 pcs", "label_uz": "5 ta", "price_usd": 55, "stock": 30, "active": True},
+        {"key": "buy_10", "qty_num": 10, "label_ru": "10 штук", "label_en": "10 pcs", "label_uz": "10 ta", "price_usd": 108, "stock": 20, "active": True},
+        {"key": "buy_20", "qty_num": 20, "label_ru": "20 штук", "label_en": "20 pcs", "label_uz": "20 ta", "price_usd": 210, "stock": 15, "active": True},
+        {"key": "buy_50", "qty_num": 50, "label_ru": "50 штук", "label_en": "50 pcs", "label_uz": "50 ta", "price_usd": 510, "stock": 10, "active": True},
+        {"key": "buy_100", "qty_num": 100, "label_ru": "100 штук", "label_en": "100 pcs", "label_uz": "100 ta", "price_usd": 1000, "stock": 5, "active": True}
+    ]
+}
+
+# Dynamic stock inventory managed via Admin Panel or Morning Update
+INVENTORY_STOCKS = {
+    "buy_2": 50,
+    "buy_3": 40,
+    "buy_5": 30,
+    "buy_10": 20,
+    "buy_20": 15,
+    "buy_50": 10,
+    "buy_100": 5
+}
+
+def load_bot_config():
+    global BOT_CONFIG, INVENTORY_STOCKS
+    if os.path.exists(CONFIG_FILE):
+        try:
+            with open(CONFIG_FILE, "r", encoding="utf-8") as f:
+                BOT_CONFIG = json.load(f)
+                logging.info(f"Loaded dynamic bot config from {CONFIG_FILE}")
+                # Synchronize inventory stocks from packages
+                for pkg in BOT_CONFIG.get("packages", []):
+                    k = pkg.get("key")
+                    if k and "stock" in pkg:
+                        INVENTORY_STOCKS[k] = pkg["stock"]
+                return
+        except Exception as e:
+            logging.error(f"Error loading {CONFIG_FILE}: {e}")
+    BOT_CONFIG = dict(DEFAULT_BOT_CONFIG)
+    save_bot_config()
+
+def save_bot_config():
+    try:
+        with open(CONFIG_FILE, "w", encoding="utf-8") as f:
+            json.dump(BOT_CONFIG, f, ensure_ascii=False, indent=2)
+    except Exception as e:
+        logging.error(f"Error saving {CONFIG_FILE}: {e}")
+
+def get_product_name() -> str:
+    return BOT_CONFIG.get("product_name", "Рега")
+
+def get_support_handle() -> str:
+    return BOT_CONFIG.get("support_handle", "@ashley_graves3")
+
+def get_support_url() -> str:
+    handle = get_support_handle().replace("@", "")
+    return BOT_CONFIG.get("support_url") or f"https://t.me/{handle}"
+
+def get_website_url() -> str:
+    return BOT_CONFIG.get("website_url", "https://dragonx-gamma.vercel.app")
+
+def get_reviews_url() -> str:
+    return BOT_CONFIG.get("reviews_url", "https://dragonx-gamma.vercel.app")
+
+def get_exchanger_1() -> str:
+    return BOT_CONFIG.get("exchanger_1_url", "https://t.me/Eva_obmen")
+
+def get_exchanger_2() -> str:
+    return BOT_CONFIG.get("exchanger_2_url", "https://t.me/sum_exc")
+
+def get_ltc_address() -> str:
+    return BOT_CONFIG.get("ltc_address", "ltc1qr5xhqe9tdd5lekrxurfftdv9hhaaqche2urvhr")
+
+def is_maintenance_mode() -> bool:
+    return bool(BOT_CONFIG.get("maintenance_mode", False))
+
+def get_districts() -> list:
+    return [d for d in BOT_CONFIG.get("districts", []) if d.get("active", True)]
+
+def get_packages() -> list:
+    return [p for p in BOT_CONFIG.get("packages", []) if p.get("active", True)]
+
+# Backward compatibility aliases
+SUPPORT_HANDLE = get_support_handle()
+SUPPORT_URL    = get_support_url()
+WEBSITE_URL    = get_website_url()
+REVIEWS_URL    = get_reviews_url()
+EXCHANGER_1_URL = get_exchanger_1()
+EXCHANGER_2_URL = get_exchanger_2()
+LTC_ADDRESS    = get_ltc_address()
 
 # SMTP Config for sending notification emails (optional, uses fallback logging if unconfigured)
 SMTP_SERVER  = os.getenv("SMTP_SERVER", "smtp.gmail.com")
@@ -46,17 +150,6 @@ PROCESSED_TX_HASHES = set()
 USER_LANGUAGES = {}         # { user_id: 'ru' | 'en' | 'uz' }
 USER_CAPTCHAS = {}          # { user_id: {'ans': int, 'verified': bool} }
 USER_DISTRICTS = {}         # { user_id: {'ru': str, 'en': str, 'uz': str} }
-
-# Dynamic stock inventory managed via Admin Panel or Morning Update
-INVENTORY_STOCKS = {
-    "buy_2": 50,
-    "buy_3": 40,
-    "buy_5": 30,
-    "buy_10": 20,
-    "buy_20": 15,
-    "buy_50": 10,
-    "buy_100": 5
-}
 
 DEFAULT_SEED_ORDERS = {
     "DRGX-9024-8142": {
@@ -644,7 +737,8 @@ async def menu(callback: CallbackQuery):
 
     # ── Catalogue ────────────────────────────────────────────────────────────
     elif data == "catalog":
-        btn_rega  = {"ru": "💊 Рега", "en": "💊 Rega", "uz": "💊 Rega"}[lang]
+        p_name = get_product_name()
+        btn_rega  = {"ru": f"💊 {p_name}", "en": f"💊 {p_name}", "uz": f"💊 {p_name}"}[lang]
         btn_home  = {"ru": "🔙 Главное меню", "en": "🔙 Main Menu", "uz": "🔙 Asosiy menyu"}[lang]
 
         keyboard = InlineKeyboardMarkup(inline_keyboard=[
@@ -653,14 +747,15 @@ async def menu(callback: CallbackQuery):
         ])
 
         cat_txt = {
-            "ru": "🛍 <b>Каталог товаров DRAGON-X</b>\n\n• 💊 <b>Рега</b>",
-            "en": "🛍 <b>DRAGON-X Product Catalog</b>\n\n• 💊 <b>Rega</b>",
-            "uz": "🛍 <b>DRAGON-X Mahsulotlar katalogi</b>\n\n• 💊 <b>Rega</b>"
+            "ru": f"🛍 <b>Каталог товаров DRAGON-X</b>\n\n• 💊 <b>{p_name}</b>",
+            "en": f"🛍 <b>DRAGON-X Product Catalog</b>\n\n• 💊 <b>{p_name}</b>",
+            "uz": f"🛍 <b>DRAGON-X Mahsulotlar katalogi</b>\n\n• 💊 <b>{p_name}</b>"
         }[lang]
         await callback.message.answer(cat_txt, reply_markup=keyboard)
 
     # ── Product Selection -> Region Step ─────────────────────────────────────
     elif data == "category_medical":
+        p_name = get_product_name()
         btn_reg  = {"ru": "📍 Выбрать регион", "en": "📍 Select Region", "uz": "📍 Hududni tanlash"}[lang]
         btn_cat  = {"ru": "🔙 Каталог",          "en": "🔙 Catalog",       "uz": "🔙 Katalog"}[lang]
 
@@ -670,9 +765,9 @@ async def menu(callback: CallbackQuery):
         ])
 
         prod_txt = {
-            "ru": "💊 <b>Рега</b>\n\nПерейдите к выбору региона доставки и выдачи:",
-            "en": "💊 <b>Rega</b>\n\nProceed to select delivery region:",
-            "uz": "💊 <b>Rega</b>\n\nYetkazib berish hududini tanlashga o'ting:"
+            "ru": f"💊 <b>{p_name}</b>\n\nПерейдите к выбору региона доставки и выдачи:",
+            "en": f"💊 <b>{p_name}</b>\n\nProceed to select delivery region:",
+            "uz": f"💊 <b>{p_name}</b>\n\nYetkazib berish hududini tanlashga o'ting:"
         }[lang]
         await callback.message.answer(prod_txt, reply_markup=keyboard)
 
@@ -693,38 +788,42 @@ async def menu(callback: CallbackQuery):
         }[lang]
         await callback.message.answer(reg_txt, reply_markup=keyboard)
 
-    # ── Tashkent -> District Selection (Чиланзор, Яшнабад, Ulugbek) ───────────
+    # ── Tashkent -> District Selection (Dynamic from BOT_CONFIG) ─────────────
     elif data == "region_tashkent":
-        btn_chil = {"ru": "📍 Чиланзор", "en": "📍 Chilanzar", "uz": "📍 Chilonzor"}[lang]
-        btn_yash = {"ru": "📍 Яшнабад",  "en": "📍 Yashnabad",  "uz": "📍 Yashnobod"}[lang]
-        btn_ulug = {"ru": "📍 Ulugbek",   "en": "📍 Ulugbek",   "uz": "📍 Ulug'bek"}[lang]
+        active_dists = get_districts()
         btn_reg  = {"ru": "🔙 К выбору региона", "en": "🔙 Select Region",   "uz": "🔙 Hududga qaytish"}[lang]
         btn_home = {"ru": "🔙 Главное меню",     "en": "🔙 Main Menu",       "uz": "🔙 Asosiy menyu"}[lang]
 
-        keyboard = InlineKeyboardMarkup(inline_keyboard=[
-            [InlineKeyboardButton(text=btn_chil, callback_data="district_chilanzer")],
-            [InlineKeyboardButton(text=btn_yash, callback_data="district_yashnabad")],
-            [InlineKeyboardButton(text=btn_ulug, callback_data="district_ulugbek")],
-            [InlineKeyboardButton(text=btn_reg,  callback_data="select_region")],
-            [InlineKeyboardButton(text=btn_home, callback_data="home")]
-        ])
+        kb_rows = []
+        for d in active_dists:
+            kb_rows.append([InlineKeyboardButton(text=f"📍 {d['name']}", callback_data=d["id"])])
+        kb_rows.append([InlineKeyboardButton(text=btn_reg, callback_data="select_region")])
+        kb_rows.append([InlineKeyboardButton(text=btn_home, callback_data="home")])
 
+        keyboard = InlineKeyboardMarkup(inline_keyboard=kb_rows)
+
+        dist_bullets = "\n".join([f"• <b>{d['name']}</b>" for d in active_dists]) or "• <b>Чиланзор</b>\n• <b>Яшнабад</b>\n• <b>Ulugbek</b>"
         dist_txt = {
-            "ru": "📍 <b>Регион: Ташкент</b>\n\n🏘 <b>Выберите район:</b>\n• <b>Чиланзор</b>\n• <b>Яшнабад</b>\n• <b>Ulugbek</b>",
-            "en": "📍 <b>Region: Tashkent</b>\n\n🏘 <b>Select District:</b>\n• <b>Chilanzar</b>\n• <b>Yashnabad</b>\n• <b>Ulugbek</b>",
-            "uz": "📍 <b>Hudud: Toshkent</b>\n\n🏘 <b>Tuman tanlang:</b>\n• <b>Chilonzor</b>\n• <b>Yashnobod</b>\n• <b>Ulug'bek</b>"
+            "ru": f"📍 <b>Регион: Ташкент</b>\n\n🏘 <b>Выберите район:</b>\n{dist_bullets}",
+            "en": f"📍 <b>Region: Tashkent</b>\n\n🏘 <b>Select District:</b>\n{dist_bullets}",
+            "uz": f"📍 <b>Hudud: Toshkent</b>\n\n🏘 <b>Tuman tanlang:</b>\n{dist_bullets}"
         }[lang]
         await callback.message.answer(dist_txt, reply_markup=keyboard)
 
     # ── 4th Page: Price Section & Quantity Options with Stock Verification ───
-    elif data in ("district_chilanzer", "district_yashnabad", "district_ulugbek", "district_mirabad", "product_pregabalin"):
-        district_map = {
-            "district_chilanzer": {"ru": "Чиланзор", "en": "Chilanzar", "uz": "Chilonzor"},
-            "district_yashnabad": {"ru": "Яшнабад",  "en": "Yashnabad",  "uz": "Yashnobod"},
-            "district_ulugbek":   {"ru": "Ulugbek",   "en": "Ulugbek",   "uz": "Ulug'bek"},
-        }
-        if data in district_map:
-            USER_DISTRICTS[user_id] = district_map[data]
+    elif data.startswith("district_") or data.startswith("dist_") or data == "product_pregabalin":
+        active_dists = get_districts()
+        found_dist = next((d for d in active_dists if d["id"] == data), None)
+        if found_dist:
+            USER_DISTRICTS[user_id] = {"ru": found_dist["name"], "en": found_dist["name"], "uz": found_dist["name"]}
+        else:
+            district_map = {
+                "district_chilanzer": {"ru": "Чиланзор", "en": "Chilanzar", "uz": "Chilonzor"},
+                "district_yashnabad": {"ru": "Яшнабад",  "en": "Yashnabad",  "uz": "Yashnobod"},
+                "district_ulugbek":   {"ru": "Ulugbek",   "en": "Ulugbek",   "uz": "Ulug'bek"},
+            }
+            if data in district_map:
+                USER_DISTRICTS[user_id] = district_map[data]
 
         cur_district = USER_DISTRICTS.get(user_id, {"ru": "Чиланзор", "en": "Chilanzar", "uz": "Chilonzor"})[lang]
         lbl_stock = {"ru": "в наличии", "en": "in stock", "uz": "mavjud"}[lang]
@@ -732,81 +831,60 @@ async def menu(callback: CallbackQuery):
         btn_dist  = {"ru": "🔙 К выбору района",    "en": "🔙 Select District",  "uz": "🔙 Tumanga qaytish"}[lang]
         btn_home  = {"ru": "🔙 Главное меню",        "en": "🔙 Main Menu",        "uz": "🔙 Asosiy menyu"}[lang]
 
-        keyboard = InlineKeyboardMarkup(inline_keyboard=[
-            [
-                InlineKeyboardButton(text=f"2 pcs — 25$ ({INVENTORY_STOCKS.get('buy_2', 0)} {lbl_stock})",   callback_data="buy_2"),
-                InlineKeyboardButton(text=f"3 pcs — 35$ ({INVENTORY_STOCKS.get('buy_3', 0)} {lbl_stock})",   callback_data="buy_3")
-            ],
-            [
-                InlineKeyboardButton(text=f"5 pcs — 55$ ({INVENTORY_STOCKS.get('buy_5', 0)} {lbl_stock})",   callback_data="buy_5"),
-                InlineKeyboardButton(text=f"10 pcs — 108$ ({INVENTORY_STOCKS.get('buy_10', 0)} {lbl_stock})", callback_data="buy_10")
-            ],
-            [
-                InlineKeyboardButton(text=f"20 pcs — 210$ ({INVENTORY_STOCKS.get('buy_20', 0)} {lbl_stock})", callback_data="buy_20"),
-                InlineKeyboardButton(text=f"50 pcs — 510$ ({INVENTORY_STOCKS.get('buy_50', 0)} {lbl_stock})", callback_data="buy_50")
-            ],
-            [
-                InlineKeyboardButton(text=f"100 pcs — 1000$ ({INVENTORY_STOCKS.get('buy_100', 0)} {lbl_stock})", callback_data="buy_100")
-            ],
-            [
-                InlineKeyboardButton(text=btn_op,   url=SUPPORT_URL)
-            ],
-            [
-                InlineKeyboardButton(text=btn_dist, callback_data="region_tashkent"),
-                InlineKeyboardButton(text=btn_home, callback_data="home")
-            ]
+        active_pkgs = get_packages()
+        kb_rows = []
+        row = []
+        for pkg in active_pkgs:
+            k = pkg["key"]
+            stk = INVENTORY_STOCKS.get(k, pkg.get("stock", 0))
+            q_num = pkg.get("qty_num", 2)
+            p_usd = pkg.get("price_usd", 25)
+            row.append(InlineKeyboardButton(text=f"{q_num} pcs — {p_usd}$ ({stk} {lbl_stock})", callback_data=k))
+            if len(row) == 2:
+                kb_rows.append(row)
+                row = []
+        if row:
+            kb_rows.append(row)
+
+        kb_rows.append([InlineKeyboardButton(text=btn_op, url=get_support_url())])
+        kb_rows.append([
+            InlineKeyboardButton(text=btn_dist, callback_data="region_tashkent"),
+            InlineKeyboardButton(text=btn_home, callback_data="home")
+        ])
+        keyboard = InlineKeyboardMarkup(inline_keyboard=kb_rows)
+
+        price_bullets = "\n".join([
+            f"• {p.get('qty_num', 2)} штук — <b>{p.get('price_usd', 25)}$</b> [В наличии: {INVENTORY_STOCKS.get(p['key'], p.get('stock', 0))}]"
+            for p in active_pkgs
         ])
 
-        st2   = INVENTORY_STOCKS.get('buy_2', 0)
-        st3   = INVENTORY_STOCKS.get('buy_3', 0)
-        st5   = INVENTORY_STOCKS.get('buy_5', 0)
-        st10  = INVENTORY_STOCKS.get('buy_10', 0)
-        st20  = INVENTORY_STOCKS.get('buy_20', 0)
-        st50  = INVENTORY_STOCKS.get('buy_50', 0)
-        st100 = INVENTORY_STOCKS.get('buy_100', 0)
+        p_name = get_product_name()
+        ltc_addr = get_ltc_address()
 
         price_txt = {
-            "ru": f"💊 <b>Рега</b>\n"
+            "ru": f"💊 <b>{p_name}</b>\n"
                   f"📍 <b>Регион:</b> Ташкент\n"
                   f"🏘 <b>Район:</b> {cur_district}\n\n"
                   "💰 <b>Прайс-лист и остатки на сегодня:</b>\n"
-                  f"• 2 штук — <b>25$</b> [В наличии: {st2}]\n"
-                  f"• 3 штук — <b>35$</b> [В наличии: {st3}]\n"
-                  f"• 5 штук — <b>55$</b> [В наличии: {st5}]\n"
-                  f"• 10 штук — <b>108$</b> [В наличии: {st10}]\n"
-                  f"• 20 штук — <b>210$</b> [В наличии: {st20}]\n"
-                  f"• 50 штук — <b>510$</b> [В наличии: {st50}]\n"
-                  f"• 100 штук — <b>1000$</b> [В наличии: {st100}]\n\n"
+                  f"{price_bullets}\n\n"
                   "💳 <b>Оплата принимается на LTC адрес:</b> (нажмите, чтобы открыть)\n"
-                  f"<tg-spoiler>{LTC_ADDRESS}</tg-spoiler>\n\n"
+                  f"<tg-spoiler>{ltc_addr}</tg-spoiler>\n\n"
                   "👇 Выберите нужную фасовку для оформления заказа:",
-            "en": f"💊 <b>Rega</b>\n"
+            "en": f"💊 <b>{p_name}</b>\n"
                   f"📍 <b>Region:</b> Tashkent\n"
                   f"🏘 <b>District:</b> {cur_district}\n\n"
                   "💰 <b>Price List & Today's Stock:</b>\n"
-                  f"• 2 pcs — <b>25$</b> [In stock: {st2}]\n"
-                  f"• 3 pcs — <b>35$</b> [In stock: {st3}]\n"
-                  f"• 5 pcs — <b>55$</b> [In stock: {st5}]\n"
-                  f"• 10 pcs — <b>108$</b> [In stock: {st10}]\n"
-                  f"• 20 pcs — <b>210$</b> [In stock: {st20}]\n"
-                  f"• 50 pcs — <b>510$</b> [In stock: {st50}]\n"
-                  f"• 100 pcs — <b>1000$</b> [In stock: {st100}]\n\n"
+                  f"{price_bullets}\n\n"
                   "💳 <b>Payment accepted via LTC address:</b> (tap to reveal)\n"
-                  f"<tg-spoiler>{LTC_ADDRESS}</tg-spoiler>\n\n"
+                  f"<tg-spoiler>{ltc_addr}</tg-spoiler>\n\n"
                   "👇 Select desired quantity to order:",
-            "uz": f"💊 <b>Rega</b>\n"
+            "uz": f"💊 <b>{p_name}</b>\n"
                   f"📍 <b>Hudud:</b> Toshkent\n"
                   f"🏘 <b>Tuman:</b> {cur_district}\n\n"
                   "💰 <b>Narxlar va bugungi mavjudlik:</b>\n"
-                  f"• 2 ta — <b>25$</b> [Mavjud: {st2}]\n"
-                  f"• 3 ta — <b>35$</b> [Mavjud: {st3}]\n"
-                  f"• 5 ta — <b>55$</b> [Mavjud: {st5}]\n"
-                  f"• 10 ta — <b>108$</b> [Mavjud: {st10}]\n"
-                  f"• 20 ta — <b>210$</b> [Mavjud: {st20}]\n"
-                  f"• 50 ta — <b>510$</b> [Mavjud: {st50}]\n"
-                  f"• 100 ta — <b>1000$</b> [Mavjud: {st100}]\n\n"
+                  f"{price_bullets}\n\n"
                   "💳 <b>To'lov LTC manzili orqali:</b> (ko'rish uchun bosing)\n"
-                  f"<tg-spoiler>{LTC_ADDRESS}</tg-spoiler>\n\n"
+                  f"<tg-spoiler>{ltc_addr}</tg-spoiler>\n\n"
                   "👇 Buyurtma uchun miqdorni tanlang:"
         }[lang]
         await callback.message.answer(price_txt, reply_markup=keyboard)
@@ -814,12 +892,15 @@ async def menu(callback: CallbackQuery):
     # ── Order Confirmation with Stock Check & Unique Reference ID ─────────────
     elif data.startswith("buy_"):
         cur_district = USER_DISTRICTS.get(user_id, {"ru": "Чиланзор", "en": "Chilanzar", "uz": "Chilonzor"})[lang]
-        stock_count = INVENTORY_STOCKS.get(data, 0)
+        active_pkgs = get_packages()
+        pkg = next((p for p in active_pkgs if p["key"] == data), None)
+
+        stock_count = INVENTORY_STOCKS.get(data, pkg.get("stock", 0) if pkg else 0)
         if stock_count <= 0:
             btn_op    = {"ru": "💬 Связаться с оператором", "en": "💬 Contact Operator", "uz": "💬 Operatorga yozish"}[lang]
             btn_price = {"ru": "🔙 К выбору района",      "en": "🔙 Select District",    "uz": "🔙 Tumanga qaytish"}[lang]
             keyboard = InlineKeyboardMarkup(inline_keyboard=[
-                [InlineKeyboardButton(text=btn_op,    url=SUPPORT_URL)],
+                [InlineKeyboardButton(text=btn_op,    url=get_support_url())],
                 [InlineKeyboardButton(text=btn_price, callback_data="region_tashkent")]
             ])
             out_txt = {
@@ -833,24 +914,20 @@ async def menu(callback: CallbackQuery):
         order_rand = random.randint(1000, 9999)
         unique_order_id = f"DRGX-{user_id}-{order_rand}"
 
-        qty_map = {
-            "buy_2":   ({"ru": "2 штук", "en": "2 pcs", "uz": "2 ta"}, "25$"),
-            "buy_3":   ({"ru": "3 штук", "en": "3 pcs", "uz": "3 ta"}, "35$"),
-            "buy_5":   ({"ru": "5 штук", "en": "5 pcs", "uz": "5 ta"}, "55$"),
-            "buy_10":  ({"ru": "10 штук", "en": "10 pcs", "uz": "10 ta"}, "108$"),
-            "buy_20":  ({"ru": "20 штук", "en": "20 pcs", "uz": "20 ta"}, "210$"),
-            "buy_50":  ({"ru": "50 штук", "en": "50 pcs", "uz": "50 ta"}, "510$"),
-            "buy_100": ({"ru": "100 штук", "en": "100 pcs", "uz": "100 ta"}, "1000$"),
-        }
-        qty_data = qty_map.get(data, ({"ru": "штук", "en": "pcs", "uz": "ta"}, "N/A"))
-        qty_label = qty_data[0][lang]
-        price_val = qty_data[1]
-        
-        def_coords = "41.2721, 69.2045" if "Чиланзор" in cur_district else ("41.2985, 69.3241" if "Яшнабад" in cur_district else "41.3412, 69.4520")
-        try:
-            total_amt = float(price_val.replace('$', '').strip())
-        except Exception:
+        if pkg:
+            qty_label = pkg.get(f"label_{lang}", pkg.get("label_ru", f"{pkg.get('qty_num', 2)} шт"))
+            price_val = f"{pkg.get('price_usd', 25)}$"
+            total_amt = float(pkg.get("price_usd", 25))
+        else:
+            qty_label = "2 штук"
+            price_val = "25$"
             total_amt = 25.0
+
+        p_name = get_product_name()
+        ltc_addr = get_ltc_address()
+
+        d_item = next((d for d in get_districts() if d.get("name") == cur_district), None)
+        def_coords = d_item.get("coords") if d_item else "41.2721, 69.2045"
 
         ACTIVE_ORDERS[unique_order_id] = {
             'id': unique_order_id,
@@ -863,7 +940,7 @@ async def menu(callback: CallbackQuery):
                 'lang': lang
             },
             'created_at': time.time(),
-            'product': "Рега",
+            'product': p_name,
             'qty': qty_label,
             'price': price_val,
             'total_amount': total_amt,
@@ -890,10 +967,10 @@ async def menu(callback: CallbackQuery):
         keyboard = InlineKeyboardMarkup(inline_keyboard=[
             [InlineKeyboardButton(text=btn_verify, callback_data=f"check_tx_{unique_order_id}")],
             [
-                InlineKeyboardButton(text=btn_ex1, url=EXCHANGER_1_URL),
-                InlineKeyboardButton(text=btn_ex2, url=EXCHANGER_2_URL)
+                InlineKeyboardButton(text=btn_ex1, url=get_exchanger_1()),
+                InlineKeyboardButton(text=btn_ex2, url=get_exchanger_2())
             ],
-            [InlineKeyboardButton(text=btn_pay,    url=SUPPORT_URL)],
+            [InlineKeyboardButton(text=btn_pay,    url=get_support_url())],
             [InlineKeyboardButton(text=btn_price,  callback_data="region_tashkent")],
             [InlineKeyboardButton(text=btn_home,   callback_data="home")]
         ])
@@ -902,39 +979,39 @@ async def menu(callback: CallbackQuery):
             "ru": "📦 <b>Оформление заказа — DRAGON-X</b>\n\n"
                   "📍 <b>Регион:</b> Ташкент\n"
                   f"🏘 <b>Район:</b> {cur_district}\n"
-                  "💊 <b>Рега</b>\n"
+                  f"💊 <b>{p_name}</b>\n"
                   f"📊 <b>Объем:</b> {qty_label}\n"
                   f"💵 <b>Сумма к оплате:</b> {price_val}\n\n"
                   f"🔑 <b>Ваш уникальный ID заказа / клиента:</b>\n"
                   f"<code>{unique_order_id}</code>\n\n"
                   "💳 <b>Реквизиты для оплаты LTC:</b> (нажмите, чтобы открыть)\n"
-                  f"<tg-spoiler>{LTC_ADDRESS}</tg-spoiler>\n\n"
+                  f"<tg-spoiler>{ltc_addr}</tg-spoiler>\n\n"
                   "📌 <b>Инструкция по оплате:</b>\n"
                   "1. Нажмите на скрытый текст выше, чтобы увидеть LTC адрес, и переведите сумму заказа.\n"
                   "2. После перевода нажмите кнопку <b>🔍 Проверить транзакцию LTC</b> для авто-проверки в блокчейне!",
             "en": "📦 <b>Order Checkout — DRAGON-X</b>\n\n"
                   "📍 <b>Region:</b> Tashkent\n"
                   f"🏘 <b>District:</b> {cur_district}\n"
-                  "💊 <b>Product:</b> Rega\n"
+                  f"💊 <b>Product:</b> {p_name}\n"
                   f"📊 <b>Volume:</b> {qty_label}\n"
                   f"💵 <b>Total Amount:</b> {price_val}\n\n"
                   f"🔑 <b>Your Unique Order / Client ID:</b>\n"
                   f"<code>{unique_order_id}</code>\n\n"
                   "💳 <b>LTC Payment Address:</b> (tap to reveal)\n"
-                  f"<tg-spoiler>{LTC_ADDRESS}</tg-spoiler>\n\n"
+                  f"<tg-spoiler>{ltc_addr}</tg-spoiler>\n\n"
                   "📌 <b>Payment Instructions:</b>\n"
                   "1. Tap the spoiler above to reveal the LTC address, and send the order amount.\n"
                   "2. After sending, click <b>🔍 Verify LTC Transaction</b> for automated blockchain check!",
             "uz": "📦 <b>Buyurtmani rasmiylashtirish — DRAGON-X</b>\n\n"
                   "📍 <b>Hudud:</b> Toshkent\n"
                   f"🏘 <b>Tuman:</b> {cur_district}\n"
-                  "💊 <b>Mahsulot:</b> Rega\n"
+                  f"💊 <b>Mahsulot:</b> {p_name}\n"
                   f"📊 <b>Hajmi:</b> {qty_label}\n"
                   f"💵 <b>To'lov summasi:</b> {price_val}\n\n"
                   f"🔑 <b>Sizning noyob buyurtma ID:</b>\n"
                   f"<code>{unique_order_id}</code>\n\n"
                   "💳 <b>LTC To'lov manzili:</b> (ko'rish uchun bosing)\n"
-                  f"<tg-spoiler>{LTC_ADDRESS}</tg-spoiler>\n\n"
+                  f"<tg-spoiler>{ltc_addr}</tg-spoiler>\n\n"
                   "📌 <b>To'lov yo'riqnomasi:</b>\n"
                   "1. LTC manzilini ko'rish uchun yuqoridagi spoylerga bosing va to'lovni yuboring.\n"
                   "2. Yuborgandan so'ng blokcheynda tekshirish uchun <b>🔍 LTC Tranzaksiyani tekshirish</b> tugmasini bosing!"
@@ -956,7 +1033,7 @@ async def menu(callback: CallbackQuery):
         }[lang]
         await callback.message.answer(checking_msg)
         
-        new_tx = await check_new_ltc_transaction(LTC_ADDRESS, min_time)
+        new_tx = await check_new_ltc_transaction(get_ltc_address(), min_time)
         
         if new_tx:
             PROCESSED_TX_HASHES.add(new_tx['hash'])
@@ -991,7 +1068,7 @@ async def menu(callback: CallbackQuery):
             btn_home = {"ru": "🔙 Главное меню",                       "en": "🔙 Main Menu",                    "uz": "🔙 Asosiy menyu"}[lang]
 
             keyboard = InlineKeyboardMarkup(inline_keyboard=[
-                [InlineKeyboardButton(text=btn_get,  url=SUPPORT_URL)],
+                [InlineKeyboardButton(text=btn_get,  url=get_support_url())],
                 [InlineKeyboardButton(text=btn_home, callback_data="home")]
             ])
 
@@ -1027,13 +1104,14 @@ async def menu(callback: CallbackQuery):
             btn_op    = {"ru": "💬 Связаться с оператором напрямую", "en": "💬 Contact Operator", "uz": "💬 Operator bilan bog'lanish"}[lang]
             btn_home  = {"ru": "🔙 Главное меню",                      "en": "🔙 Main Menu",        "uz": "🔙 Asosiy menyu"}[lang]
 
+            ltc_addr = get_ltc_address()
             keyboard = InlineKeyboardMarkup(inline_keyboard=[
                 [InlineKeyboardButton(text=btn_retry, callback_data=data)],
                 [
-                    InlineKeyboardButton(text=btn_ex1, url=EXCHANGER_1_URL),
-                    InlineKeyboardButton(text=btn_ex2, url=EXCHANGER_2_URL)
+                    InlineKeyboardButton(text=btn_ex1, url=get_exchanger_1()),
+                    InlineKeyboardButton(text=btn_ex2, url=get_exchanger_2())
                 ],
-                [InlineKeyboardButton(text=btn_op,    url=SUPPORT_URL)],
+                [InlineKeyboardButton(text=btn_op,    url=get_support_url())],
                 [InlineKeyboardButton(text=btn_home,  callback_data="home")]
             ])
 
@@ -1041,17 +1119,17 @@ async def menu(callback: CallbackQuery):
                 "ru": "⏳ <b>Новая транзакция пока не найдена в сети Litecoin.</b>\n\n"
                       f"🔑 <b>Код заказа:</b> <code>{order_code}</code>\n"
                       "💳 <b>Адрес для оплаты LTC:</b> (нажмите, чтобы открыть)\n"
-                      f"<tg-spoiler>{LTC_ADDRESS}</tg-spoiler>\n\n"
+                      f"<tg-spoiler>{ltc_addr}</tg-spoiler>\n\n"
                       "💡 <i>Примечание: Проверяются только НОВЫЕ переводы, сделанные после оформления заказа. Если вы только что перевели средства, нажмите «Проверить еще раз» через 1–2 минуты.</i>",
                 "en": "⏳ <b>New transaction not found on Litecoin network yet.</b>\n\n"
                       f"🔑 <b>Order Code:</b> <code>{order_code}</code>\n"
                       "💳 <b>LTC Payment Address:</b> (tap to reveal)\n"
-                      f"<tg-spoiler>{LTC_ADDRESS}</tg-spoiler>\n\n"
+                      f"<tg-spoiler>{ltc_addr}</tg-spoiler>\n\n"
                       "💡 <i>Note: Only NEW transfers sent after order creation are verified. If you just sent funds, click \"Check Again\" in 1–2 minutes.</i>",
                 "uz": "⏳ <b>Litecoin tarmog'ida hali yangi tranzaksiya topilmadi.</b>\n\n"
                       f"🔑 <b>Buyurtma kodi:</b> <code>{order_code}</code>\n"
                       "💳 <b>LTC To'lov manzili:</b> (ko'rish uchun bosing)\n"
-                      f"<tg-spoiler>{LTC_ADDRESS}</tg-spoiler>\n\n"
+                      f"<tg-spoiler>{ltc_addr}</tg-spoiler>\n\n"
                       "💡 <i>Eslatma: Faqat buyurtma yaratilgandan so'ng yuborilgan YANGI o'tkazmalar tekshiriladi. 1–2 daqiqadan so'ng qayta urinib ko'ring.</i>"
             }[lang]
 
@@ -1065,7 +1143,17 @@ async def menu(callback: CallbackQuery):
 @dp.message()
 async def generic_message_handler(message: Message):
     user_id = message.from_user.id
+    KNOWN_USER_IDS.add(user_id)
     lang = USER_LANGUAGES.setdefault(user_id, "ru")
+
+    if is_maintenance_mode():
+        m_txt = BOT_CONFIG.get("maintenance_text", "⚠️ Бот временно находится на техническом обслуживании.")
+        kb = InlineKeyboardMarkup(inline_keyboard=[
+            [InlineKeyboardButton(text="💬 Связаться с оператором", url=get_support_url())]
+        ])
+        await message.answer(m_txt, reply_markup=kb)
+        return
+
     if not USER_CAPTCHAS.get(user_id, {}).get('verified', False):
         prompt, kb = generate_captcha(user_id, lang)
         await message.answer(
@@ -1436,6 +1524,104 @@ async def update_stock_api(request):
     return cors_response({"status": "invalid payload"}, status=400)
 
 
+async def get_config_api(request):
+    return cors_response({
+        "status": "success",
+        "config": BOT_CONFIG,
+        "stocks": INVENTORY_STOCKS,
+        "active_districts_count": len(get_districts()),
+        "active_packages_count": len(get_packages()),
+        "known_users_count": len(KNOWN_USER_IDS)
+    })
+
+
+async def update_config_api(request):
+    try:
+        data = await request.json()
+        if not isinstance(data, dict):
+            return cors_response({"status": "error", "message": "Payload must be a JSON object"}, status=400)
+
+        # Dynamic fields update
+        if "product_name" in data and data["product_name"]:
+            BOT_CONFIG["product_name"] = str(data["product_name"]).strip()
+        if "support_handle" in data and data["support_handle"]:
+            handle = str(data["support_handle"]).strip()
+            if not handle.startswith("@"):
+                handle = f"@{handle}"
+            BOT_CONFIG["support_handle"] = handle
+            BOT_CONFIG["support_url"] = f"https://t.me/{handle.replace('@','')}"
+        if "support_url" in data and data["support_url"]:
+            BOT_CONFIG["support_url"] = str(data["support_url"]).strip()
+        if "ltc_address" in data and data["ltc_address"]:
+            BOT_CONFIG["ltc_address"] = str(data["ltc_address"]).strip()
+        if "exchanger_1_url" in data and data["exchanger_1_url"]:
+            BOT_CONFIG["exchanger_1_url"] = str(data["exchanger_1_url"]).strip()
+        if "exchanger_2_url" in data and data["exchanger_2_url"]:
+            BOT_CONFIG["exchanger_2_url"] = str(data["exchanger_2_url"]).strip()
+        if "website_url" in data and data["website_url"]:
+            BOT_CONFIG["website_url"] = str(data["website_url"]).strip()
+        if "reviews_url" in data and data["reviews_url"]:
+            BOT_CONFIG["reviews_url"] = str(data["reviews_url"]).strip()
+        if "maintenance_mode" in data:
+            BOT_CONFIG["maintenance_mode"] = bool(data["maintenance_mode"])
+        if "maintenance_text" in data and data["maintenance_text"]:
+            BOT_CONFIG["maintenance_text"] = str(data["maintenance_text"]).strip()
+        if "districts" in data and isinstance(data["districts"], list):
+            BOT_CONFIG["districts"] = data["districts"]
+        if "packages" in data and isinstance(data["packages"], list):
+            BOT_CONFIG["packages"] = data["packages"]
+            for pkg in data["packages"]:
+                k = pkg.get("key")
+                if k and "stock" in pkg:
+                    try:
+                        INVENTORY_STOCKS[k] = int(pkg["stock"])
+                    except Exception:
+                        pass
+        if "stocks" in data and isinstance(data["stocks"], dict):
+            INVENTORY_STOCKS.update(data["stocks"])
+
+        save_bot_config()
+        logging.info(f"Bot config updated live via Admin Panel API: product={BOT_CONFIG.get('product_name')}, LTC={BOT_CONFIG.get('ltc_address')}")
+        return cors_response({"status": "success", "config": BOT_CONFIG, "stocks": INVENTORY_STOCKS})
+    except Exception as e:
+        return cors_response({"status": "error", "message": str(e)}, status=400)
+
+
+async def broadcast_api(request):
+    try:
+        data = await request.json()
+        text = (data.get("message") or "").strip()
+        if not text:
+            return cors_response({"status": "error", "message": "Message text is required"}, status=400)
+
+        # Collect target user IDs
+        target_users = set(KNOWN_USER_IDS)
+        for o in ACTIVE_ORDERS.values():
+            uid = o.get("user_id")
+            if uid:
+                target_users.add(uid)
+
+        sent = 0
+        failed = 0
+        for uid in target_users:
+            try:
+                await bot.send_message(chat_id=uid, text=text)
+                sent += 1
+                await asyncio.sleep(0.04)
+            except Exception as e:
+                logging.warning(f"Broadcast failed for user {uid}: {e}")
+                failed += 1
+
+        return cors_response({
+            "status": "success",
+            "total_recipients": len(target_users),
+            "sent_count": sent,
+            "failed_count": failed
+        })
+    except Exception as e:
+        return cors_response({"status": "error", "message": str(e)}, status=400)
+
+
 async def run_web_server():
     port = int(os.getenv("PORT", 10000))
     app  = web.Application()
@@ -1447,6 +1633,9 @@ async def run_web_server():
     app.router.add_get("/", health_check)
     app.router.add_get("/api/ping", health_check)
     app.router.add_get("/api/health", health_check)
+    app.router.add_get("/api/config", get_config_api)
+    app.router.add_post("/api/config", update_config_api)
+    app.router.add_post("/api/broadcast", broadcast_api)
     app.router.add_get("/api/orders", get_orders_api)
     app.router.add_post("/api/orders", create_order_api)
     app.router.add_post("/api/orders/update", update_order_api)
@@ -1471,10 +1660,11 @@ async def main():
     username = await get_bot_username()
     logging.info(f"Bot info loaded: @{username}")
 
-    # Load persistent orders
+    # Load dynamic bot config & persistent orders
+    load_bot_config()
     load_orders()
 
-    await init_historical_txs(LTC_ADDRESS)
+    await init_historical_txs(get_ltc_address())
 
     # Run Web Server in background
     asyncio.create_task(run_web_server())

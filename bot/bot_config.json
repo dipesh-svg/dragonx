@@ -1,0 +1,106 @@
+{
+  "product_name": "Рега",
+  "support_handle": "@ashley_graves3",
+  "support_url": "https://t.me/ashley_graves3",
+  "website_url": "https://dragonx-gamma.vercel.app",
+  "reviews_url": "https://dragonx-gamma.vercel.app",
+  "exchanger_1_name": "🔄 Обменник 1 (Eva)",
+  "exchanger_1_url": "https://t.me/Eva_obmen",
+  "exchanger_2_name": "🔄 Обменник 2 (Sum Exc)",
+  "exchanger_2_url": "https://t.me/sum_exc",
+  "ltc_address": "ltc1qr5xhqe9tdd5lekrxurfftdv9hhaaqche2urvhr",
+  "maintenance_mode": false,
+  "maintenance_text": "⚠️ Бот временно на техническом обслуживании. Свяжитесь с оператором: @ashley_graves3",
+  "districts": [
+    {
+      "id": "district_chilanzer",
+      "name": "Чиланзор",
+      "coords": "41.2721, 69.2045",
+      "active": true
+    },
+    {
+      "id": "district_yashnabad",
+      "name": "Яшнабад",
+      "coords": "41.2985, 69.3241",
+      "active": true
+    },
+    {
+      "id": "district_ulugbek",
+      "name": "Ulugbek",
+      "coords": "41.3412, 69.4520",
+      "active": true
+    }
+  ],
+  "packages": [
+    {
+      "key": "buy_2",
+      "qty_num": 2,
+      "label_ru": "2 штук",
+      "label_en": "2 pcs",
+      "label_uz": "2 ta",
+      "price_usd": 25,
+      "stock": 50,
+      "active": true
+    },
+    {
+      "key": "buy_3",
+      "qty_num": 3,
+      "label_ru": "3 штук",
+      "label_en": "3 pcs",
+      "label_uz": "3 ta",
+      "price_usd": 35,
+      "stock": 40,
+      "active": true
+    },
+    {
+      "key": "buy_5",
+      "qty_num": 5,
+      "label_ru": "5 штук",
+      "label_en": "5 pcs",
+      "label_uz": "5 ta",
+      "price_usd": 55,
+      "stock": 30,
+      "active": true
+    },
+    {
+      "key": "buy_10",
+      "qty_num": 10,
+      "label_ru": "10 штук",
+      "label_en": "10 pcs",
+      "label_uz": "10 ta",
+      "price_usd": 108,
+      "stock": 20,
+      "active": true
+    },
+    {
+      "key": "buy_20",
+      "qty_num": 20,
+      "label_ru": "20 штук",
+      "label_en": "20 pcs",
+      "label_uz": "20 ta",
+      "price_usd": 210,
+      "stock": 15,
+      "active": true
+    },
+    {
+      "key": "buy_50",
+      "qty_num": 50,
+      "label_ru": "50 штук",
+      "label_en": "50 pcs",
+      "label_uz": "50 ta",
+      "price_usd": 510,
+      "stock": 10,
+      "active": true
+    },
+    {
+      "key": "buy_100",
+      "qty_num": 100,
+      "label_ru": "100 штук",
+      "label_en": "100 pcs",
+      "label_uz": "100 ta",
+      "price_usd": 1000,
+      "stock": 5,
+      "active": true
+    }
+  ]
+}
