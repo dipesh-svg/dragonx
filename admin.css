@@ -1321,3 +1321,91 @@
   box-shadow: 0 0 25px rgba(139, 92, 246, 0.6) !important;
 }
 
+/* Master Control Header & Banner Styles */
+.header-master-btn {
+  background: linear-gradient(135deg, #00f0ff 0%, #3b82f6 100%) !important;
+  color: #030712 !important;
+  font-weight: 800 !important;
+  box-shadow: 0 0 20px rgba(0, 240, 255, 0.45) !important;
+  border: none !important;
+}
+
+.header-master-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0 30px rgba(0, 240, 255, 0.75) !important;
+}
+
+.master-control-tab-btn {
+  border: 1px solid rgba(0, 240, 255, 0.35) !important;
+  background: rgba(0, 240, 255, 0.08) !important;
+}
+
+.master-control-tab-btn.active {
+  background: linear-gradient(135deg, rgba(0, 240, 255, 0.25), rgba(59, 130, 246, 0.25)) !important;
+  border-color: #00f0ff !important;
+  box-shadow: 0 0 20px rgba(0, 240, 255, 0.3) !important;
+}
+
+.highlight-tab-title {
+  color: #00f0ff;
+  font-weight: 700;
+}
+
+.live-bot-banner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1.25rem;
+  padding: 1rem 1.4rem;
+  margin-bottom: 1.25rem;
+  background: linear-gradient(90deg, rgba(15, 23, 42, 0.85) 0%, rgba(2, 6, 23, 0.95) 100%);
+  border: 1px solid rgba(0, 240, 255, 0.25);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+}
+
+.live-bot-banner-left {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.live-pulse-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #10b981;
+  box-shadow: 0 0 12px #10b981;
+  animation: pulseDot 1.5s infinite;
+  flex-shrink: 0;
+}
+
+.live-banner-title {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.live-banner-sub {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  margin-top: 0.2rem;
+}
+
+@media (max-width: 768px) {
+  .live-bot-banner {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .live-bot-banner-right {
+    width: 100%;
+  }
+  .live-bot-banner-right button {
+    width: 100%;
+  }
+}
+
+

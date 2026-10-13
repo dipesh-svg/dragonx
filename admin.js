@@ -175,7 +175,7 @@
     users: [],
     botConfig: { ...DEFAULT_BOT_CONFIG },
     stock: { 'buy_2': 50, 'buy_3': 40, 'buy_5': 30, 'buy_10': 20, 'buy_20': 15, 'buy_50': 10, 'buy_100': 5 },
-    botApiUrl: 'https://dragon-x-telegram-bot.onrender.com',
+    botApiUrl: 'https://dragonx.onrender.com',
     isApiOnline: false,
     lastSyncTime: null,
     syncIntervalId: null,
@@ -188,7 +188,7 @@
     if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
       return 'http://localhost:10000';
     }
-    return 'https://dragon-x-telegram-bot.onrender.com';
+    return 'https://dragonx.onrender.com';
   }
 
   // =========================================================================
@@ -263,7 +263,13 @@
       if (savedBot) {
         const parsed = JSON.parse(savedBot);
         AdminState.botConfig = Object.assign({ ...DEFAULT_BOT_CONFIG }, parsed);
-        if (parsed.apiUrl) AdminState.botApiUrl = parsed.apiUrl;
+        if (parsed.apiUrl && !parsed.apiUrl.includes('dragon-x-telegram-bot.onrender.com')) {
+          AdminState.botApiUrl = parsed.apiUrl;
+        } else {
+          AdminState.botApiUrl = detectDefaultApiUrl();
+          AdminState.botConfig.apiUrl = AdminState.botApiUrl;
+          localStorage.setItem(STORAGE_KEYS.BOT_CONFIG, JSON.stringify(AdminState.botConfig));
+        }
       } else {
         AdminState.botConfig = { ...DEFAULT_BOT_CONFIG };
         AdminState.botApiUrl = detectDefaultApiUrl();
@@ -272,6 +278,7 @@
       AdminState.botConfig = { ...DEFAULT_BOT_CONFIG };
       AdminState.botApiUrl = detectDefaultApiUrl();
     }
+
 
     // 2. Orders Local Storage
     try {
@@ -453,20 +460,31 @@
 
     const botMap = new Map();
     botOrders.forEach(bo => {
+      const orderDate = bo.createdAt || 
+        (bo.createdTimestamp ? new Date(bo.createdTimestamp * 1000).toISOString() : 
+        (bo.created_at ? new Date(bo.created_at * 1000).toISOString() : new Date().toISOString()));
+
+      const tg = bo.telegram && bo.telegram !== '—' 
+        ? (bo.telegram.startsWith('@') ? bo.telegram : `@${bo.telegram}`) 
+        : (bo.username ? `@${bo.username.replace('@','')}` : '—');
+
+      const totalVal = parseFloat(bo.totalAmount || bo.price_usd || bo.total_amount || 25);
+      const cryptoVal = parseFloat(bo.cryptoAmount || bo.ltc_amount || (totalVal / 65).toFixed(3));
+
       const normalized = {
         id: bo.id || bo.order_id,
-        createdAt: bo.createdAt || (bo.created_at ? new Date(bo.created_at * 1000).toISOString() : new Date().toISOString()),
-        customerId: bo.customerId || bo.customer_id || (bo.user_id ? `TG-${bo.user_id}` : 'DRGX-TG-USER'),
-        customerName: bo.customerName || bo.customer_name || 'Покупатель Telegram',
-        telegram: bo.telegram || (bo.username ? `@${bo.username.replace('@','')}` : ''),
+        createdAt: orderDate,
+        customerId: bo.customerId || bo.customer_id || (bo.userId ? `DRGX-${bo.userId}` : (bo.user_id ? `DRGX-${bo.user_id}` : 'DRGX-TG-USER')),
+        customerName: bo.customerName || bo.customer_name || (bo.userId ? `Клиент #${bo.userId}` : 'Покупатель Telegram'),
+        telegram: tg,
         district: bo.district || 'Чиланзор',
-        item: bo.item || AdminState.botConfig.product_name || 'Рега',
-        volume: bo.volume || `${bo.quantity || 2} шт`,
-        totalAmount: parseFloat(bo.totalAmount || bo.price_usd || 25),
-        currency: 'USD',
-        cryptoAmount: parseFloat(bo.cryptoAmount || bo.ltc_amount || 0),
+        item: bo.product || bo.item || AdminState.botConfig.product_name || 'Рега',
+        volume: bo.qty || bo.volume || `${bo.quantity || 2} шт`,
+        totalAmount: totalVal,
+        currency: bo.currency || 'USD',
+        cryptoAmount: cryptoVal,
         cryptoCurrency: 'LTC',
-        status: bo.status || 'paid',
+        status: bo.status || 'pending',
         deliveryLocation: bo.deliveryLocation || bo.location || 'Локация выдается в боте',
         coordinates: bo.coordinates || DISTRICT_COORDS[bo.district] || '41.2721, 69.2045',
         trackingCode: bo.trackingCode || bo.tracking_code || `DRGX-TRK-${(bo.id||'').slice(-4)}`,
@@ -490,6 +508,9 @@
         processedIds.add(lo.id);
       }
     });
+
+    // Sort newest orders at top
+    merged.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
     AdminState.orders = merged;
     saveOrdersLocally();
@@ -818,6 +839,64 @@
         </tr>
       `).join('');
     }
+
+    // 3. Tab 5 Controls (Payment, Exchangers, Support, Maintenance)
+    const ltcInp = document.getElementById('cfgBotLtcWallet');
+    if (ltcInp) ltcInp.value = AdminState.botConfig.ltc_address || 'ltc1qr5xhqe9tdd5lekrxurfftdv9hhaaqche2urvhr';
+
+    const ex1Inp = document.getElementById('cfgBotExchanger1');
+    if (ex1Inp) ex1Inp.value = AdminState.botConfig.exchanger_1_url || 'https://t.me/Eva_obmen';
+
+    const ex2Inp = document.getElementById('cfgBotExchanger2');
+    if (ex2Inp) ex2Inp.value = AdminState.botConfig.exchanger_2_url || 'https://t.me/sum_exc';
+
+    const supInp = document.getElementById('cfgBotSupportHandle');
+    if (supInp) supInp.value = AdminState.botConfig.support_handle || '@ashley_graves3';
+
+    const maintToggle = document.getElementById('cfgBotMaintenanceToggle');
+    if (maintToggle) {
+      maintToggle.checked = AdminState.botConfig.maintenance_mode === true;
+      const grp = document.getElementById('cfgMaintenanceTextGroup');
+      if (grp) grp.style.display = maintToggle.checked ? 'block' : 'none';
+    }
+
+    const maintText = document.getElementById('cfgBotMaintenanceText');
+    if (maintText) maintText.value = AdminState.botConfig.maintenance_text || '⚠️ Бот временно находится на техническом обслуживании. Свяжитесь с оператором: @ashley_graves3';
+
+    // 4. Update Tab 1 Banner Elements
+    const bBotName = document.getElementById('bannerBotName');
+    if (bBotName) bBotName.textContent = AdminState.botConfig.username || '@yuan_rndiBOT';
+
+    const bProd = document.getElementById('bannerProdName');
+    if (bProd) bProd.textContent = AdminState.botConfig.product_name || 'Рега';
+
+    const bDist = document.getElementById('bannerDistCount');
+    if (bDist) {
+      const activeCount = (AdminState.botConfig.districts || []).filter(d => d.active !== false).length;
+      bDist.textContent = activeCount;
+    }
+
+    const bLtc = document.getElementById('bannerLtcCode');
+    if (bLtc) {
+      const addr = AdminState.botConfig.ltc_address || 'ltc1qr5xhqe9tdd5lekrxurfftdv9hhaaqche2urvhr';
+      bLtc.textContent = addr.length > 14 ? `${addr.slice(0, 10)}...${addr.slice(-4)}` : addr;
+    }
+
+    const bOnline = document.getElementById('bannerBotOnlineBadge');
+    const bDot = document.getElementById('bannerPulseDot');
+    if (bOnline && bDot) {
+      if (AdminState.isApiOnline) {
+        bOnline.className = 'badge-status-online';
+        bOnline.innerHTML = `<i class="fa-solid fa-circle"></i> ОНЛАЙН (dragonx.onrender.com)`;
+        bDot.style.background = '#10b981';
+        bDot.style.boxShadow = '0 0 12px #10b981';
+      } else {
+        bOnline.className = 'badge-status-offline';
+        bOnline.innerHTML = `<i class="fa-solid fa-circle"></i> АВТОНОМНО (Кэш)`;
+        bDot.style.background = '#f59e0b';
+        bDot.style.boxShadow = '0 0 12px #f59e0b';
+      }
+    }
   }
 
   function addNewPackageRow() {
@@ -930,14 +1009,14 @@
       AdminState.botConfig.districts = updatedDists;
     }
 
-    // 3. Gather Settings from Tab 3
+    // 3. Gather Settings from Tab 5 or Tab 3
     const botUserInp = document.getElementById('adminBotUsername');
-    const botSupInp = document.getElementById('adminOperatorHandle');
-    const ltcInp = document.getElementById('adminBotLtcAddress');
-    const ex1Inp = document.getElementById('adminBotExchanger1');
-    const ex2Inp = document.getElementById('adminBotExchanger2');
-    const maintToggle = document.getElementById('adminBotMaintenanceToggle');
-    const maintText = document.getElementById('adminBotMaintenanceText');
+    const botSupInp = document.getElementById('cfgBotSupportHandle') || document.getElementById('adminOperatorHandle');
+    const ltcInp = document.getElementById('cfgBotLtcWallet') || document.getElementById('adminBotLtcAddress');
+    const ex1Inp = document.getElementById('cfgBotExchanger1') || document.getElementById('adminBotExchanger1');
+    const ex2Inp = document.getElementById('cfgBotExchanger2') || document.getElementById('adminBotExchanger2');
+    const maintToggle = document.getElementById('cfgBotMaintenanceToggle') || document.getElementById('adminBotMaintenanceToggle');
+    const maintText = document.getElementById('cfgBotMaintenanceText') || document.getElementById('adminBotMaintenanceText');
 
     if (botUserInp) AdminState.botConfig.username = botUserInp.value.trim() || '@yuan_rndiBOT';
     if (botSupInp) AdminState.botConfig.support_handle = botSupInp.value.trim() || '@ashley_graves3';
@@ -949,12 +1028,13 @@
 
     saveBotConfigLocally();
     renderTelegramTab();
+    renderBotCatalogTab();
     renderOrdersTable();
 
     // 4. Send POST /api/config to bot REST API
     const apiUrl = (AdminState.botApiUrl || detectDefaultApiUrl()).replace(/\/+$/, '');
     try {
-      showToast('Отправка обновлений в Telegram бот...', 'info');
+      showToast('Отправка обновлений в Telegram бот (dragonx.onrender.com)...', 'info');
       const resp = await fetch(`${apiUrl}/api/config`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -963,13 +1043,13 @@
 
       if (resp.ok) {
         const resData = await resp.json();
-        showToast(`🚀 Все изменения успешно отправлены и применены в боте ${AdminState.botConfig.username}!`, 'success');
+        showToast(`🚀 Все изменения успешно отправлены и применены в боте ${AdminState.botConfig.username || '@yuan_rndiBOT'}!`, 'success');
         return true;
       }
       throw new Error(`Bot returned status ${resp.status}`);
     } catch (e) {
       console.warn('Bot config API push failed:', e.message);
-      showToast('Настройки сохранены локально. Бот применит их при следующем подключении.', 'info');
+      showToast('Настройки сохранены локально. Проверьте соединение с bot API.', 'info');
       return false;
     }
   }
@@ -978,7 +1058,7 @@
    * MASS BROADCAST CONSOLE
    */
   async function sendBroadcastMessage() {
-    const textInp = document.getElementById('broadcastMessageInput');
+    const textInp = document.getElementById('cfgBroadcastMessageInput') || document.getElementById('broadcastMessageInput');
     const text = textInp ? textInp.value.trim() : '';
 
     if (!text) {
@@ -1003,12 +1083,27 @@
         const data = await resp.json();
         showToast(`📢 Рассылка доставлена ${data.sent_count || 0} клиентам в боте!`, 'success');
         textInp.value = '';
+        const other = document.getElementById('broadcastMessageInput');
+        if (other) other.value = '';
+        const other2 = document.getElementById('cfgBroadcastMessageInput');
+        if (other2) other2.value = '';
       } else {
         showToast('Ошибка отправки рассылки ботом.', 'error');
       }
     } catch (e) {
       showToast('Не удалось связаться с API бота для рассылки.', 'error');
     }
+  }
+
+  function switchToTab(tabId) {
+    document.querySelectorAll('.adm-tab-btn').forEach(b => {
+      b.classList.toggle('active', b.dataset.tab === tabId);
+    });
+    document.querySelectorAll('.admin-tab-pane').forEach(p => {
+      p.classList.toggle('hidden', p.id !== tabId);
+    });
+    AdminState.activeTab = tabId;
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   // =========================================================================
@@ -1713,6 +1808,34 @@
     const saveCatalogTopBtn = document.getElementById('saveAllBotCatalogTopBtn');
     if (saveCatalogTopBtn) {
       saveCatalogTopBtn.addEventListener('click', pushBotConfigToAPI);
+    }
+
+    // Master Control Navigation Shortcuts
+    const headerMasterBtn = document.getElementById('headerMasterBotBtn');
+    if (headerMasterBtn) {
+      headerMasterBtn.addEventListener('click', () => switchToTab('tabPrices'));
+    }
+
+    const bannerMasterBtn = document.getElementById('bannerOpenMasterBotBtn');
+    if (bannerMasterBtn) {
+      bannerMasterBtn.addEventListener('click', () => switchToTab('tabPrices'));
+    }
+
+    // Tab 5 Maintenance Toggle Listener
+    const cfgMaintToggle = document.getElementById('cfgBotMaintenanceToggle');
+    if (cfgMaintToggle) {
+      cfgMaintToggle.addEventListener('change', (e) => {
+        const grp = document.getElementById('cfgMaintenanceTextGroup');
+        if (grp) grp.style.display = e.target.checked ? 'block' : 'none';
+        const otherToggle = document.getElementById('adminBotMaintenanceToggle');
+        if (otherToggle) otherToggle.checked = e.target.checked;
+      });
+    }
+
+    // Tab 5 Broadcast Button
+    const cfgBroadcastBtn = document.getElementById('cfgSendBroadcastBtn');
+    if (cfgBroadcastBtn) {
+      cfgBroadcastBtn.addEventListener('click', sendBroadcastMessage);
     }
 
     // Refresh Clients Button

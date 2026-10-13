@@ -99,7 +99,12 @@
       </div>
 
       <div class="admin-header-right">
-        <button id="adminManualSyncBtn" class="btn-primary glow-btn btn-sm" title="Синхронизировать с Telegram ботом">
+        <button id="headerMasterBotBtn" class="btn-primary glow-btn btn-sm header-master-btn" title="Управление настройками бота, товаром, ценами и районами">
+          <i class="fa-solid fa-wand-magic-sparkles"></i>
+          <span>⚙️ Управление Ботом & Push</span>
+        </button>
+
+        <button id="adminManualSyncBtn" class="btn-ghost btn-sm" title="Синхронизировать с Telegram ботом">
           <i class="fa-solid fa-arrows-rotate" id="syncSpinIcon"></i>
           <span>Синхронизация с ботом</span>
         </button>
@@ -168,6 +173,11 @@
         <span class="tab-badge" id="ordersTabCount">0</span>
       </button>
 
+      <button class="adm-tab-btn master-control-tab-btn" data-tab="tabPrices" id="tabPricesBtn">
+        <i class="fa-solid fa-wand-magic-sparkles text-cyan"></i>
+        <span class="highlight-tab-title">⚙️ Управление Ботом & Каталог (Push changes)</span>
+      </button>
+
       <button class="adm-tab-btn" data-tab="tabLocations">
         <i class="fa-solid fa-location-crosshairs"></i>
         <span>Локации Доставки & Дропы</span>
@@ -182,17 +192,40 @@
         <i class="fa-solid fa-id-card-clip"></i>
         <span>База Клиентов (Unique ID)</span>
       </button>
-
-      <button class="adm-tab-btn" data-tab="tabPrices">
-        <i class="fa-solid fa-sliders"></i>
-        <span>Цены & Складские Остатки</span>
-      </button>
     </nav>
 
     <!-- ======================================================== -->
     <!-- TAB 1: ORDERS MANAGEMENT & TRACKING -->
     <!-- ======================================================== -->
     <div id="tabOrders" class="admin-tab-pane active">
+
+      <!-- LIVE BOT STATUS & QUICK CONTROL BANNER -->
+      <div class="live-bot-banner glass-panel">
+        <div class="live-bot-banner-left">
+          <div class="live-pulse-dot" id="bannerPulseDot"></div>
+          <div>
+            <div class="live-banner-title">
+              <span>Синхронизация с ботом:</span>
+              <strong id="bannerBotName" class="text-cyan">@yuan_rndiBOT</strong>
+              <span class="badge-status-online" id="bannerBotOnlineBadge" style="margin-left: 0.5rem; font-size: 0.75rem;">
+                <i class="fa-solid fa-circle"></i> ОНЛАЙН (dragonx.onrender.com)
+              </span>
+            </div>
+            <div class="live-banner-sub">
+              Товар в боте: <strong id="bannerProdName" class="text-gold">Рега</strong> • 
+              Активных районов: <strong id="bannerDistCount" class="text-cyan">3</strong> (Чиланзор, Яшнабад, Ulugbek) • 
+              LTC кошелек: <code id="bannerLtcCode" class="text-mono text-muted" style="color:#00ffcc;">ltc1qr5xh...</code>
+            </div>
+          </div>
+        </div>
+        <div class="live-bot-banner-right">
+          <button type="button" id="bannerOpenMasterBotBtn" class="btn-primary glow-btn btn-sm">
+            <i class="fa-solid fa-wand-magic-sparkles"></i>
+            <span>Изменить Товар, Цены, Районы & Запушить в Бот</span>
+          </button>
+        </div>
+      </div>
+
       <div class="pane-header-actions glass-panel">
         <div class="search-filter-box">
           <div class="search-input-wrap">
@@ -608,6 +641,68 @@
           </div>
         </div>
 
+        <!-- 4. Payment Details & Exchangers in Bot -->
+        <div class="bot-config-section">
+          <h4><i class="fa-solid fa-wallet text-gold"></i> 4. Реквизиты Оплаты (LTC) & Обменники:</h4>
+          <p style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 0.85rem;">
+            Адрес кошелька Litecoin скрывается спойлером при заказе. Обменники показываются клиенту в чеке оплаты.
+          </p>
+          <div class="form-group" style="margin-bottom: 0.85rem;">
+            <label for="cfgBotLtcWallet"><i class="fa-brands fa-bitcoin"></i> Адрес Litecoin (LTC) кошелька:</label>
+            <input type="text" id="cfgBotLtcWallet" value="ltc1qr5xhqe9tdd5lekrxurfftdv9hhaaqche2urvhr" class="form-input font-mono text-cyan" placeholder="ltc1q...">
+          </div>
+          <div class="form-grid" style="grid-template-columns: 1fr 1fr; gap: 1rem;">
+            <div class="form-group">
+              <label for="cfgBotExchanger1"><i class="fa-solid fa-arrow-right-arrow-left"></i> Обменник 1 (Eva):</label>
+              <input type="text" id="cfgBotExchanger1" value="https://t.me/Eva_obmen" class="form-input font-mono" placeholder="https://t.me/Eva_obmen">
+            </div>
+            <div class="form-group">
+              <label for="cfgBotExchanger2"><i class="fa-solid fa-arrow-right-arrow-left"></i> Обменник 2 (Sum Exc):</label>
+              <input type="text" id="cfgBotExchanger2" value="https://t.me/sum_exc" class="form-input font-mono" placeholder="https://t.me/sum_exc">
+            </div>
+          </div>
+        </div>
+
+        <!-- 5. Support & Maintenance Mode -->
+        <div class="bot-config-section">
+          <h4><i class="fa-solid fa-headset text-cyan"></i> 5. Поддержка & Режим Обслуживания:</h4>
+          <div class="form-grid" style="grid-template-columns: 1fr 1fr; gap: 1rem; align-items: start;">
+            <div class="form-group">
+              <label for="cfgBotSupportHandle"><i class="fa-brands fa-telegram"></i> Никнейм оператора поддержки:</label>
+              <input type="text" id="cfgBotSupportHandle" value="@ashley_graves3" class="form-input font-mono" placeholder="@ashley_graves3">
+            </div>
+            <div class="switch-toggle-row" style="background: rgba(0,0,0,0.3); padding: 0.75rem 1rem; border-radius: var(--radius-md); border: 1px solid rgba(255,255,255,0.1);">
+              <div>
+                <strong><i class="fa-solid fa-power-off"></i> Режим техобслуживания:</strong>
+                <p style="font-size: 0.75rem; color: var(--text-muted); margin: 0.15rem 0 0 0;">Приостановить заказы в боте</p>
+              </div>
+              <label class="switch-toggle">
+                <input type="checkbox" id="cfgBotMaintenanceToggle">
+                <span class="switch-slider"></span>
+              </label>
+            </div>
+          </div>
+          <div class="form-group" id="cfgMaintenanceTextGroup" style="display: none; margin-top: 0.75rem;">
+            <label for="cfgBotMaintenanceText">Текст сообщения при техобслуживании:</label>
+            <input type="text" id="cfgBotMaintenanceText" value="⚠️ Бот временно находится на техническом обслуживании. Свяжитесь с оператором: @ashley_graves3" class="form-input">
+          </div>
+        </div>
+
+        <!-- 6. Mass Broadcast from Master Tab -->
+        <div class="bot-config-section" style="background: rgba(139, 92, 246, 0.08); border-color: rgba(139, 92, 246, 0.3);">
+          <h4><i class="fa-solid fa-bullhorn text-purple"></i> 6. Массовая Рассылка Клиентам Бота:</h4>
+          <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.65rem;">
+            Мгновенно разослать уведомление всем клиентам, которые когда-либо нажимали /start или заказывали в боте.
+          </p>
+          <div class="form-group">
+            <textarea id="cfgBroadcastMessageInput" rows="2" placeholder="Введите текст объявления для клиентов (скидка, пополнение, свежий дроп)..." class="form-input"></textarea>
+          </div>
+          <button type="button" id="cfgSendBroadcastBtn" class="btn-broadcast glow-btn btn-sm">
+            <i class="fa-solid fa-paper-plane"></i>
+            <span>Отправить рассылку пользователям</span>
+          </button>
+        </div>
+
         <!-- Main Push Changes to Bot Button -->
         <div style="margin-top: 1.5rem;">
           <button type="button" id="saveAllBotCatalogBtn" class="btn-primary glow-btn btn-push-bot full-w" style="padding: 1.15rem !important;">
@@ -615,7 +710,7 @@
             <span>СОХРАНИТЬ & ПРИМЕНИТЬ ВСЕ ИЗМЕНЕНИЯ В БОТЕ (PUSH CHANGES TO BOT)</span>
           </button>
           <p style="text-align: center; color: var(--text-dim); font-size: 0.78rem; margin-top: 0.5rem;">
-            Данные сохраняются в постоянный файл bot_config.json на сервере и вступают в силу немедленно без перезагрузки.
+            Все параметры моментально передаются на сервер бота и сохраняются в bot_config.json без перезагрузки!
           </p>
         </div>
       </div>
