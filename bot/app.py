@@ -5,6 +5,7 @@ import datetime
 import asyncio
 import logging
 import smtplib
+import ssl
 from email.message import EmailMessage
 from html import escape
 import json
@@ -21,6 +22,11 @@ logging.basicConfig(level=logging.INFO)
 # ── Config ───────────────────────────────────────────────────────────────────
 TOKEN          = os.getenv("BOT_TOKEN", "7969562725:AAHQiUes57T3_0pX15g9L82bF4-1rllgU60")
 ADMIN_EMAIL    = "ydvhrsh1604@gmail.com"
+DATABASE_URL   = os.getenv(
+    "DATABASE_URL",
+    "postgresql://neondb_owner:npg_ISrJagmCF4W3@ep-crimson-cloud-b5s6gc0y-pooler.c-7.us-east-2.aws.neon.tech/neondb"
+)
+db_pool        = None
 
 CONFIG_FILE = os.path.join(os.path.dirname(__file__), "bot_config.json")
 BOT_CONFIG = {}
@@ -90,6 +96,12 @@ def save_bot_config():
             json.dump(BOT_CONFIG, f, ensure_ascii=False, indent=2)
     except Exception as e:
         logging.error(f"Error saving {CONFIG_FILE}: {e}")
+    try:
+        loop = asyncio.get_event_loop()
+        if loop.is_running() and db_pool:
+            loop.create_task(db_upsert_config(BOT_CONFIG))
+    except Exception:
+        pass
 
 def get_product_name() -> str:
     return BOT_CONFIG.get("product_name", "Рега")
@@ -265,6 +277,211 @@ DEFAULT_SEED_ORDERS = {
 }
 
 
+# ── Neon PostgreSQL Database Engine ──────────────────────────────────────────
+
+def sanitize_db_url(url: str) -> str:
+    if not url:
+        return ""
+    return url.split("?")[0]
+
+
+async def init_neon_db():
+    global db_pool
+    if not DATABASE_URL:
+        logging.info("DATABASE_URL not set, operating with local JSON storage.")
+        return
+
+    try:
+        import asyncpg
+        ssl_ctx = ssl.create_default_context()
+        ssl_ctx.check_hostname = False
+        ssl_ctx.verify_mode = ssl.CERT_NONE
+
+        clean_url = sanitize_db_url(DATABASE_URL)
+        db_pool = await asyncpg.create_pool(
+            clean_url,
+            ssl=ssl_ctx,
+            min_size=1,
+            max_size=5,
+            command_timeout=15
+        )
+        logging.info("✅ Connected to Neon PostgreSQL pool successfully!")
+
+        async with db_pool.acquire() as conn:
+            await conn.execute("""
+            CREATE TABLE IF NOT EXISTS orders (
+                id VARCHAR(64) PRIMARY KEY,
+                user_id BIGINT,
+                customer_name VARCHAR(255),
+                telegram VARCHAR(128),
+                product VARCHAR(128),
+                qty VARCHAR(64),
+                total_amount NUMERIC(10, 2),
+                currency VARCHAR(16) DEFAULT 'USD',
+                district VARCHAR(128),
+                location TEXT,
+                coordinates VARCHAR(128),
+                status VARCHAR(64),
+                pickup_status VARCHAR(64),
+                tracking_code VARCHAR(128),
+                tx_hash VARCHAR(256),
+                notes TEXT,
+                created_at DOUBLE PRECISION,
+                updated_at DOUBLE PRECISION,
+                order_data JSONB
+            );
+            """)
+
+            await conn.execute("""
+            CREATE TABLE IF NOT EXISTS bot_config (
+                key VARCHAR(64) PRIMARY KEY,
+                config_data JSONB,
+                updated_at DOUBLE PRECISION
+            );
+            """)
+
+            await conn.execute("""
+            CREATE TABLE IF NOT EXISTS inventory_stocks (
+                pack_key VARCHAR(64) PRIMARY KEY,
+                stock INT,
+                updated_at DOUBLE PRECISION
+            );
+            """)
+
+        # Pull latest orders and config from Neon into memory
+        await db_refresh_orders()
+        await db_refresh_config()
+        logging.info(f"✅ Synced from Neon DB: {len(ACTIVE_ORDERS)} orders loaded.")
+    except Exception as e:
+        logging.error(f"⚠️ Neon DB init error (falling back to JSON): {e}")
+
+
+async def db_refresh_orders():
+    global ACTIVE_ORDERS
+    if not db_pool:
+        return
+    try:
+        async with db_pool.acquire() as conn:
+            rows = await conn.fetch("SELECT id, order_data FROM orders;")
+            for r in rows:
+                oid = r['id']
+                raw_data = r['order_data']
+                if raw_data:
+                    if isinstance(raw_data, str):
+                        ACTIVE_ORDERS[oid] = json.loads(raw_data)
+                    else:
+                        ACTIVE_ORDERS[oid] = raw_data
+    except Exception as e:
+        logging.warning(f"Error fetching orders from Neon: {e}")
+
+
+async def db_refresh_config():
+    global BOT_CONFIG, INVENTORY_STOCKS
+    if not db_pool:
+        return
+    try:
+        async with db_pool.acquire() as conn:
+            row = await conn.fetchrow("SELECT config_data FROM bot_config WHERE key = 'main_config';")
+            if row and row['config_data']:
+                raw = row['config_data']
+                cfg = json.loads(raw) if isinstance(raw, str) else raw
+                if isinstance(cfg, dict):
+                    BOT_CONFIG.update(cfg)
+                    for pkg in BOT_CONFIG.get("packages", []):
+                        k = pkg.get("key")
+                        if k and "stock" in pkg:
+                            INVENTORY_STOCKS[k] = pkg["stock"]
+    except Exception as e:
+        logging.warning(f"Error fetching config from Neon: {e}")
+
+
+async def db_upsert_order(o: dict):
+    if not db_pool or not isinstance(o, dict) or not o.get('id'):
+        return
+    try:
+        oid = o['id']
+        user_meta = o.get("user_data", {}) if isinstance(o.get("user_data"), dict) else {}
+        u_name = user_meta.get("username") or o.get("username") or ""
+        tg = f"@{u_name}" if u_name and not u_name.startswith("@") else (u_name or "—")
+        c_name = f"{user_meta.get('first_name', '')} {user_meta.get('last_name', '')}".strip() or tg or f"Client {o.get('user_id')}"
+        tot_amt = float(o.get("total_amount") or 25.0)
+        tx_info = o.get("tx_info") or {}
+        tx_h = tx_info.get("hash") if isinstance(tx_info, dict) else ""
+
+        async with db_pool.acquire() as conn:
+            await conn.execute("""
+            INSERT INTO orders (
+                id, user_id, customer_name, telegram, product, qty, total_amount, currency,
+                district, location, coordinates, status, pickup_status, tracking_code,
+                tx_hash, notes, created_at, updated_at, order_data
+            ) VALUES (
+                $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19
+            ) ON CONFLICT (id) DO UPDATE SET
+                status = EXCLUDED.status,
+                pickup_status = EXCLUDED.pickup_status,
+                location = EXCLUDED.location,
+                coordinates = EXCLUDED.coordinates,
+                notes = EXCLUDED.notes,
+                updated_at = EXCLUDED.updated_at,
+                order_data = EXCLUDED.order_data;
+            """,
+            oid,
+            int(o.get("user_id") or 0),
+            c_name,
+            tg,
+            o.get("product", "Рега"),
+            o.get("qty", "2 штук"),
+            tot_amt,
+            o.get("currency", "USD"),
+            o.get("district", "Чиланзор"),
+            o.get("location", ""),
+            o.get("coordinates", ""),
+            o.get("status", "paid"),
+            o.get("pickup_status", "waiting"),
+            o.get("tracking_code", ""),
+            tx_h,
+            o.get("notes", ""),
+            float(o.get("created_at") or 0.0),
+            float(o.get("updated_at") or 0.0),
+            json.dumps(o)
+            )
+    except Exception as e:
+        logging.error(f"Failed to upsert order {o.get('id')} to Neon: {e}")
+
+
+async def db_sync_all_orders():
+    if not db_pool:
+        return
+    for o in list(ACTIVE_ORDERS.values()):
+        await db_upsert_order(o)
+
+
+async def db_delete_order(order_id: str):
+    if not db_pool or not order_id:
+        return
+    try:
+        async with db_pool.acquire() as conn:
+            await conn.execute("DELETE FROM orders WHERE id = $1;", order_id)
+    except Exception as e:
+        logging.error(f"Failed to delete order {order_id} from Neon: {e}")
+
+
+async def db_upsert_config(cfg: dict):
+    if not db_pool or not isinstance(cfg, dict):
+        return
+    try:
+        async with db_pool.acquire() as conn:
+            await conn.execute("""
+            INSERT INTO bot_config (key, config_data, updated_at)
+            VALUES ('main_config', $1, EXTRACT(EPOCH FROM NOW()))
+            ON CONFLICT (key) DO UPDATE SET
+                config_data = EXCLUDED.config_data,
+                updated_at = EXCLUDED.updated_at;
+            """, json.dumps(cfg))
+    except Exception as e:
+        logging.error(f"Failed to upsert config to Neon: {e}")
+
+
 def load_orders():
     global ACTIVE_ORDERS
     if os.path.exists(DB_FILE):
@@ -279,12 +496,21 @@ def load_orders():
     save_orders()
 
 
-def save_orders():
+def save_orders(specific_order_id=None):
     try:
         with open(DB_FILE, "w", encoding="utf-8") as f:
             json.dump(ACTIVE_ORDERS, f, ensure_ascii=False, indent=2)
     except Exception as e:
         logging.error(f"Error saving {DB_FILE}: {e}")
+    try:
+        loop = asyncio.get_event_loop()
+        if loop.is_running() and db_pool:
+            if specific_order_id and specific_order_id in ACTIVE_ORDERS:
+                loop.create_task(db_upsert_order(ACTIVE_ORDERS[specific_order_id]))
+            else:
+                loop.create_task(db_sync_all_orders())
+    except Exception:
+        pass
 
 
 async def get_bot_username() -> str:
@@ -1323,6 +1549,11 @@ async def health_check(request):
 
 
 async def get_orders_api(request):
+    if db_pool:
+        try:
+            await db_refresh_orders()
+        except Exception:
+            pass
     orders_list = []
     for oid, o in sorted(ACTIVE_ORDERS.items(), key=lambda x: x[1].get('created_at', 0), reverse=True):
         user_meta = o.get('user_data', {}) if isinstance(o.get('user_data'), dict) else {}
@@ -1545,6 +1776,8 @@ async def delete_order_api(request):
         if order_id in ACTIVE_ORDERS:
             del ACTIVE_ORDERS[order_id]
             save_orders()
+            if db_pool:
+                asyncio.create_task(db_delete_order(order_id))
             return cors_response({"status": "success"})
         return cors_response({"status": "not_found"}, status=404)
     except Exception as e:
@@ -1726,6 +1959,9 @@ async def main():
     # Load dynamic bot config & persistent orders
     load_bot_config()
     load_orders()
+
+    # Connect to Neon PostgreSQL & sync persistent cloud database
+    await init_neon_db()
 
     await init_historical_txs(get_ltc_address())
 
