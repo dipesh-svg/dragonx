@@ -152,6 +152,37 @@ USER_CAPTCHAS = {}          # { user_id: {'ans': int, 'verified': bool} }
 USER_DISTRICTS = {}         # { user_id: {'ru': str, 'en': str, 'uz': str} }
 
 DEFAULT_SEED_ORDERS = {
+    "DRGX-8634764266-8265": {
+        "id": "DRGX-8634764266-8265",
+        "user_id": 8634764266,
+        "user_data": {
+            "id": 8634764266,
+            "username": "dragon_buyer",
+            "first_name": "Клиент #8634764266",
+            "last_name": "",
+            "lang": "ru"
+        },
+        "created_at": 1791892427.0,
+        "product": "Рега",
+        "qty": "2 штук",
+        "price": "26$",
+        "total_amount": 26.4,
+        "currency": "USD",
+        "pack_key": "buy_2",
+        "district": "Чиланзор",
+        "location": "Чиланзор, тайник готовится курьером",
+        "coordinates": "41.2721, 69.2045",
+        "status": "paid",
+        "pickup_status": "waiting",
+        "tracking_code": "DRGX-TRK-8265",
+        "notes": "Оплачено в блокчейне LTC (0.40608 LTC). TxID: f1500bf280ad33816fe71ad4cbffff0da51df7b2a7e78c20e51d55dd9234c384",
+        "tx_info": {
+            "hash": "f1500bf280ad33816fe71ad4cbffff0da51df7b2a7e78c20e51d55dd9234c384",
+            "amount_ltc": 0.40608,
+            "confirmations": 2
+        },
+        "updated_at": 1791892427.0
+    },
     "DRGX-9024-8142": {
         "id": "DRGX-9024-8142",
         "user_id": 90248142,
@@ -1048,12 +1079,43 @@ async def menu(callback: CallbackQuery):
             price_val = order_info.get('price', 'N/A') if order_info else 'N/A'
             order_district = order_info.get('district', 'Чиланзор') if order_info else 'Чиланзор'
             
-            if order_info:
+            if not order_info:
+                d_item = next((d for d in get_districts() if d.get("name") == order_district), None)
+                def_coords = d_item.get("coords") if d_item else "41.2721, 69.2045"
+                p_name = get_product_name()
+                ltc_amt = float(new_tx.get('amount_ltc', 0.406))
+                approx_usd = round(ltc_amt * 65.0, 2)
+                if approx_usd < 10:
+                    approx_usd = 25.0
+
+                order_info = {
+                    'id': order_code,
+                    'user_id': user_id,
+                    'user_data': user_meta,
+                    'created_at': time.time(),
+                    'product': p_name,
+                    'qty': qty_val if qty_val != 'N/A' else '2 штук',
+                    'price': f"{int(approx_usd)}$",
+                    'total_amount': approx_usd,
+                    'currency': 'USD',
+                    'district': order_district,
+                    'location': f"Ташкент, {order_district} (Координаты выдаются после подтверждения оплаты)",
+                    'coordinates': def_coords,
+                    'status': 'paid',
+                    'pickup_status': 'paid_preparing',
+                    'tracking_code': f"DRGX-TRK-{order_code[-4:]}",
+                    'notes': f"Оплачено в блокчейне LTC ({new_tx.get('amount_ltc')} LTC)",
+                    'tx_info': new_tx,
+                    'updated_at': time.time()
+                }
+                ACTIVE_ORDERS[order_code] = order_info
+            else:
                 order_info['status'] = 'paid'
                 order_info['pickup_status'] = 'paid_preparing'
                 order_info['tx_info'] = new_tx
                 order_info['updated_at'] = time.time()
-                save_orders()
+
+            save_orders()
 
             asyncio.create_task(notify_admin_email(
                 order_code=order_code,
@@ -1079,21 +1141,21 @@ async def menu(callback: CallbackQuery):
                       f"💰 <b>Получено:</b> {new_tx['amount_ltc']} LTC\n"
                       f"🔗 <b>TxID хэш:</b>\n<code>{new_tx['hash']}</code>\n\n"
                       "🎉 <b>Заказ успешно оплачен! Детали отправлены администратору на почту.</b>\n"
-                      "Нажмите кнопку ниже, чтобы связаться с оператором и получить детали выдачи в районе <b>{order_district}</b>.",
+                      f"Нажмите кнопку ниже, чтобы связаться с оператором и получить детали выдачи в районе <b>{order_district}</b>.",
                 "en": "✅ <b>New Transaction Detected on Litecoin Blockchain!</b>\n\n"
                       f"🔑 <b>Order Code:</b> <code>{order_code}</code>\n"
                       f"📊 <b>Status:</b> Confirmed ({new_tx['confirmations']} confs)\n"
                       f"💰 <b>Received:</b> {new_tx['amount_ltc']} LTC\n"
                       f"🔗 <b>TxID Hash:</b>\n<code>{new_tx['hash']}</code>\n\n"
                       "🎉 <b>Order successfully paid! Details sent to admin.</b>\n"
-                      "Click the button below to contact the operator and receive pickup/delivery details in <b>{order_district}</b>.",
+                      f"Click the button below to contact the operator and receive pickup/delivery details in <b>{order_district}</b>.",
                 "uz": "✅ <b>Litecoin blokcheynida yangi tranzaksiya topildi!</b>\n\n"
                       f"🔑 <b>Buyurtma kodi:</b> <code>{order_code}</code>\n"
                       f"📊 <b>Holat:</b> Tasdiqlandi ({new_tx['confirmations']} tasdiq)\n"
                       f"💰 <b>Qabul qilindi:</b> {new_tx['amount_ltc']} LTC\n"
                       f"🔗 <b>TxID hesh:</b>\n<code>{new_tx['hash']}</code>\n\n"
                       "🎉 <b>Buyurtma muvaffaqiyatli to'landi!</b>\n"
-                      "<b>{order_district}</b> tumanida olish uchun operator bilan bog'laning."
+                      f"<b>{order_district}</b> tumanida olish uchun operator bilan bog'laning."
             }[lang]
 
             await callback.message.answer(success_txt, reply_markup=keyboard)

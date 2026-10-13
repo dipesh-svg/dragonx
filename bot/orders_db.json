@@ -1,4 +1,35 @@
 {
+  "DRGX-8634764266-8265": {
+    "id": "DRGX-8634764266-8265",
+    "user_id": 8634764266,
+    "user_data": {
+      "id": 8634764266,
+      "username": "dragon_buyer",
+      "first_name": "Клиент #8634764266",
+      "last_name": "",
+      "lang": "ru"
+    },
+    "created_at": 1791892427.0,
+    "product": "Рега",
+    "qty": "2 штук",
+    "price": "26$",
+    "total_amount": 26.4,
+    "currency": "USD",
+    "pack_key": "buy_2",
+    "district": "Чиланзор",
+    "location": "Чиланзор, тайник готовится курьером",
+    "coordinates": "41.2721, 69.2045",
+    "status": "paid",
+    "pickup_status": "waiting",
+    "tracking_code": "DRGX-TRK-8265",
+    "notes": "Оплачено в блокчейне LTC (0.40608 LTC). TxID: f1500bf280ad33816fe71ad4cbffff0da51df7b2a7e78c20e51d55dd9234c384",
+    "tx_info": {
+      "hash": "f1500bf280ad33816fe71ad4cbffff0da51df7b2a7e78c20e51d55dd9234c384",
+      "amount_ltc": 0.40608,
+      "confirmations": 2
+    },
+    "updated_at": 1791892427.0
+  },
   "DRGX-9024-8142": {
     "id": "DRGX-9024-8142",
     "user_id": 90248142,
