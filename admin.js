@@ -487,7 +487,8 @@
                 }
                 if (!silent || !AdminState.isInitialConfigLoaded) {
                   const isEditing = document.activeElement && (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA');
-                  if (!isEditing) {
+                  const hasDirtyInputs = !!document.querySelector('#botPackagesTable input[data-dirty="true"], #botDistrictsTable input[data-dirty="true"]');
+                  if (!isEditing && !hasDirtyInputs) {
                     AdminState.botConfig = Object.assign(AdminState.botConfig, cfgData.config);
                     saveBotConfigLocally();
                     renderTelegramTab();
@@ -997,13 +998,14 @@
   function updateLiveStockValues(packages) {
     if (!Array.isArray(packages)) return;
     packages.forEach((pkg, idx) => {
-      if (AdminState.botConfig.packages && AdminState.botConfig.packages[idx]) {
-        AdminState.botConfig.packages[idx].stock = pkg.stock;
-      }
       const row = document.querySelector(`tr[data-pkg-idx="${idx}"]`);
       if (row) {
         const inp = row.querySelector('.pkg-stock-inp');
-        if (inp && document.activeElement !== inp) {
+        if (inp) {
+          // If the user modified this input or is currently focused on it, NEVER overwrite it!
+          if (inp.dataset.dirty === 'true' || document.activeElement === inp) {
+            return;
+          }
           const curVal = parseInt(inp.value, 10);
           if (curVal !== pkg.stock) {
             inp.value = pkg.stock;
@@ -1011,6 +1013,12 @@
             inp.style.backgroundColor = 'rgba(16, 185, 129, 0.3)';
             setTimeout(() => { inp.style.backgroundColor = ''; }, 1200);
           }
+        }
+      }
+      const rowInp = row ? row.querySelector('.pkg-stock-inp') : null;
+      if (!rowInp || (rowInp.dataset.dirty !== 'true' && document.activeElement !== rowInp)) {
+        if (AdminState.botConfig.packages && AdminState.botConfig.packages[idx]) {
+          AdminState.botConfig.packages[idx].stock = pkg.stock;
         }
       }
     });
@@ -1029,7 +1037,8 @@
     });
     AdminState.botConfig.packages = pkgs;
     renderBotCatalogTab();
-    showToast('Добавлена новая строка фасовки. Не забудьте нажать «Применить в Боте»!', 'info');
+    scheduleCatalogAutoPush(200);
+    showToast('Добавлена новая строка фасовки. Сохранение в бот...', 'info');
   }
 
   function deletePackageRow(idx) {
@@ -1041,7 +1050,8 @@
     pkgs.splice(idx, 1);
     AdminState.botConfig.packages = pkgs;
     renderBotCatalogTab();
-    showToast('Позиция удалена из списка.', 'info');
+    scheduleCatalogAutoPush(200);
+    showToast('Позиция удалена из списка и сохранена в боте.', 'info');
   }
 
   function addNewDistrictRow() {
@@ -1054,7 +1064,8 @@
     });
     AdminState.botConfig.districts = dists;
     renderBotCatalogTab();
-    showToast('Добавлен новый район. Укажите название и координаты и нажмите «Применить в Боте»!', 'info');
+    scheduleCatalogAutoPush(200);
+    showToast('Добавлен новый район и синхронизирован с ботом.', 'info');
   }
 
   function deleteDistrictRow(idx) {
@@ -1066,14 +1077,52 @@
     dists.splice(idx, 1);
     AdminState.botConfig.districts = dists;
     renderBotCatalogTab();
-    showToast('Район удален из списка.', 'info');
+    scheduleCatalogAutoPush(200);
+    showToast('Район удален из списка и синхронизирован с ботом.', 'info');
   }
 
   /**
-   * PUSH COMPLETE CONFIG TO RUNNING TELEGRAM BOT VIA REST API
+   * DEBOUNCED LIVE CLOUD AUTO-SYNC ENGINE
    */
-  async function pushBotConfigToAPI() {
-    // 1. Gather Catalog & Packages
+  let catalogAutoSaveTimer = null;
+
+  function setCatalogSaveBadge(state) {
+    const badge = document.getElementById('catalogLiveStatusBadge');
+    if (!badge) return;
+    if (state === 'saving') {
+      badge.style.display = 'inline-flex';
+      badge.style.background = 'rgba(245, 158, 11, 0.15)';
+      badge.style.color = '#f59e0b';
+      badge.style.borderColor = 'rgba(245, 158, 11, 0.3)';
+      badge.style.opacity = '1';
+      badge.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Сохранение в бот...';
+    } else if (state === 'saved') {
+      badge.style.display = 'inline-flex';
+      badge.style.background = 'rgba(16, 185, 129, 0.15)';
+      badge.style.color = '#10b981';
+      badge.style.borderColor = 'rgba(16, 185, 129, 0.3)';
+      badge.style.opacity = '1';
+      badge.innerHTML = '<i class="fa-solid fa-cloud-arrow-up"></i> Синхронизировано с Neon DB';
+    } else if (state === 'offline') {
+      badge.style.display = 'inline-flex';
+      badge.style.background = 'rgba(239, 68, 68, 0.15)';
+      badge.style.color = '#ef4444';
+      badge.style.borderColor = 'rgba(239, 68, 68, 0.3)';
+      badge.style.opacity = '1';
+      badge.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> Сохранено в кэше';
+    }
+    badge.dataset.state = state;
+  }
+
+  function scheduleCatalogAutoPush(delayMs = 600) {
+    setCatalogSaveBadge('saving');
+    if (catalogAutoSaveTimer) clearTimeout(catalogAutoSaveTimer);
+    catalogAutoSaveTimer = setTimeout(async () => {
+      await pushBotConfigToAPISilent();
+    }, delayMs);
+  }
+
+  function collectBotCatalogFromDOM() {
     const prodNameInp = document.getElementById('cfgBotProductName');
     if (prodNameInp) {
       AdminState.botConfig.product_name = prodNameInp.value.trim() || 'Рега';
@@ -1109,7 +1158,6 @@
       AdminState.stock = updatedStocks;
     }
 
-    // 2. Gather Districts
     const distRows = document.querySelectorAll('#botDistrictsTableBody tr');
     const updatedDists = [];
 
@@ -1126,7 +1174,6 @@
       AdminState.botConfig.districts = updatedDists;
     }
 
-    // 3. Gather Settings from Tab 5 or Tab 3
     const botUserInp = document.getElementById('adminBotUsername');
     const botSupInp = document.getElementById('cfgBotSupportHandle') || document.getElementById('adminOperatorHandle');
     const ltcInp = document.getElementById('cfgBotLtcWallet') || document.getElementById('adminBotLtcAddress');
@@ -1144,11 +1191,42 @@
     if (maintText) AdminState.botConfig.maintenance_text = maintText.value.trim();
 
     saveBotConfigLocally();
+  }
+
+  async function pushBotConfigToAPISilent() {
+    collectBotCatalogFromDOM();
+    const apiUrl = (AdminState.botApiUrl || detectDefaultApiUrl()).replace(/\/+$/, '');
+    try {
+      const resp = await fetch(`${apiUrl}/api/config`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(AdminState.botConfig)
+      });
+      if (resp.ok) {
+        document.querySelectorAll('#botPackagesTable input, #botDistrictsTable input').forEach(el => {
+          el.dataset.dirty = 'false';
+        });
+        setCatalogSaveBadge('saved');
+        return true;
+      }
+      setCatalogSaveBadge('offline');
+      return false;
+    } catch (e) {
+      console.warn('Silent config sync failed:', e.message);
+      setCatalogSaveBadge('offline');
+      return false;
+    }
+  }
+
+  /**
+   * PUSH COMPLETE CONFIG TO RUNNING TELEGRAM BOT VIA REST API (MANUAL)
+   */
+  async function pushBotConfigToAPI() {
+    collectBotCatalogFromDOM();
     renderTelegramTab();
     renderBotCatalogTab();
     renderOrdersTable();
 
-    // 4. Send POST /api/config to bot REST API
     const apiUrl = (AdminState.botApiUrl || detectDefaultApiUrl()).replace(/\/+$/, '');
     try {
       showToast('Отправка обновлений в Telegram бот (dragonx.onrender.com)...', 'info');
@@ -1159,13 +1237,17 @@
       });
 
       if (resp.ok) {
-        const resData = await resp.json();
+        document.querySelectorAll('#botPackagesTable input, #botDistrictsTable input').forEach(el => {
+          el.dataset.dirty = 'false';
+        });
+        setCatalogSaveBadge('saved');
         showToast(`🚀 Все изменения успешно отправлены и применены в боте ${AdminState.botConfig.username || '@yuan_rndiBOT'}!`, 'success');
         return true;
       }
       throw new Error(`Bot returned status ${resp.status}`);
     } catch (e) {
       console.warn('Bot config API push failed:', e.message);
+      setCatalogSaveBadge('offline');
       showToast('Настройки сохранены локально. Проверьте соединение с bot API.', 'info');
       return false;
     }
@@ -1984,8 +2066,14 @@
         const idx = parseInt(row.dataset.pkgIdx, 10);
         if (isNaN(idx) || !AdminState.botConfig.packages || !AdminState.botConfig.packages[idx]) return;
 
+        // Mark dirty so polling never clobbers local user typing
+        e.target.dataset.dirty = 'true';
+
         if (e.target.classList.contains('pkg-stock-inp')) {
-          AdminState.botConfig.packages[idx].stock = parseInt(e.target.value, 10) || 0;
+          const val = parseInt(e.target.value, 10) || 0;
+          AdminState.botConfig.packages[idx].stock = val;
+          const k = AdminState.botConfig.packages[idx].key;
+          if (k) AdminState.stock[k] = val;
         } else if (e.target.classList.contains('pkg-price-inp')) {
           AdminState.botConfig.packages[idx].price_usd = parseFloat(e.target.value) || 0;
         } else if (e.target.classList.contains('pkg-qty-inp')) {
@@ -1996,18 +2084,28 @@
           AdminState.botConfig.packages[idx].key = e.target.value;
         }
         saveBotConfigLocally();
+        scheduleCatalogAutoPush(600);
       });
 
       pkgTable.addEventListener('change', (e) => {
+        const row = e.target.closest('tr');
+        if (!row) return;
+        const idx = parseInt(row.dataset.pkgIdx, 10);
+        if (isNaN(idx) || !AdminState.botConfig.packages || !AdminState.botConfig.packages[idx]) return;
+
+        e.target.dataset.dirty = 'true';
+
         if (e.target.classList.contains('pkg-active-inp')) {
-          const row = e.target.closest('tr');
-          if (!row) return;
-          const idx = parseInt(row.dataset.pkgIdx, 10);
-          if (!isNaN(idx) && AdminState.botConfig.packages && AdminState.botConfig.packages[idx]) {
-            AdminState.botConfig.packages[idx].active = e.target.checked;
-            saveBotConfigLocally();
-          }
+          AdminState.botConfig.packages[idx].active = e.target.checked;
+        } else if (e.target.classList.contains('pkg-stock-inp')) {
+          const val = parseInt(e.target.value, 10) || 0;
+          AdminState.botConfig.packages[idx].stock = val;
+          const k = AdminState.botConfig.packages[idx].key;
+          if (k) AdminState.stock[k] = val;
         }
+        saveBotConfigLocally();
+        // Immediately sync on change / blur / step
+        scheduleCatalogAutoPush(50);
       });
     }
 
@@ -2019,6 +2117,8 @@
         const idx = parseInt(row.dataset.distIdx, 10);
         if (isNaN(idx) || !AdminState.botConfig.districts || !AdminState.botConfig.districts[idx]) return;
 
+        e.target.dataset.dirty = 'true';
+
         if (e.target.classList.contains('dist-name-inp')) {
           AdminState.botConfig.districts[idx].name = e.target.value;
         } else if (e.target.classList.contains('dist-coords-inp')) {
@@ -2027,17 +2127,21 @@
           AdminState.botConfig.districts[idx].id = e.target.value;
         }
         saveBotConfigLocally();
+        scheduleCatalogAutoPush(600);
       });
 
       distTable.addEventListener('change', (e) => {
+        const row = e.target.closest('tr');
+        if (!row) return;
+        const idx = parseInt(row.dataset.distIdx, 10);
+        if (isNaN(idx) || !AdminState.botConfig.districts || !AdminState.botConfig.districts[idx]) return;
+
+        e.target.dataset.dirty = 'true';
+
         if (e.target.classList.contains('dist-active-inp')) {
-          const row = e.target.closest('tr');
-          if (!row) return;
-          const idx = parseInt(row.dataset.distIdx, 10);
-          if (!isNaN(idx) && AdminState.botConfig.districts && AdminState.botConfig.districts[idx]) {
-            AdminState.botConfig.districts[idx].active = e.target.checked;
-            saveBotConfigLocally();
-          }
+          AdminState.botConfig.districts[idx].active = e.target.checked;
+          saveBotConfigLocally();
+          scheduleCatalogAutoPush(50);
         }
       });
     }
@@ -2055,8 +2159,13 @@
       const el = document.getElementById(id);
       if (el) {
         el.addEventListener('input', (e) => {
+          e.target.dataset.dirty = 'true';
           AdminState.botConfig[key] = e.target.value.trim();
           saveBotConfigLocally();
+          scheduleCatalogAutoPush(600);
+        });
+        el.addEventListener('change', () => {
+          scheduleCatalogAutoPush(50);
         });
       }
     });
@@ -2075,6 +2184,7 @@
     addNewDistrictRow,
     deleteDistrictRow,
     pushBotConfigToAPI,
+    pushBotConfigToAPISilent,
     quickTgContact: function (tgHandle, orderId) {
       if (tgHandle && tgHandle.startsWith('@')) {
         const clean = tgHandle.replace('@', '');

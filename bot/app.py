@@ -97,9 +97,13 @@ def save_bot_config():
     except Exception as e:
         logging.error(f"Error saving {CONFIG_FILE}: {e}")
     try:
-        loop = asyncio.get_event_loop()
-        if loop.is_running() and db_pool:
+        try:
+            loop = asyncio.get_running_loop()
+        except RuntimeError:
+            loop = asyncio.get_event_loop()
+        if loop and loop.is_running() and db_pool:
             loop.create_task(db_upsert_config(BOT_CONFIG))
+            loop.create_task(db_upsert_stocks(INVENTORY_STOCKS))
     except Exception:
         pass
 
@@ -496,6 +500,14 @@ async def db_refresh_config():
                         k = pkg.get("key")
                         if k and "stock" in pkg:
                             INVENTORY_STOCKS[k] = pkg["stock"]
+            stock_rows = await conn.fetch("SELECT pack_key, stock FROM inventory_stocks;")
+            for s_row in stock_rows:
+                k = s_row['pack_key']
+                stk = int(s_row['stock'])
+                INVENTORY_STOCKS[k] = stk
+                for pkg in BOT_CONFIG.get("packages", []):
+                    if pkg.get("key") == k:
+                        pkg["stock"] = stk
     except Exception as e:
         logging.warning(f"Error fetching config from Neon: {e}")
 
@@ -585,6 +597,27 @@ async def db_upsert_config(cfg: dict):
             """, json.dumps(cfg))
     except Exception as e:
         logging.error(f"Failed to upsert config to Neon: {e}")
+
+
+async def db_upsert_stocks(stocks: dict):
+    if not db_pool or not isinstance(stocks, dict):
+        return
+    try:
+        async with db_pool.acquire() as conn:
+            for k, val in stocks.items():
+                try:
+                    num_val = int(val)
+                    await conn.execute("""
+                    INSERT INTO inventory_stocks (pack_key, stock, updated_at)
+                    VALUES ($1, $2, EXTRACT(EPOCH FROM NOW()))
+                    ON CONFLICT (pack_key) DO UPDATE SET
+                        stock = EXCLUDED.stock,
+                        updated_at = EXCLUDED.updated_at;
+                    """, str(k), num_val)
+                except Exception:
+                    pass
+    except Exception as e:
+        logging.error(f"Failed to upsert stocks to Neon: {e}")
 
 
 def load_orders():
@@ -1933,9 +1966,18 @@ async def update_stock_api(request):
     try:
         data = await request.json()
         if isinstance(data, dict):
-            INVENTORY_STOCKS.update(data)
+            for k, val in data.items():
+                try:
+                    num_val = int(val)
+                    INVENTORY_STOCKS[k] = num_val
+                    for pkg in BOT_CONFIG.get("packages", []):
+                        if pkg.get("key") == k:
+                            pkg["stock"] = num_val
+                except Exception:
+                    pass
+            save_bot_config()
             logging.info(f"Updated inventory stocks via Admin API: {INVENTORY_STOCKS}")
-            return cors_response({"status": "success", "stocks": INVENTORY_STOCKS})
+            return cors_response({"status": "success", "stocks": INVENTORY_STOCKS, "packages": BOT_CONFIG.get("packages", [])})
     except Exception as e:
         return cors_response({"status": "error", "message": str(e)}, status=400)
     return cors_response({"status": "invalid payload"}, status=400)

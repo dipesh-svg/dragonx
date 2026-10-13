@@ -580,7 +580,12 @@
         <!-- 2. Dynamic Packages & Prices in Bot -->
         <div class="bot-config-section">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.85rem; flex-wrap: wrap; gap: 0.5rem;">
-            <h4><i class="fa-solid fa-tags text-gold"></i> 2. Фасовки, Цены ($) и Складские Остатки:</h4>
+            <div style="display: flex; align-items: center; gap: 0.75rem;">
+              <h4><i class="fa-solid fa-tags text-gold"></i> 2. Фасовки, Цены ($) и Складские Остатки:</h4>
+              <span id="catalogLiveStatusBadge" style="display: inline-flex; align-items: center; gap: 5px; font-size: 0.72rem; padding: 2px 8px; border-radius: 999px; background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3); transition: all 0.3s ease;">
+                <i class="fa-solid fa-cloud-arrow-up"></i> Синхронизировано с Neon DB
+              </span>
+            </div>
             <button type="button" id="addNewPackageBtn" class="btn-ghost btn-xs">
               <i class="fa-solid fa-plus"></i>
               <span>Добавить фасовку</span>
@@ -1094,6 +1099,6 @@
   <div id="toastContainer" class="toast-container"></div>
 
   <!-- Scripts -->
-  <script src="admin.js?v=20261013_v7"></script>
+  <script src="admin.js?v=20261013_v8"></script>
 </body>
 </html>
