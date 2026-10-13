@@ -387,8 +387,10 @@
 
       if (resp.ok) {
         const data = await resp.json();
-        if (data && data.success && Array.isArray(data.orders)) {
-          mergeBotOrders(data.orders);
+        const ordersArray = Array.isArray(data) ? data : (data && Array.isArray(data.orders) ? data.orders : null);
+
+        if (ordersArray) {
+          mergeBotOrders(ordersArray);
           AdminState.isApiOnline = true;
           AdminState.lastSyncTime = new Date();
 
@@ -422,9 +424,10 @@
           renderOrdersTable();
           buildUsersFromOrders();
           renderClientsTable();
+          renderBotCatalogTab();
 
           if (!silent) {
-            showToast(`Синхронизация успешна! Получено ${data.orders.length} заказов из бота (${elapsed}ms).`, 'success');
+            showToast(`Синхронизация успешна! Получено ${ordersArray.length} заказов из бота (${elapsed}ms).`, 'success');
           }
           return true;
         }
