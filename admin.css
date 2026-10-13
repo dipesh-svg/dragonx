@@ -312,8 +312,9 @@
   display: none;
 }
 
-.admin-tab-pane.active {
-  display: block;
+.admin-tab-pane.active,
+.admin-tab-pane:not(.hidden) {
+  display: block !important;
 }
 
 .pane-header-actions {

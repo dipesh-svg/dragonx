@@ -1096,13 +1096,24 @@
   }
 
   function switchToTab(tabId) {
+    if (!tabId) return;
     document.querySelectorAll('.adm-tab-btn').forEach(b => {
       b.classList.toggle('active', b.dataset.tab === tabId);
     });
     document.querySelectorAll('.admin-tab-pane').forEach(p => {
-      p.classList.toggle('hidden', p.id !== tabId);
+      const isTarget = p.id === tabId;
+      p.classList.toggle('active', isTarget);
+      p.classList.toggle('hidden', !isTarget);
+      p.style.display = isTarget ? 'block' : 'none';
     });
     AdminState.activeTab = tabId;
+
+    if (tabId === 'tabPrices') renderBotCatalogTab();
+    if (tabId === 'tabTelegram') renderTelegramTab();
+    if (tabId === 'tabOrders') renderOrdersTable();
+    if (tabId === 'tabClients') renderClientsTable();
+    if (tabId === 'tabLocations') renderZonesList();
+
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
@@ -1549,13 +1560,8 @@
     // Tab Navigation
     document.querySelectorAll('.adm-tab-btn').forEach(btn => {
       btn.addEventListener('click', () => {
-        document.querySelectorAll('.adm-tab-btn').forEach(b => b.classList.remove('active'));
-        document.querySelectorAll('.admin-tab-pane').forEach(p => p.classList.add('hidden'));
-
-        btn.classList.add('active');
         const targetTab = btn.dataset.tab;
-        const pane = document.getElementById(targetTab);
-        if (pane) pane.classList.remove('hidden');
+        if (targetTab) switchToTab(targetTab);
       });
     });
 
