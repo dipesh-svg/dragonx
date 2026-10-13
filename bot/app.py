@@ -174,11 +174,11 @@ DEFAULT_SEED_ORDERS = {
             "last_name": "",
             "lang": "ru"
         },
-        "created_at": 1791892427.0,
+        "created_at": 1791893000.0,
         "product": "Рега",
         "qty": "2 штук",
-        "price": "26$",
-        "total_amount": 26.4,
+        "price": "26.40$",
+        "total_amount": 26.40,
         "currency": "USD",
         "pack_key": "buy_2",
         "district": "Чиланзор",
@@ -193,7 +193,112 @@ DEFAULT_SEED_ORDERS = {
             "amount_ltc": 0.40608,
             "confirmations": 2
         },
-        "updated_at": 1791892427.0
+        "updated_at": 1791893000.0
+    },
+    "DRGX-8281942784-2817": {
+        "id": "DRGX-8281942784-2817",
+        "user_id": 8281942784,
+        "user_data": {
+            "id": 8281942784,
+            "username": "dkouzz",
+            "first_name": "𝐃.𝐊",
+            "last_name": "",
+            "lang": "ru"
+        },
+        "created_at": 1791890760.0,
+        "product": "Рега",
+        "qty": "2 штук",
+        "price": "25.00$",
+        "total_amount": 25.00,
+        "currency": "USD",
+        "pack_key": "buy_2",
+        "district": "Чиланзор",
+        "location": "Ташкент, Чиланзор (Координаты выдаются после подтверждения оплаты)",
+        "coordinates": "41.2721, 69.2045",
+        "status": "pending",
+        "pickup_status": "waiting_payment",
+        "tracking_code": "DRGX-TRK-2817",
+        "notes": "Ожидает проверки оплаты LTC",
+        "updated_at": 1791890760.0
+    },
+    "DRGX-7738837350-3207": {
+        "id": "DRGX-7738837350-3207",
+        "user_id": 7738837350,
+        "user_data": {
+            "id": 7738837350,
+            "username": "hello_narco",
+            "first_name": "𝐻𝐸𝐿𝐿☯ 𝒩𝒜R𝒞☯ ❎",
+            "last_name": "",
+            "lang": "ru"
+        },
+        "created_at": 1791889020.0,
+        "product": "Рега",
+        "qty": "2 штук",
+        "price": "25.00$",
+        "total_amount": 25.00,
+        "currency": "USD",
+        "pack_key": "buy_2",
+        "district": "Чиланзор",
+        "location": "Ташкент, Чиланзор (Координаты выдаются после подтверждения оплаты)",
+        "coordinates": "41.2721, 69.2045",
+        "status": "pending",
+        "pickup_status": "waiting_payment",
+        "tracking_code": "DRGX-TRK-3207",
+        "notes": "Ожидает проверки оплаты LTC",
+        "updated_at": 1791889020.0
+    },
+    "DRGX-8281942784-5209": {
+        "id": "DRGX-8281942784-5209",
+        "user_id": 8281942784,
+        "user_data": {
+            "id": 8281942784,
+            "username": "",
+            "first_name": "𝐃.𝐊",
+            "last_name": "",
+            "lang": "ru"
+        },
+        "created_at": 1791888600.0,
+        "product": "Рега",
+        "qty": "2 штук",
+        "price": "25.00$",
+        "total_amount": 25.00,
+        "currency": "USD",
+        "pack_key": "buy_2",
+        "district": "Яшнабад",
+        "location": "Ташкент, Яшнабад (Координаты выдаются после подтверждения оплаты)",
+        "coordinates": "41.2985, 69.3241",
+        "status": "pending",
+        "pickup_status": "waiting_payment",
+        "tracking_code": "DRGX-TRK-5209",
+        "notes": "Ожидает проверки оплаты LTC",
+        "updated_at": 1791888600.0
+    },
+    "DRGX-20261013-4821": {
+        "id": "DRGX-20261013-4821",
+        "user_id": 88419201,
+        "user_data": {
+            "id": 88419201,
+            "username": "timur_tashkent",
+            "first_name": "Тимур (VIP Client)",
+            "last_name": "",
+            "lang": "ru"
+        },
+        "created_at": 1791881820.0,
+        "product": "Рега",
+        "qty": "2 шт",
+        "price": "25.00$",
+        "total_amount": 25.00,
+        "currency": "USD",
+        "pack_key": "buy_2",
+        "district": "Чиланзор",
+        "location": "Чиланзор, кв-л 9, дом 14 (Магнит за кондиционером)",
+        "coordinates": "41.2721, 69.2045",
+        "status": "picked_up",
+        "pickup_status": "picked_up",
+        "picked_up_at": 1791883600.0,
+        "tracking_code": "DRGX-TRK-4821",
+        "notes": "Клиент забрал заказ без задержек. Все чисто.",
+        "updated_at": 1791883600.0
     },
     "DRGX-9024-8142": {
         "id": "DRGX-9024-8142",
@@ -201,15 +306,15 @@ DEFAULT_SEED_ORDERS = {
         "user_data": {
             "id": 90248142,
             "username": "tashkent_vip",
-            "first_name": "Алексей",
-            "last_name": "VIP",
+            "first_name": "Алексей VIP",
+            "last_name": "",
             "lang": "ru"
         },
-        "created_at": time.time() - 3600 * 2,
+        "created_at": 1791880560.0,
         "product": "Рега",
         "qty": "2 штук",
-        "price": "25$",
-        "total_amount": 25.0,
+        "price": "25.00$",
+        "total_amount": 25.00,
         "currency": "USD",
         "pack_key": "buy_2",
         "district": "Чиланзор",
@@ -219,7 +324,7 @@ DEFAULT_SEED_ORDERS = {
         "pickup_status": "ready",
         "tracking_code": "DRGX-TRK-8142",
         "notes": "Дроп свежий, защитная метка X-42. Координаты подтверждены курьером.",
-        "updated_at": time.time() - 3600 * 1
+        "updated_at": 1791883600.0
     },
     "DRGX-5519-9311": {
         "id": "DRGX-5519-9311",
@@ -227,15 +332,15 @@ DEFAULT_SEED_ORDERS = {
         "user_data": {
             "id": 55199311,
             "username": "sergey_tash",
-            "first_name": "Сергей",
-            "last_name": "К.",
+            "first_name": "Сергей К.",
+            "last_name": "",
             "lang": "ru"
         },
-        "created_at": time.time() - 3600 * 5,
+        "created_at": 1791865560.0,
         "product": "Рега",
         "qty": "5 штук",
-        "price": "55$",
-        "total_amount": 55.0,
+        "price": "55.00$",
+        "total_amount": 55.00,
         "currency": "USD",
         "pack_key": "buy_5",
         "district": "Яшнабад",
@@ -243,10 +348,10 @@ DEFAULT_SEED_ORDERS = {
         "coordinates": "41.2985, 69.3241",
         "status": "picked_up",
         "pickup_status": "picked_up",
-        "picked_up_at": time.time() - 3600 * 1.5,
+        "picked_up_at": 1791875000.0,
         "tracking_code": "DRGX-TRK-9311",
         "notes": "Клиент успешно забрал заказ в 14:15, тайник чист.",
-        "updated_at": time.time() - 3600 * 1.5
+        "updated_at": 1791875000.0
     },
     "DRGX-1204-4420": {
         "id": "DRGX-1204-4420",
@@ -258,11 +363,11 @@ DEFAULT_SEED_ORDERS = {
             "last_name": "",
             "lang": "ru"
         },
-        "created_at": time.time() - 3600 * 8,
+        "created_at": 1791850560.0,
         "product": "Рега",
         "qty": "10 штук",
-        "price": "108$",
-        "total_amount": 108.0,
+        "price": "108.00$",
+        "total_amount": 108.00,
         "currency": "USD",
         "pack_key": "buy_10",
         "district": "Ulugbek",
@@ -272,7 +377,7 @@ DEFAULT_SEED_ORDERS = {
         "pickup_status": "preparing",
         "tracking_code": "DRGX-TRK-4420",
         "notes": "Оплата LTC подтверждена в блокчейне. Курьер закладывает дроп.",
-        "updated_at": time.time() - 3600 * 6
+        "updated_at": 1791855000.0
     }
 }
 
@@ -1210,9 +1315,21 @@ async def menu(callback: CallbackQuery):
             'pickup_status': "waiting_payment",
             'tracking_code': f"DRGX-TRK-{order_rand}",
             'notes': "Ожидает проверки оплаты LTC",
+            'stock_decremented': True,
             'updated_at': time.time()
         }
-        save_orders()
+
+        # Decrement package stock inventory immediately in memory, config, & Neon DB
+        if pkg and "stock" in pkg and pkg["stock"] > 0:
+            pkg["stock"] -= 1
+            INVENTORY_STOCKS[data] = pkg["stock"]
+            for p in BOT_CONFIG.get("packages", []):
+                if p.get("key") == data:
+                    p["stock"] = pkg["stock"]
+            save_bot_config()
+            logging.info(f"Inventory stock reduced for {data}: {pkg['stock']} pcs remaining")
+
+        save_orders(unique_order_id)
 
         btn_verify = {"ru": "🔍 Проверить транзакцию LTC", "en": "🔍 Verify LTC Transaction", "uz": "🔍 LTC Tranzaksiyani tekshirish"}[lang]
         btn_ex1    = {"ru": "🔄 Обменник 1", "en": "🔄 Exchanger 1", "uz": "🔄 Ayirboshlash 1"}[lang]
@@ -1295,10 +1412,14 @@ async def menu(callback: CallbackQuery):
         if new_tx:
             PROCESSED_TX_HASHES.add(new_tx['hash'])
             
-            if order_info and 'pack_key' in order_info:
+            if order_info and 'pack_key' in order_info and not order_info.get('stock_decremented'):
                 pk = order_info['pack_key']
-                if pk in INVENTORY_STOCKS and INVENTORY_STOCKS[pk] > 0:
-                    INVENTORY_STOCKS[pk] -= 1
+                for p in BOT_CONFIG.get("packages", []):
+                    if p.get("key") == pk and p.get("stock", 0) > 0:
+                        p["stock"] -= 1
+                        INVENTORY_STOCKS[pk] = p["stock"]
+                order_info['stock_decremented'] = True
+                save_bot_config()
 
             user_meta = order_info.get('user_data', {'id': user_id, 'username': callback.from_user.username, 'lang': lang}) if order_info else {'id': user_id, 'username': callback.from_user.username, 'lang': lang}
             qty_val = order_info.get('qty', 'N/A') if order_info else 'N/A'

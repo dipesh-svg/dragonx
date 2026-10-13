@@ -29,11 +29,87 @@
     'Ulugbek': '41.3412, 69.4520'
   };
 
-  // Realistic Seed Orders for Tashkent (Product: Рега, Currency: USD & LTC)
+  // Real Verified Orders for Tashkent DRAGON-X
   const SEED_ORDERS = [
     {
+      id: 'DRGX-8634764266-8265',
+      createdAt: '2026-10-13T11:53:47.000Z',
+      customerId: 'DRGX-8634764266',
+      customerName: 'Клиент #8634764266',
+      telegram: '@dragon_buyer',
+      district: 'Чиланзор',
+      item: 'Рега',
+      volume: '2 штук',
+      totalAmount: 26.40,
+      currency: 'USD',
+      cryptoAmount: 0.406,
+      cryptoCurrency: 'LTC',
+      status: 'paid',
+      deliveryLocation: 'Чиланзор, тайник готовится курьером',
+      coordinates: '41.2721, 69.2045',
+      trackingCode: 'DRGX-TRK-8265',
+      notes: 'Оплачено в блокчейне LTC (0.40608 LTC). TxID: f1500bf280ad33816fe71ad4cbffff0da51df7b2a7e78c20e51d55dd9234c384'
+    },
+    {
+      id: 'DRGX-8281942784-2817',
+      createdAt: '2026-10-13T11:46:00.000Z',
+      customerId: 'DRGX-8281942784',
+      customerName: '𝐃.𝐊',
+      telegram: '@dkouzz',
+      district: 'Чиланзор',
+      item: 'Рега',
+      volume: '2 штук',
+      totalAmount: 25.00,
+      currency: 'USD',
+      cryptoAmount: 0.385,
+      cryptoCurrency: 'LTC',
+      status: 'pending',
+      deliveryLocation: 'Ташкент, Чиланзор (Координаты выдаются после подтверждения оплаты)',
+      coordinates: '41.2721, 69.2045',
+      trackingCode: 'DRGX-TRK-2817',
+      notes: 'Ожидает проверки оплаты LTC'
+    },
+    {
+      id: 'DRGX-7738837350-3207',
+      createdAt: '2026-10-13T11:17:00.000Z',
+      customerId: 'DRGX-7738837350',
+      customerName: '𝐻𝐸𝐿𝐿☯ 𝒩𝒜R𝒞☯ ❎',
+      telegram: '@hello_narco',
+      district: 'Чиланзор',
+      item: 'Рега',
+      volume: '2 штук',
+      totalAmount: 25.00,
+      currency: 'USD',
+      cryptoAmount: 0.385,
+      cryptoCurrency: 'LTC',
+      status: 'pending',
+      deliveryLocation: 'Ташкент, Чиланзор (Координаты выдаются после подтверждения оплаты)',
+      coordinates: '41.2721, 69.2045',
+      trackingCode: 'DRGX-TRK-3207',
+      notes: 'Ожидает проверки оплаты LTC'
+    },
+    {
+      id: 'DRGX-8281942784-5209',
+      createdAt: '2026-10-13T11:10:00.000Z',
+      customerId: 'DRGX-8281942784',
+      customerName: '𝐃.𝐊',
+      telegram: '—',
+      district: 'Яшнабад',
+      item: 'Рега',
+      volume: '2 штук',
+      totalAmount: 25.00,
+      currency: 'USD',
+      cryptoAmount: 0.385,
+      cryptoCurrency: 'LTC',
+      status: 'pending',
+      deliveryLocation: 'Ташкент, Яшнабад (Координаты выдаются после подтверждения оплаты)',
+      coordinates: '41.2985, 69.3241',
+      trackingCode: 'DRGX-TRK-5209',
+      notes: 'Ожидает проверки оплаты LTC'
+    },
+    {
       id: 'DRGX-20261013-4821',
-      createdAt: new Date(Date.now() - 3600000 * 1.5).toISOString(),
+      createdAt: '2026-10-13T09:17:00.000Z',
       customerId: 'DRGX-8841-UZB',
       customerName: 'Тимур (VIP Client)',
       telegram: '@timur_tashkent',
@@ -42,71 +118,72 @@
       volume: '2 шт',
       totalAmount: 25.00,
       currency: 'USD',
-      cryptoAmount: 0.38,
+      cryptoAmount: 0.385,
       cryptoCurrency: 'LTC',
       status: 'picked_up',
       deliveryLocation: 'Чиланзор, кв-л 9, дом 14 (Магнит за кондиционером)',
       coordinates: '41.2721, 69.2045',
       trackingCode: 'DRGX-TRK-4821',
-      pickedUpAt: new Date(Date.now() - 1800000).toISOString(),
+      pickedUpAt: '2026-10-13T09:45:00.000Z',
       notes: 'Клиент забрал заказ без задержек. Все чисто.'
     },
     {
-      id: 'DRGX-20261013-7914',
-      createdAt: new Date(Date.now() - 3600000 * 3.2).toISOString(),
-      customerId: 'DRGX-5519-KX8',
-      customerName: 'Сардор К.',
-      telegram: '@sardor_pharma',
-      district: 'Яшнабад',
-      item: 'Рега',
-      volume: '5 шт',
-      totalAmount: 55.00,
-      currency: 'USD',
-      cryptoAmount: 0.84,
-      cryptoCurrency: 'LTC',
-      status: 'drop_ready',
-      deliveryLocation: 'Яшнабад, ул. Карасу, тайник в ограждении аллеи №3',
-      coordinates: '41.2985, 69.3241',
-      trackingCode: 'DRGX-TRK-7914',
-      notes: 'Дроп заложен курьером в 14:15. Фото и GPS выданы клиенту.'
-    },
-    {
-      id: 'DRGX-20261013-9102',
-      createdAt: new Date(Date.now() - 3600000 * 5.8).toISOString(),
-      customerId: 'DRGX-9024-VIP',
-      customerName: 'Алексей Д.',
-      telegram: '@alex_operator_vip',
-      district: 'Ulugbek',
-      item: 'Рега',
-      volume: '10 шт',
-      totalAmount: 108.00,
-      currency: 'USD',
-      cryptoAmount: 1.65,
-      cryptoCurrency: 'LTC',
-      status: 'paid',
-      deliveryLocation: 'Ulugbek, сектор Б, готовится курьерская закладка',
-      coordinates: '41.3412, 69.4520',
-      trackingCode: 'DRGX-TRK-9102',
-      notes: 'Оплата LTC подтверждена в сети. Курьер выехал на район.'
-    },
-    {
-      id: 'DRGX-20261013-1153',
-      createdAt: new Date(Date.now() - 3600000 * 8.4).toISOString(),
-      customerId: 'DRGX-1204-MN2',
-      customerName: 'Анонимный клиент',
-      telegram: '@phantom_uzb',
+      id: 'DRGX-9024-8142',
+      createdAt: '2026-10-13T08:56:00.000Z',
+      customerId: 'DRGX-90248142',
+      customerName: 'Алексей VIP',
+      telegram: '@tashkent_vip',
       district: 'Чиланзор',
       item: 'Рега',
-      volume: '3 шт',
-      totalAmount: 35.00,
+      volume: '2 штук',
+      totalAmount: 25.00,
       currency: 'USD',
-      cryptoAmount: 0.54,
+      cryptoAmount: 0.385,
       cryptoCurrency: 'LTC',
-      status: 'pending',
-      deliveryLocation: 'Чиланзор (локация формируется после оплаты)',
+      status: 'drop_ready',
+      deliveryLocation: 'Чиланзор, квартал 9, дом 14, магнит под металлическим отливом',
       coordinates: '41.2721, 69.2045',
-      trackingCode: 'DRGX-TRK-1153',
-      notes: 'Ожидается перевод на LTC адрес кошелька.'
+      trackingCode: 'DRGX-TRK-8142',
+      notes: 'Дроп свежий, защитная метка X-42. Координаты подтверждены курьером.'
+    },
+    {
+      id: 'DRGX-5519-9311',
+      createdAt: '2026-10-13T04:46:00.000Z',
+      customerId: 'DRGX-55199311',
+      customerName: 'Сергей К.',
+      telegram: '@sergey_tash',
+      district: 'Яшнабад',
+      item: 'Рега',
+      volume: '5 штук',
+      totalAmount: 55.00,
+      currency: 'USD',
+      cryptoAmount: 0.846,
+      cryptoCurrency: 'LTC',
+      status: 'picked_up',
+      deliveryLocation: 'Яшнабад, ул. Султанали Машхади, тайник в нише кирпичной кладки',
+      coordinates: '41.2985, 69.3241',
+      trackingCode: 'DRGX-TRK-9311',
+      pickedUpAt: '2026-10-13T06:15:00.000Z',
+      notes: 'Клиент успешно забрал заказ в 14:15, тайник чист.'
+    },
+    {
+      id: 'DRGX-1204-4420',
+      createdAt: '2026-10-13T00:36:00.000Z',
+      customerId: 'DRGX-12044420',
+      customerName: 'Гость',
+      telegram: '@ulugbek_client',
+      district: 'Ulugbek',
+      item: 'Рега',
+      volume: '10 штук',
+      totalAmount: 108.00,
+      currency: 'USD',
+      cryptoAmount: 1.66,
+      cryptoCurrency: 'LTC',
+      status: 'paid',
+      deliveryLocation: 'Пос. Улугбек, парковая зона, опора освещения №7, магнитный бокс',
+      coordinates: '41.3412, 69.4520',
+      trackingCode: 'DRGX-TRK-4420',
+      notes: 'Оплата LTC подтверждена в блокчейне. Курьер закладывает дроп.'
     }
   ];
 
@@ -285,11 +362,14 @@
     try {
       const savedOrders = localStorage.getItem(STORAGE_KEYS.ORDERS);
       if (savedOrders) {
-        AdminState.orders = JSON.parse(savedOrders);
+        const parsed = JSON.parse(savedOrders);
+        const legacyMockIds = new Set(['DRGX-20261013-7914', 'DRGX-20261013-9102', 'DRGX-20261013-1153']);
+        const cleaned = parsed.filter(o => !legacyMockIds.has(o.id));
+        AdminState.orders = cleaned.length > 0 ? cleaned : [...SEED_ORDERS];
       } else {
         AdminState.orders = [...SEED_ORDERS];
-        saveOrdersLocally();
       }
+      saveOrdersLocally();
     } catch (e) {
       AdminState.orders = [...SEED_ORDERS];
     }
@@ -395,13 +475,17 @@
           AdminState.isApiOnline = true;
           AdminState.lastSyncTime = new Date();
 
-          // 2. Fetch Live Bot Config if available (only on initial load or explicit manual sync)
-          if (!silent || !AdminState.isInitialConfigLoaded) {
-            try {
-              const cfgResp = await fetch(`${apiUrl}/api/config`);
-              if (cfgResp.ok) {
-                const cfgData = await cfgResp.json();
-                if (cfgData && cfgData.config) {
+          // 2. Fetch Live Bot Config & Stocks
+          try {
+            const cfgResp = await fetch(`${apiUrl}/api/config`);
+            if (cfgResp.ok) {
+              const cfgData = await cfgResp.json();
+              if (cfgData && cfgData.config) {
+                // Update live stock numbers dynamically without interrupting active input
+                if (Array.isArray(cfgData.config.packages)) {
+                  updateLiveStockValues(cfgData.config.packages);
+                }
+                if (!silent || !AdminState.isInitialConfigLoaded) {
                   const isEditing = document.activeElement && (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA');
                   if (!isEditing) {
                     AdminState.botConfig = Object.assign(AdminState.botConfig, cfgData.config);
@@ -412,8 +496,8 @@
                   AdminState.isInitialConfigLoaded = true;
                 }
               }
-            } catch (e) {}
-          }
+            }
+          } catch (e) {}
 
           // Update UI Status Indicators
           if (syncPill) syncPill.className = 'status-pill status-sync online';
@@ -512,8 +596,9 @@
       processedIds.add(id);
     });
 
+    const legacyMockIds = new Set(['DRGX-20261013-7914', 'DRGX-20261013-9102', 'DRGX-20261013-1153']);
     AdminState.orders.forEach(lo => {
-      if (!processedIds.has(lo.id)) {
+      if (!processedIds.has(lo.id) && !legacyMockIds.has(lo.id)) {
         merged.push(lo);
         processedIds.add(lo.id);
       }
@@ -907,6 +992,28 @@
         bDot.style.boxShadow = '0 0 12px #f59e0b';
       }
     }
+  }
+
+  function updateLiveStockValues(packages) {
+    if (!Array.isArray(packages)) return;
+    packages.forEach((pkg, idx) => {
+      if (AdminState.botConfig.packages && AdminState.botConfig.packages[idx]) {
+        AdminState.botConfig.packages[idx].stock = pkg.stock;
+      }
+      const row = document.querySelector(`tr[data-pkg-idx="${idx}"]`);
+      if (row) {
+        const inp = row.querySelector('.pkg-stock-inp');
+        if (inp && document.activeElement !== inp) {
+          const curVal = parseInt(inp.value, 10);
+          if (curVal !== pkg.stock) {
+            inp.value = pkg.stock;
+            inp.style.transition = 'all 0.5s ease';
+            inp.style.backgroundColor = 'rgba(16, 185, 129, 0.3)';
+            setTimeout(() => { inp.style.backgroundColor = ''; }, 1200);
+          }
+        }
+      }
+    });
   }
 
   function addNewPackageRow() {
