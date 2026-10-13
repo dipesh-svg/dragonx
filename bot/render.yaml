@@ -1,5 +1,5 @@
 services:
-  - type: worker
+  - type: web
     name: dragon-x-telegram-bot
     runtime: python
     plan: free
@@ -9,3 +9,5 @@ services:
     envVars:
       - key: BOT_TOKEN
         sync: false
+      - key: PORT
+        value: 10000

@@ -777,3 +777,397 @@
     justify-content: space-between;
   }
 }
+
+/* ========================================================
+   REAL-TIME BOT SYNCHRONIZATION & STATUS PILLS
+   ======================================================== */
+.status-sync {
+  background: rgba(0, 240, 255, 0.1);
+  color: var(--accent-cyan);
+  border: 1px solid rgba(0, 240, 255, 0.25);
+  transition: all 0.3s ease;
+}
+
+.status-sync.online {
+  background: rgba(16, 185, 129, 0.15);
+  color: #34d399;
+  border-color: rgba(16, 185, 129, 0.35);
+}
+
+.status-sync.offline {
+  background: rgba(245, 158, 11, 0.15);
+  color: #fbbf24;
+  border-color: rgba(245, 158, 11, 0.35);
+}
+
+.sync-icon.spin, .sync-spinning {
+  animation: spinIcon 1s linear infinite;
+}
+
+@keyframes spinIcon {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Status Badges */
+.status-drop-ready {
+  background: rgba(0, 240, 255, 0.15);
+  color: #38bdf8;
+  border: 1px solid rgba(0, 240, 255, 0.4);
+}
+
+.status-picked-up {
+  background: rgba(16, 185, 129, 0.18);
+  color: #10b981;
+  border: 1px solid rgba(16, 185, 129, 0.45);
+  font-weight: 800;
+}
+
+/* ========================================================
+   TRACK LOCATION & PICKUP STASH MODAL
+   ======================================================== */
+.location-modal-dialog {
+  max-width: 780px;
+}
+
+.tracking-stepper-card {
+  padding: 1.25rem;
+  margin-bottom: 1.25rem;
+  border-radius: var(--radius-lg);
+}
+
+.stepper-title-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.25rem;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.stepper-title-row h4 {
+  font-size: 0.95rem;
+  color: #fff;
+  margin: 0;
+}
+
+.step-status-highlight {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--accent-cyan);
+  background: rgba(0, 240, 255, 0.1);
+  padding: 0.25rem 0.65rem;
+  border-radius: var(--radius-pill);
+}
+
+.tracking-stepper {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: relative;
+}
+
+.step-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  z-index: 2;
+  flex: 1;
+}
+
+.step-circle {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: rgba(15, 23, 42, 0.9);
+  border: 2px solid rgba(255, 255, 255, 0.15);
+  color: var(--text-dim);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.9rem;
+  transition: all 0.3s ease;
+}
+
+.step-title {
+  font-size: 0.7rem;
+  color: var(--text-dim);
+  font-weight: 600;
+  text-align: center;
+}
+
+.step-line {
+  flex: 1;
+  height: 2px;
+  background: rgba(255, 255, 255, 0.1);
+  margin: 0 -5px;
+  margin-bottom: 1.5rem;
+  transition: background 0.3s ease;
+}
+
+.step-item.step-done .step-circle {
+  background: rgba(16, 185, 129, 0.2);
+  border-color: #10b981;
+  color: #34d399;
+  box-shadow: 0 0 12px rgba(16, 185, 129, 0.4);
+}
+
+.step-item.step-done .step-title {
+  color: #34d399;
+}
+
+.step-item.step-current .step-circle {
+  background: rgba(0, 240, 255, 0.2);
+  border-color: var(--accent-cyan);
+  color: var(--accent-cyan);
+  box-shadow: 0 0 15px rgba(0, 240, 255, 0.5);
+  transform: scale(1.1);
+}
+
+.step-item.step-current .step-title {
+  color: var(--accent-cyan);
+}
+
+.step-line.line-done {
+  background: #10b981;
+  box-shadow: 0 0 8px rgba(16, 185, 129, 0.4);
+}
+
+/* Quick Pickup Action Banner */
+.pickup-action-banner {
+  background: rgba(16, 185, 129, 0.08);
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  border-radius: var(--radius-lg);
+  padding: 1.15rem 1.35rem;
+  margin-bottom: 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.25rem;
+  flex-wrap: wrap;
+}
+
+.pickup-action-banner .banner-text p {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin: 0.25rem 0 0 0;
+}
+
+.btn-picked-up {
+  background: linear-gradient(135deg, #059669 0%, #10b981 100%) !important;
+  color: #fff !important;
+  border: none !important;
+  box-shadow: 0 0 18px rgba(16, 185, 129, 0.4) !important;
+  font-weight: 700;
+  padding: 0.75rem 1.35rem;
+  cursor: pointer;
+}
+
+.btn-picked-up:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0 25px rgba(16, 185, 129, 0.6) !important;
+}
+
+/* Radar Map Display Widget */
+.radar-map-card {
+  padding: 1.25rem;
+  margin-bottom: 1.25rem;
+  border-radius: var(--radius-lg);
+}
+
+.map-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.coords-display-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  background: rgba(15, 23, 42, 0.8);
+  border: 1px solid var(--glass-border-bright);
+  padding: 0.35rem 0.75rem;
+  border-radius: var(--radius-pill);
+  margin-top: 0.35rem;
+  font-size: 0.88rem;
+}
+
+.map-nav-btns {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.btn-map-link {
+  font-size: 0.78rem;
+  padding: 0.35rem 0.75rem;
+  border-radius: var(--radius-sm);
+  text-decoration: none;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  transition: all 0.2s ease;
+}
+
+.google-btn {
+  background: rgba(66, 133, 244, 0.15);
+  color: #60a5fa;
+  border: 1px solid rgba(66, 133, 244, 0.3);
+}
+
+.google-btn:hover {
+  background: rgba(66, 133, 244, 0.3);
+}
+
+.yandex-btn {
+  background: rgba(239, 68, 68, 0.15);
+  color: #f87171;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.yandex-btn:hover {
+  background: rgba(239, 68, 68, 0.3);
+}
+
+.osm-btn {
+  background: rgba(16, 185, 129, 0.15);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.osm-btn:hover {
+  background: rgba(16, 185, 129, 0.3);
+}
+
+.radar-map-display {
+  position: relative;
+  height: 180px;
+  background: radial-gradient(circle at center, #0a192f 0%, #030814 100%);
+  border: 1px solid rgba(0, 240, 255, 0.25);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.radar-ring {
+  position: absolute;
+  border-radius: 50%;
+  border: 1px dashed rgba(0, 240, 255, 0.18);
+}
+
+.ring-1 { width: 60px; height: 60px; }
+.ring-2 { width: 120px; height: 120px; }
+.ring-3 { width: 180px; height: 180px; }
+
+.radar-grid-line {
+  position: absolute;
+  background: rgba(0, 240, 255, 0.1);
+}
+
+.h-line { width: 100%; height: 1px; }
+.v-line { height: 100%; width: 1px; }
+
+.radar-sweep {
+  position: absolute;
+  inset: 0;
+  background: conic-gradient(from 0deg, rgba(0, 240, 255, 0.2) 0deg, transparent 60deg);
+  border-radius: 50%;
+  animation: radarRotate 4s linear infinite;
+  pointer-events: none;
+}
+
+@keyframes radarRotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.radar-pin {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  z-index: 10;
+  color: #ef4444;
+  font-size: 1.5rem;
+  filter: drop-shadow(0 0 8px rgba(239, 68, 68, 0.7));
+}
+
+.pin-pulse {
+  position: absolute;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: rgba(239, 68, 68, 0.35);
+  animation: pulseDot 1.5s infinite;
+  top: -4px;
+}
+
+.pin-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #fff;
+  background: rgba(0, 0, 0, 0.75);
+  padding: 0.15rem 0.5rem;
+  border-radius: var(--radius-sm);
+  margin-top: 0.25rem;
+  white-space: nowrap;
+}
+
+.radar-legend {
+  position: absolute;
+  bottom: 8px;
+  left: 12px;
+  right: 12px;
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.72rem;
+  color: var(--text-dim);
+}
+
+.district-preset-btns {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.btn-preset-district {
+  background: rgba(15, 23, 42, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #f8fafc;
+  padding: 0.4rem 0.85rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-preset-district:hover {
+  border-color: var(--accent-cyan);
+  color: var(--accent-cyan);
+  background: rgba(0, 240, 255, 0.1);
+}
+
+.btn-action-pickup {
+  color: #10b981 !important;
+}
+
+.btn-action-pickup:hover {
+  background: rgba(16, 185, 129, 0.2) !important;
+}
+
+.btn-action-location {
+  color: var(--accent-cyan) !important;
+}
+
+.btn-action-location:hover {
+  background: rgba(0, 240, 255, 0.2) !important;
+}

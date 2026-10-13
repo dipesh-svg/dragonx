@@ -3,104 +3,110 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>DRAGON-X PHARMA | Панель Управления & Диспетчер Заказов</title>
-  <meta name="robots" content="noindex, nofollow">
+  <title>DRAGON-X • Диспетчерская Панель Управления Заказами</title>
   
-  <!-- Fonts -->
+  <!-- Font Awesome 6 Pro Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- Google Fonts: Orbitron & Inter & JetBrains Mono -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700&family=Orbitron:wght@600;800;900&display=swap" rel="stylesheet">
   
-  <!-- FontAwesome -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-  
-  <!-- Stylesheets -->
+  <!-- Main Styles & Dedicated Admin CSS -->
   <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="admin.css">
 </head>
 <body class="admin-body">
 
-  <!-- Background Ambience -->
-  <div class="ambient-glow glow-1"></div>
-  <div class="ambient-glow glow-2"></div>
-  <div class="cyber-grid"></div>
-
   <!-- ======================================================== -->
-  <!-- 1. STRICT ADMIN AUTHENTICATION GATE -->
+  <!-- 1. OPERATOR AUTHENTICATION GATE (damascus@123 / vegadragon24) -->
   <!-- ======================================================== -->
   <div id="adminAuthGate" class="admin-login-overlay">
     <div class="admin-login-card glass-panel glow-cyan">
       <div class="login-brand">
-        <div class="brand-icon-box">
+        <div class="brand-icon-box glow-cyan">
           <i class="fa-solid fa-dragon"></i>
         </div>
-        <h2>DRAGON-X OPERATOR</h2>
-        <span class="gate-tag">RESTRICTED ACCESS PORTAL</span>
+        <h2>DRAGON-X DISPATCH</h2>
+        <span class="badge-accent font-mono">ПАНЕЛЬ УПРАВЛЕНИЯ & ТРЕКИНГ</span>
       </div>
 
-      <p class="login-subtitle">Авторизация оператора для управления заказами, локациями доставки и Telegram ботом</p>
+      <p class="login-subtitle">Авторизуйтесь для управления заказами препарата Рега, координатами тайников и Telegram-ботом.</p>
 
       <form id="adminLoginForm" class="admin-form" onsubmit="return false;">
         <div class="form-group">
-          <label for="adminLoginId"><i class="fa-solid fa-id-badge"></i> Идентификатор Оператора (ID)</label>
+          <label for="adminLoginId"><i class="fa-solid fa-id-badge"></i> Идентификатор Оператора:</label>
           <div class="input-with-icon">
-            <input type="text" id="adminLoginId" placeholder="Введите ваш ID" required class="form-input font-mono" autocomplete="off">
+            <input type="text" id="adminLoginId" placeholder="damascus@123" value="damascus@123" required class="form-input font-mono">
+            <i class="fa-solid fa-user-shield input-icon-right"></i>
           </div>
         </div>
 
         <div class="form-group">
-          <label for="adminLoginPassword"><i class="fa-solid fa-key"></i> Пароль Доступа (Password)</label>
+          <label for="adminLoginPassword"><i class="fa-solid fa-key"></i> Пароль Доступа:</label>
           <div class="input-with-icon">
-            <input type="password" id="adminLoginPassword" placeholder="••••••••••••" required class="form-input">
-            <button type="button" class="toggle-pwd-btn" id="toggleAdminPwdBtn"><i class="fa-solid fa-eye"></i></button>
+            <input type="password" id="adminLoginPassword" placeholder="••••••••••••" value="vegadragon24" required class="form-input font-mono">
+            <button type="button" id="toggleAdminPwdBtn" class="pwd-toggle-btn" title="Показать/скрыть пароль">
+              <i class="fa-solid fa-eye"></i>
+            </button>
           </div>
         </div>
 
-        <div id="adminLoginError" class="auth-error-banner hidden">
+        <div id="adminLoginError" class="auth-error-msg hidden">
           <i class="fa-solid fa-triangle-exclamation"></i>
           <span>Неверный ID оператора или пароль доступа!</span>
         </div>
 
         <button type="submit" id="adminLoginSubmitBtn" class="btn-primary glow-btn full-w">
-          <i class="fa-solid fa-shield-halved"></i>
-          <span>Войти в Панель Управления</span>
+          <i class="fa-solid fa-lock-open"></i>
+          <span>Войти в Диспетчерскую</span>
         </button>
 
         <div class="login-footer-links">
-          <a href="index.html" class="back-to-store-link"><i class="fa-solid fa-arrow-left"></i> Вернуться в магазин</a>
+          <a href="index.html" class="back-to-store-link">
+            <i class="fa-solid fa-arrow-left"></i> Вернуться на главную витрину
+          </a>
         </div>
       </form>
     </div>
   </div>
 
   <!-- ======================================================== -->
-  <!-- 2. ADMIN DASHBOARD INTERFACE (VISIBLE UPON LOGIN) -->
+  <!-- 2. MAIN ADMIN CONSOLE DASHBOARD -->
   <!-- ======================================================== -->
   <div id="adminDashboard" class="admin-dashboard-container hidden">
 
     <!-- Top Admin Header Bar -->
     <header class="admin-header glass-panel">
       <div class="admin-header-left">
-        <div class="brand-logo">
-          <div class="brand-icon-box">
-            <i class="fa-solid fa-dragon"></i>
-          </div>
-          <div class="brand-text">
-            <span class="brand-name">DRAGON-X</span>
-            <span class="brand-sub">OPERATOR DISPATCH CONSOLE</span>
+        <div class="brand-logo-admin">
+          <i class="fa-solid fa-dragon logo-dragon-icon"></i>
+          <div>
+            <span class="brand-title">DRAGON-X</span>
+            <span class="brand-sub">OPERATOR DISPATCH & TRACKING CONSOLE</span>
           </div>
         </div>
 
         <div class="admin-status-indicators">
           <span class="status-pill status-online"><i class="fa-solid fa-circle"></i> Диспетчер: Активен</span>
-          <span class="status-pill status-crypto"><i class="fa-solid fa-coins"></i> Валюта: LFT Crypto</span>
+          <span class="status-pill status-crypto"><i class="fa-solid fa-coins"></i> USD ($) / LTC</span>
+          <span class="status-pill status-sync" id="adminSyncPill">
+            <i class="fa-solid fa-rotate sync-icon" id="adminSyncIcon"></i>
+            <span id="adminSyncLabel">Синхронизация...</span>
+          </span>
         </div>
       </div>
 
       <div class="admin-header-right">
+        <button id="adminManualSyncBtn" class="btn-primary glow-btn btn-sm" title="Синхронизировать с Telegram ботом">
+          <i class="fa-solid fa-arrows-rotate" id="syncSpinIcon"></i>
+          <span>Синхронизация с ботом</span>
+        </button>
+
         <a href="index.html" target="_blank" class="btn-ghost btn-sm" title="Открыть витрину">
           <i class="fa-solid fa-arrow-up-right-from-square"></i>
-          <span>Открыть Магазин</span>
+          <span>Витрина</span>
         </a>
 
         <div class="admin-user-pill">
@@ -122,34 +128,34 @@
         <div class="metric-content">
           <span class="metric-label">Всего Заказов</span>
           <span class="metric-val" id="metricTotalOrders">0</span>
-          <span class="metric-sub">Прегабалин-400 (партия 2–100 шт)</span>
+          <span class="metric-sub">Рега (Ташкент: 2–100 шт)</span>
         </div>
       </div>
 
       <div class="metric-card glass-panel glow-gold">
         <div class="metric-icon-wrap gold-glow"><i class="fa-solid fa-coins"></i></div>
         <div class="metric-content">
-          <span class="metric-label">Выручка в LFT Crypto</span>
-          <span class="metric-val" id="metricTotalRevenue">0.00 LFT</span>
-          <span class="metric-sub">Оплата по сети LFT / LTC / USDT</span>
+          <span class="metric-label">Выручка в USD ($)</span>
+          <span class="metric-val" id="metricTotalRevenue">0.00 $</span>
+          <span class="metric-sub">Оплата через LTC Blockchain</span>
         </div>
       </div>
 
       <div class="metric-card glass-panel glow-blue">
-        <div class="metric-icon-wrap blue-glow"><i class="fa-solid fa-truck-fast"></i></div>
+        <div class="metric-icon-wrap blue-glow"><i class="fa-solid fa-map-location-dot"></i></div>
         <div class="metric-content">
-          <span class="metric-label">В Доставке / Локации</span>
+          <span class="metric-label">В Доставке / Дропы</span>
           <span class="metric-val" id="metricActiveDelivery">0</span>
-          <span class="metric-sub">Ожидают вручения / Дроп</span>
+          <span class="metric-sub">Чиланзор, Яшнабад, Ulugbek</span>
         </div>
       </div>
 
       <div class="metric-card glass-panel glow-emerald">
-        <div class="metric-icon-wrap emerald-glow"><i class="fa-solid fa-users"></i></div>
+        <div class="metric-icon-wrap emerald-glow"><i class="fa-solid fa-circle-check"></i></div>
         <div class="metric-content">
-          <span class="metric-label">Клиентские Unique ID</span>
-          <span class="metric-val" id="metricTotalClients">0</span>
-          <span class="metric-sub">Защищенные аккаунты</span>
+          <span class="metric-label">Забрано Клиентами</span>
+          <span class="metric-val" id="metricPickedUpCount">0</span>
+          <span class="metric-sub">Статус: Picked Up (Забран)</span>
         </div>
       </div>
     </section>
@@ -158,7 +164,7 @@
     <nav class="admin-tabs-nav glass-panel">
       <button class="adm-tab-btn active" data-tab="tabOrders">
         <i class="fa-solid fa-list-check"></i>
-        <span>Заказы Прегабалин-400</span>
+        <span>Заказы Рега (Ташкент)</span>
         <span class="tab-badge" id="ordersTabCount">0</span>
       </button>
 
@@ -169,7 +175,7 @@
 
       <button class="adm-tab-btn" data-tab="tabTelegram">
         <i class="fa-brands fa-telegram"></i>
-        <span>Telegram Бот Диспетчер</span>
+        <span>Telegram Бот & API Шлюз</span>
       </button>
 
       <button class="adm-tab-btn" data-tab="tabClients">
@@ -179,7 +185,7 @@
 
       <button class="adm-tab-btn" data-tab="tabPrices">
         <i class="fa-solid fa-sliders"></i>
-        <span>Управление Ценами & Партиями</span>
+        <span>Цены & Складские Остатки</span>
       </button>
     </nav>
 
@@ -191,16 +197,16 @@
         <div class="search-filter-box">
           <div class="search-input-wrap">
             <i class="fa-solid fa-magnifying-glass"></i>
-            <input type="text" id="orderSearchInput" placeholder="Поиск по ID заказа, Unique ID клиента или @telegram...">
+            <input type="text" id="orderSearchInput" placeholder="Поиск по ID заказа, району (Чиланзор), нику @telegram...">
           </div>
 
           <div class="filter-select-wrap">
             <select id="orderStatusFilter" class="adm-select">
               <option value="all">Все статусы</option>
-              <option value="new">Новый / Ожидает оплаты</option>
-              <option value="paid">Оплачен в LFT Crypto</option>
-              <option value="dispatch">Собран / В пути</option>
-              <option value="delivered">Доставлен / Выполнен</option>
+              <option value="pending">Ожидает оплаты LTC</option>
+              <option value="paid">Оплачен в LTC</option>
+              <option value="drop_ready">Локация выдана (Дроп заложен)</option>
+              <option value="picked_up">Забран клиентом (Picked Up)</option>
               <option value="cancelled">Отменен</option>
             </select>
           </div>
@@ -226,11 +232,12 @@
               <tr>
                 <th>Номер Заказа</th>
                 <th>Дата</th>
-                <th>Клиент (Unique ID)</th>
+                <th>Клиент (ID)</th>
                 <th>Telegram</th>
-                <th>Фасовка / Кол-во</th>
-                <th>Сумма (LFT)</th>
-                <th>Локация доставки</th>
+                <th>Район</th>
+                <th>Фасовка</th>
+                <th>Сумма ($)</th>
+                <th>Локация & Координаты</th>
                 <th>Статус</th>
                 <th>Действия</th>
               </tr>
@@ -254,37 +261,37 @@
           <div class="card-title-row">
             <i class="fa-solid fa-map-location-dot title-icon"></i>
             <div>
-              <h3>Настройки Гео-Локаций Доставки</h3>
-              <p>Управление точками выдачи, курьерскими районами и GPS координатами</p>
+              <h3>Настройки Гео-Локаций Доставки & Тайников</h3>
+              <p>Управление точками выдачи в районах Чиланзор, Яшнабад, Ulugbek</p>
             </div>
           </div>
 
           <div class="notice-box-gold">
             <i class="fa-solid fa-circle-info"></i>
-            <span><strong>Информация:</strong> Точные координаты и локации доставок настраиваются вами здесь либо будут передаваться через Telegram бот напрямую дежурному курьеру.</span>
+            <span><strong>Информация:</strong> Координаты GPS и тайники сохраняются оператором и синхронизируются с Telegram ботом @yuan_rndiBOT в реальном времени.</span>
           </div>
 
           <form id="addLocationZoneForm" class="zone-form" onsubmit="return false;">
             <h4>Добавить Город / Район / Дроп-Зону:</h4>
             
             <div class="form-group">
-              <label for="zoneCityName">Город / Регион доставки:</label>
-              <input type="text" id="zoneCityName" placeholder="Например: Москва / Алматы / Тбилиси" required class="form-input">
+              <label for="zoneCityName">Город / Регион:</label>
+              <input type="text" id="zoneCityName" placeholder="Ташкент" value="Ташкент" required class="form-input">
             </div>
 
             <div class="form-group">
-              <label for="zoneAreaName">Район / Зона обслуживания:</label>
-              <input type="text" id="zoneAreaName" placeholder="Центральный район / Северный округ / Экспресс-Курьер" required class="form-input">
+              <label for="zoneAreaName">Район обслуживания:</label>
+              <input type="text" id="zoneAreaName" placeholder="Чиланзор / Яшнабад / Ulugbek" required class="form-input">
             </div>
 
             <div class="form-group">
-              <label for="zoneCoordinatesDefault">Координаты GPS / Ссылка на тайник (опционально):</label>
-              <input type="text" id="zoneCoordinatesDefault" placeholder="55.7558, 37.6173 (или координаты дропа)" class="form-input font-mono">
+              <label for="zoneCoordinatesDefault">Координаты GPS (Широта, Долгота):</label>
+              <input type="text" id="zoneCoordinatesDefault" placeholder="41.2721, 69.2045" class="form-input font-mono">
             </div>
 
             <div class="form-group">
-              <label for="zoneDeliveryNotes">Инструкция для курьера / клиента:</label>
-              <textarea id="zoneDeliveryNotes" rows="3" placeholder="Бесконтактный тайник / Доставка курьером в руки / Пакет с защитным кодом..." class="form-input"></textarea>
+              <label for="zoneDeliveryNotes">Описание тайника / Инструкция:</label>
+              <textarea id="zoneDeliveryNotes" rows="3" placeholder="Бесконтактный магнитный тайник / Упаковка в термопакет..." class="form-input"></textarea>
             </div>
 
             <button type="submit" id="saveZoneBtn" class="btn-primary glow-btn full-w">
@@ -297,7 +304,7 @@
         <!-- Right: Active Location Zones List -->
         <div class="locations-list-card glass-panel">
           <h3>Активные Локации & Зоны Доставки</h3>
-          <p class="section-sub">Доступные локации для быстрого назначения в заказах</p>
+          <p class="section-sub">Доступные точки для назначения в заказах Ташкента</p>
 
           <div class="active-zones-list" id="activeZonesList">
             <!-- Rendered by JS -->
@@ -308,7 +315,7 @@
     </div>
 
     <!-- ======================================================== -->
-    <!-- TAB 3: TELEGRAM BOT INTEGRATION -->
+    <!-- TAB 3: TELEGRAM BOT INTEGRATION & REAL-TIME API GATEWAY -->
     <!-- ======================================================== -->
     <div id="tabTelegram" class="admin-tab-pane hidden">
       <div class="tg-config-grid">
@@ -318,52 +325,53 @@
           <div class="card-title-row">
             <i class="fa-brands fa-telegram tg-icon-pulse"></i>
             <div>
-              <h3>Подключение Telegram Бота</h3>
+              <h3>Синхронизация Telegram Бота & API Шлюз</h3>
               <p>Управление токеном, юзернеймом и каналом приема заказов</p>
             </div>
           </div>
 
           <div class="notice-box-cyan">
             <i class="fa-solid fa-robot"></i>
-            <span>Вы сможете предоставить токен и юзернейм вашего официального бота в любой момент. Система сохранит их и автоматически синхронизирует с сайтом и обработкой заказов.</span>
+            <span>Шлюз REST API синхронизирует статус заказов (оплата LTC, выдача координат, статус «Забран») между ботом и панелью в реальном времени.</span>
           </div>
 
           <form id="adminTgBotForm" class="adm-form" onsubmit="return false;">
             <div class="form-group">
+              <label for="adminBotApiUrl"><i class="fa-solid fa-server"></i> URL Шлюза API Бота (Render / VPS):</label>
+              <div class="input-with-icon">
+                <input type="text" id="adminBotApiUrl" placeholder="https://dragon-x-telegram-bot.onrender.com или http://localhost:10000" class="form-input font-mono">
+              </div>
+              <span class="field-hint">Адрес бэкенда для синхронизации заказов и обновления статусов в реальном времени</span>
+            </div>
+
+            <div class="form-group">
               <label for="adminBotUsername">Username Telegram Бота:</label>
               <div class="input-with-icon">
-                <input type="text" id="adminBotUsername" placeholder="@ВашБот" value="@yuan_rndiBOT" class="form-input font-mono">
+                <input type="text" id="adminBotUsername" placeholder="@yuan_rndiBOT" value="@yuan_rndiBOT" class="form-input font-mono">
               </div>
               <span class="field-hint">Имя бота, в который переходят клиенты при заказе</span>
             </div>
 
             <div class="form-group">
-              <label for="adminBotToken">Telegram Bot API Token (будет предоставлен вами):</label>
-              <div class="input-with-icon">
-                <input type="text" id="adminBotToken" placeholder="123456789:ABCdefGhIJKlmNoPQRsTUVwxyZ" class="form-input font-mono">
-              </div>
-              <span class="field-hint">Токен от @BotFather для отправки автоматических уведомлений</span>
-            </div>
-
-            <div class="form-group">
-              <label for="adminTgChatId">Telegram Chat ID Оператора (для уведомлений о новых заказах):</label>
-              <input type="text" id="adminTgChatId" placeholder="Например: 123456789 или @ваш_ник" class="form-input font-mono">
-              <span class="field-hint">Куда бот отправляет уведомление о поступлении нового заказа на Прегабалин-400</span>
-            </div>
-
-            <div class="form-group">
-              <label for="adminOperatorHandle">Контакт VIP Оператора в Telegram:</label>
+              <label for="adminOperatorHandle">VIP Оператор Поддержки в Telegram:</label>
               <input type="text" id="adminOperatorHandle" placeholder="@ashley_graves3" value="@ashley_graves3" class="form-input font-mono">
+            </div>
+
+            <div class="form-group">
+              <label for="adminBotToken">Telegram Bot Token (опционально, для уведомлений):</label>
+              <div class="input-with-icon">
+                <input type="text" id="adminBotToken" placeholder="7969562725:AAHQiUes57T3_0pX15g9L82bF4-1rllgU60" class="form-input font-mono">
+              </div>
             </div>
 
             <div class="btn-row">
               <button type="submit" id="saveTgSettingsBtn" class="btn-primary glow-btn">
                 <i class="fa-solid fa-floppy-disk"></i>
-                <span>Сохранить Настройки Бота</span>
+                <span>Сохранить Настройки</span>
               </button>
-              <button type="button" id="testTgNotificationBtn" class="btn-ghost">
-                <i class="fa-solid fa-paper-plane"></i>
-                <span>Тест Уведомления</span>
+              <button type="button" id="testBotApiBtn" class="btn-ghost">
+                <i class="fa-solid fa-bolt"></i>
+                <span>Тест Связи с Bot API</span>
               </button>
             </div>
           </form>
@@ -377,7 +385,7 @@
           <div class="bot-status-indicator-box glass-panel-inner">
             <div class="b-status-row">
               <span>Шлюз заказов:</span>
-              <span class="badge-status-online"><i class="fa-solid fa-circle"></i> ГОТОВ К РАБОТЕ</span>
+              <span class="badge-status-online" id="botGatewayStatusBadge"><i class="fa-solid fa-circle"></i> ОНЛАЙН (Синхронизировано)</span>
             </div>
             <div class="b-status-row">
               <span>Текущий бот:</span>
@@ -385,33 +393,33 @@
             </div>
             <div class="b-status-row">
               <span>Прием платежей:</span>
-              <span class="font-mono text-cyan">LFT Crypto / TRC20</span>
+              <span class="font-mono text-cyan">Litecoin (LTC) Network</span>
+            </div>
+            <div class="b-status-row">
+              <span>Задержка API (Ping):</span>
+              <span class="font-mono text-green" id="botPingLatency">~45 ms</span>
             </div>
           </div>
 
           <div class="bot-commands-reference">
             <h4>Команды управления, доступные для бота:</h4>
             <div class="cmd-item">
-              <code>/start &lt;unique_id&gt;</code>
-              <span>Привязка клиента к боту по его Уникальному Коду</span>
+              <code>/start</code>
+              <span>Запуск бота, выбор языка и капча</span>
+            </div>
+            <div class="cmd-item">
+              <code>/track</code>
+              <span>Отслеживание статуса заказа и получение координат дропа</span>
             </div>
             <div class="cmd-item">
               <code>/orders</code>
-              <span>Просмотр списка активных заказов оператора</span>
-            </div>
-            <div class="cmd-item">
-              <code>/location &lt;order_id&gt; &lt;адрес/координаты&gt;</code>
-              <span>Назначение локации доставки и выдачи заказа</span>
-            </div>
-            <div class="cmd-item">
-              <code>/status &lt;order_id&gt; &lt;paid|dispatch|done&gt;</code>
-              <span>Смена статуса заказа с уведомлением покупателя</span>
+              <span>Список всех активных покупок клиента</span>
             </div>
           </div>
 
-          <a href="#" id="openBotDirectAdminLink" target="_blank" class="btn-tg-primary glow-btn full-w" style="margin-top: 1.5rem;">
+          <a href="https://t.me/yuan_rndiBOT" id="openBotDirectAdminLink" target="_blank" class="btn-tg-primary glow-btn full-w" style="margin-top: 1.5rem;">
             <i class="fa-brands fa-telegram"></i>
-            <span>Открыть Диалог с Ботом в Telegram</span>
+            <span>Открыть Диалог с Ботом (@yuan_rndiBOT)</span>
           </a>
         </div>
 
@@ -426,7 +434,7 @@
         <div class="pane-header-actions" style="margin-bottom: 1.5rem;">
           <div>
             <h3>База Зарегистрированных Клиентов</h3>
-            <p style="color: var(--text-muted); font-size: 0.88rem;">Уникальные буквенно-цифровые коды (Unique ID) и история активности</p>
+            <p style="color: var(--text-muted); font-size: 0.88rem;">Уникальные буквенно-цифровые коды (Unique ID) и история заказов</p>
           </div>
           <button id="refreshClientsBtn" class="btn-ghost">
             <i class="fa-solid fa-arrows-rotate"></i>
@@ -456,77 +464,75 @@
     </div>
 
     <!-- ======================================================== -->
-    <!-- TAB 5: PRICING & LIMITS MANAGEMENT -->
+    <!-- TAB 5: PRICING & STOCK MANAGEMENT -->
     <!-- ======================================================== -->
     <div id="tabPrices" class="admin-tab-pane hidden">
-      <div class="pricing-card glass-panel" style="max-width: 800px; margin: 0 auto;">
-        <h3>Управление Фасовками & Ценами в LFT Crypto</h3>
-        <p style="color: var(--text-muted); margin-bottom: 1.5rem;">Настройка базовой стоимости фасовок Прегабалина-400 и лимитов партии</p>
+      <div class="pricing-card glass-panel" style="max-width: 860px; margin: 0 auto;">
+        <h3>Управление Фасовками Рега & Складскими Остатками</h3>
+        <p style="color: var(--text-muted); margin-bottom: 1.5rem;">Настройка актуальной стоимости в USD ($) и лимитов наличия в Telegram боте</p>
 
-        <form id="adminPricingForm" class="adm-form" onsubmit="return false;">
-          <div class="price-input-row">
+        <!-- Dynamic Stock Inventory Form -->
+        <div class="stock-mgmt-card glass-panel-inner" style="padding: 1.5rem; margin-bottom: 1.75rem;">
+          <h4 style="margin-bottom: 0.85rem; color: var(--accent-cyan);"><i class="fa-solid fa-boxes-stacked"></i> Складские Остатки на Сегодня (Синхронизируются с ботом):</h4>
+          <p style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 1.25rem;">Когда остаток равен 0, бот сообщает клиенту, что фасовка распродана.</p>
+          
+          <div class="stock-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 1rem;">
             <div class="form-group">
-              <label>30 Капсул (Старт):</label>
-              <div class="input-with-icon">
-                <input type="number" id="pricePack30" value="38" step="1" class="form-input font-mono">
-                <span class="input-suffix">LFT</span>
-              </div>
+              <label>2 шт ($25):</label>
+              <input type="number" id="stockBuy2" value="50" min="0" class="form-input font-mono">
             </div>
-
             <div class="form-group">
-              <label>60 Капсул (Оптимальный -15%):</label>
-              <div class="input-with-icon">
-                <input type="number" id="pricePack60" value="65" step="1" class="form-input font-mono">
-                <span class="input-suffix">LFT</span>
-              </div>
+              <label>3 шт ($35):</label>
+              <input type="number" id="stockBuy3" value="40" min="0" class="form-input font-mono">
+            </div>
+            <div class="form-group">
+              <label>5 шт ($55):</label>
+              <input type="number" id="stockBuy5" value="30" min="0" class="form-input font-mono">
+            </div>
+            <div class="form-group">
+              <label>10 шт ($108):</label>
+              <input type="number" id="stockBuy10" value="20" min="0" class="form-input font-mono">
+            </div>
+            <div class="form-group">
+              <label>20 шт ($210):</label>
+              <input type="number" id="stockBuy20" value="15" min="0" class="form-input font-mono">
+            </div>
+            <div class="form-group">
+              <label>50 шт ($510):</label>
+              <input type="number" id="stockBuy50" value="10" min="0" class="form-input font-mono">
+            </div>
+            <div class="form-group">
+              <label>100 шт ($1000):</label>
+              <input type="number" id="stockBuy100" value="5" min="0" class="form-input font-mono">
             </div>
           </div>
 
-          <div class="price-input-row">
-            <div class="form-group">
-              <label>90 Капсул (Полный курс -25%):</label>
-              <div class="input-with-icon">
-                <input type="number" id="pricePack90" value="89" step="1" class="form-input font-mono">
-                <span class="input-suffix">LFT</span>
-              </div>
-            </div>
-
-            <div class="form-group">
-              <label>120 Капсул (Оптовый бокс -35%):</label>
-              <div class="input-with-icon">
-                <input type="number" id="pricePack120" value="110" step="1" class="form-input font-mono">
-                <span class="input-suffix">LFT</span>
-              </div>
-            </div>
-          </div>
-
-          <div class="limits-config-box glass-panel-inner" style="padding: 1.25rem; margin: 1.5rem 0;">
-            <h4 style="margin-bottom: 0.75rem;"><i class="fa-solid fa-boxes-stacked"></i> Лимиты Партии Заказа (Штук):</h4>
-            <div class="price-input-row">
-              <div class="form-group">
-                <label>Минимальный заказ (упаковок):</label>
-                <input type="number" id="cfgMinQty" value="2" min="1" max="50" class="form-input font-mono">
-              </div>
-
-              <div class="form-group">
-                <label>Максимальный заказ (упаковок):</label>
-                <input type="number" id="cfgMaxQty" value="100" min="2" max="500" class="form-input font-mono">
-              </div>
-            </div>
-          </div>
-
-          <button type="submit" id="savePricingBtn" class="btn-primary glow-btn full-w">
-            <i class="fa-solid fa-check"></i>
-            <span>Применить Цены & Лимиты на Сайте</span>
+          <button type="button" id="saveStockBtn" class="btn-primary glow-btn full-w" style="margin-top: 1.25rem;">
+            <i class="fa-solid fa-floppy-disk"></i>
+            <span>Обновить Остатки на Складе в Боте</span>
           </button>
-        </form>
+        </div>
+
+        <!-- Price Configuration Overview -->
+        <div class="glass-panel-inner" style="padding: 1.5rem;">
+          <h4 style="margin-bottom: 0.85rem;"><i class="fa-solid fa-tag"></i> Действующий Прейскурант (Ташкент):</h4>
+          <div class="price-list-preview" style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; font-size: 0.9rem;">
+            <div>• 2 штук — <strong>25$</strong></div>
+            <div>• 3 штук — <strong>35$</strong></div>
+            <div>• 5 штук — <strong>55$</strong></div>
+            <div>• 10 штук — <strong>108$</strong></div>
+            <div>• 20 штук — <strong>210$</strong></div>
+            <div>• 50 штук — <strong>510$</strong></div>
+            <div>• 100 штук — <strong>1000$</strong></div>
+          </div>
+        </div>
       </div>
     </div>
 
   </div>
 
   <!-- ======================================================== -->
-  <!-- 3. ORDER DETAILS & LOCATION ASSIGNMENT MODAL -->
+  <!-- 3. ORDER DETAILS & FULL EDIT MODAL -->
   <!-- ======================================================== -->
   <div id="orderDetailModal" class="modal-overlay hidden">
     <div class="modal-dialog order-modal-dialog glass-panel glow-cyan">
@@ -535,7 +541,7 @@
       <div class="order-modal-header">
         <i class="fa-solid fa-file-shield modal-header-icon"></i>
         <div>
-          <h3 id="modalOrderNumber">DX-PG400-000000</h3>
+          <h3 id="modalOrderNumber">DRGX-0000000000-0000</h3>
           <span class="modal-order-date" id="modalOrderDate">--</span>
         </div>
       </div>
@@ -556,14 +562,14 @@
             <a href="#" target="_blank" class="m-val text-blue font-mono" id="modalCustomerTg">--</a>
           </div>
           <div class="meta-item">
-            <span class="m-lbl">Сумма в LFT Crypto:</span>
-            <span class="m-val font-bold text-gold" id="modalOrderTotal">-- LFT</span>
+            <span class="m-lbl">Сумма Заказа:</span>
+            <span class="m-val font-bold text-gold" id="modalOrderTotal">-- $</span>
           </div>
         </div>
 
         <!-- Order Items Breakdown -->
         <div class="order-items-breakdown">
-          <h4>Состав заказа:</h4>
+          <h4>Товарная позиция:</h4>
           <div class="modal-items-list" id="modalItemsList">
             <!-- Items injected by JS -->
           </div>
@@ -573,26 +579,55 @@
         <form id="updateOrderForm" class="adm-form" onsubmit="return false;" style="margin-top: 1.5rem;">
           <input type="hidden" id="modalEditOrderId">
 
-          <div class="form-group">
-            <label for="modalEditStatus"><i class="fa-solid fa-signal"></i> Статус заказа:</label>
-            <select id="modalEditStatus" class="adm-select">
-              <option value="new">Новый / Ожидает оплаты</option>
-              <option value="paid">Оплачен в LFT Crypto</option>
-              <option value="dispatch">Собран / В пути к локации</option>
-              <option value="delivered">Доставлен / Выдан клиенту</option>
-              <option value="cancelled">Отменен</option>
-            </select>
+          <div class="price-input-row">
+            <div class="form-group">
+              <label for="modalEditStatus"><i class="fa-solid fa-signal"></i> Статус заказа:</label>
+              <select id="modalEditStatus" class="adm-select">
+                <option value="pending">Ожидает оплаты LTC</option>
+                <option value="paid">Оплачен в LTC</option>
+                <option value="drop_ready">Локация выдана (Дроп заложен)</option>
+                <option value="picked_up">Забран клиентом (Picked Up)</option>
+                <option value="cancelled">Отменен</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="modalEditDistrict"><i class="fa-solid fa-map-pin"></i> Район выдачи:</label>
+              <select id="modalEditDistrict" class="adm-select">
+                <option value="Чиланзор">Чиланзор</option>
+                <option value="Яшнабад">Яшнабад</option>
+                <option value="Ulugbek">Ulugbek</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="price-input-row">
+            <div class="form-group">
+              <label for="modalEditCoordinates"><i class="fa-solid fa-crosshairs"></i> Координаты GPS:</label>
+              <input type="text" id="modalEditCoordinates" placeholder="41.2721, 69.2045" class="form-input font-mono">
+            </div>
+
+            <div class="form-group">
+              <label for="modalEditTracking"><i class="fa-solid fa-barcode"></i> Трек-Код:</label>
+              <input type="text" id="modalEditTracking" placeholder="DRGX-TRK-7849" class="form-input font-mono">
+            </div>
           </div>
 
           <div class="form-group">
-            <label for="modalEditLocation"><i class="fa-solid fa-location-dot"></i> Локация Доставки / GPS Координаты Тайника:</label>
-            <textarea id="modalEditLocation" rows="3" placeholder="Укажите город, район, координаты или детали выдачи заказа..." class="form-input"></textarea>
-            <span class="field-hint">Эта локация сохраняется для заказа и передается клиенту / курьеру в Telegram</span>
+            <label for="modalEditLocation"><i class="fa-solid fa-location-dot"></i> Локация Доставки / Описание Тайника:</label>
+            <textarea id="modalEditLocation" rows="2" placeholder="Укажите район, улицу, координаты или описание тайника..." class="form-input"></textarea>
           </div>
 
           <div class="form-group">
-            <label for="modalEditTracking"><i class="fa-solid fa-barcode"></i> Трек-Код / Кодовое слово:</label>
-            <input type="text" id="modalEditTracking" placeholder="DX-TRK-7849-NX" class="form-input font-mono">
+            <label for="modalEditNotes"><i class="fa-solid fa-note-sticky"></i> Заметки оператора:</label>
+            <input type="text" id="modalEditNotes" placeholder="Код тайника, комментарий курьера..." class="form-input">
+          </div>
+
+          <div class="checkbox-group" style="margin: 0.25rem 0;">
+            <label style="display: flex; align-items: center; gap: 0.6rem; cursor: pointer; color: var(--text-muted); font-size: 0.85rem;">
+              <input type="checkbox" id="modalEditNotifyCustomer" checked style="width: 17px; height: 17px; accent-color: var(--accent-cyan);">
+              <span><i class="fa-brands fa-telegram text-cyan"></i> Отправить мгновенное уведомление в Telegram клиенту</span>
+            </label>
           </div>
 
           <div class="btn-row">
@@ -617,39 +652,50 @@
       <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1.25rem;">Добавление заказа от клиента из Telegram или внешнего источника</p>
 
       <form id="createManualOrderForm" class="adm-form" onsubmit="return false;">
-        <div class="form-group">
-          <label for="newOrderClientId">Unique ID Клиента (или создать новый):</label>
-          <input type="text" id="newOrderClientId" placeholder="DRGX-XXXX-XXXX" required class="form-input font-mono">
+        <div class="price-input-row">
+          <div class="form-group">
+            <label for="newOrderClientId">Unique ID Клиента:</label>
+            <input type="text" id="newOrderClientId" placeholder="DRGX-8547-XXXX" required class="form-input font-mono">
+          </div>
+
+          <div class="form-group">
+            <label for="newOrderClientName">Имя клиента:</label>
+            <input type="text" id="newOrderClientName" placeholder="Алексей / Аноним" required class="form-input">
+          </div>
+        </div>
+
+        <div class="price-input-row">
+          <div class="form-group">
+            <label for="newOrderClientTg">Telegram ник клиента:</label>
+            <input type="text" id="newOrderClientTg" placeholder="@username" required class="form-input font-mono">
+          </div>
+
+          <div class="form-group">
+            <label for="newOrderDistrict">Район Ташкента:</label>
+            <select id="newOrderDistrict" class="adm-select">
+              <option value="Чиланзор">Чиланзор</option>
+              <option value="Яшнабад">Яшнабад</option>
+              <option value="Ulugbek">Ulugbek</option>
+            </select>
+          </div>
         </div>
 
         <div class="form-group">
-          <label for="newOrderClientName">Имя клиента:</label>
-          <input type="text" id="newOrderClientName" placeholder="Дмитрий / Аноним" required class="form-input">
-        </div>
-
-        <div class="form-group">
-          <label for="newOrderClientTg">Telegram ник клиента:</label>
-          <input type="text" id="newOrderClientTg" placeholder="@username" required class="form-input font-mono">
-        </div>
-
-        <div class="form-group">
-          <label for="newOrderPack">Фасовка Прегабалина-400:</label>
+          <label for="newOrderPack">Фасовка Рега:</label>
           <select id="newOrderPack" class="adm-select">
-            <option value="30">30 Капсул (38.00 LFT / шт)</option>
-            <option value="60" selected>60 Капсул (65.00 LFT / шт)</option>
-            <option value="90">90 Капсул (89.00 LFT / шт)</option>
-            <option value="120">120 Капсул (110.00 LFT / шт)</option>
+            <option value="2 штук" data-price="25">2 штук — $25</option>
+            <option value="3 штук" data-price="35">3 штук — $35</option>
+            <option value="5 штук" data-price="55">5 штук — $55</option>
+            <option value="10 штук" data-price="108">10 штук — $108</option>
+            <option value="20 штук" data-price="210">20 штук — $210</option>
+            <option value="50 штук" data-price="510">50 штук — $510</option>
+            <option value="100 штук" data-price="1000">100 штук — $1000</option>
           </select>
         </div>
 
         <div class="form-group">
-          <label for="newOrderQuantity">Количество упаковок (от 2 до 100):</label>
-          <input type="number" id="newOrderQuantity" value="2" min="2" max="100" required class="form-input font-mono">
-        </div>
-
-        <div class="form-group">
-          <label for="newOrderLocation">Локация доставки (адрес / координаты):</label>
-          <textarea id="newOrderLocation" rows="2" placeholder="Город, район, координаты..." class="form-input"></textarea>
+          <label for="newOrderLocation">Локация / GPS координаты дропа:</label>
+          <textarea id="newOrderLocation" rows="2" placeholder="Район, описание тайника, координаты..." class="form-input"></textarea>
         </div>
 
         <button type="submit" id="submitCreateOrderBtn" class="btn-primary glow-btn full-w">
@@ -660,10 +706,207 @@
     </div>
   </div>
 
+  <!-- ======================================================== -->
+  <!-- 5. TRACK LOCATION & PICKUP STASH CONSOLE MODAL -->
+  <!-- ======================================================== -->
+  <div id="orderLocationModal" class="modal-overlay hidden">
+    <div class="modal-dialog location-modal-dialog glass-panel glow-cyan">
+      <button class="modal-close-btn" id="closeOrderLocationModalBtn"><i class="fa-solid fa-xmark"></i></button>
+
+      <div class="order-modal-header">
+        <i class="fa-solid fa-map-location-dot modal-header-icon text-cyan"></i>
+        <div>
+          <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
+            <h3 id="locModalOrderNumber">DRGX-0000-0000</h3>
+            <span class="ord-status" id="locModalStatusBadge">Оплачен</span>
+          </div>
+          <span class="modal-order-date" id="locModalClientSummary">Клиент: @username • Товар: Рега (2 шт) — 25$</span>
+        </div>
+      </div>
+
+      <div class="order-modal-body">
+        <!-- 5-STEP DELIVERY PROGRESS TRACKER -->
+        <div class="tracking-stepper-card glass-panel-inner">
+          <div class="stepper-title-row">
+            <h4><i class="fa-solid fa-route"></i> Статус Выполнения Заказа & Доставки:</h4>
+            <span id="locModalStepText" class="step-status-highlight">Локация Выдана (Дроп Готов)</span>
+          </div>
+
+          <div class="tracking-stepper">
+            <div class="step-item" id="step1">
+              <div class="step-circle"><i class="fa-solid fa-cart-shopping"></i></div>
+              <span class="step-title">1. Создан</span>
+            </div>
+            <div class="step-line" id="line1"></div>
+            <div class="step-item" id="step2">
+              <div class="step-circle"><i class="fa-solid fa-coins"></i></div>
+              <span class="step-title">2. Оплачен LTC</span>
+            </div>
+            <div class="step-line" id="line2"></div>
+            <div class="step-item" id="step3">
+              <div class="step-circle"><i class="fa-solid fa-location-dot"></i></div>
+              <span class="step-title">3. Дроп готов</span>
+            </div>
+            <div class="step-line" id="line3"></div>
+            <div class="step-item" id="step4">
+              <div class="step-circle"><i class="fa-solid fa-box-open"></i></div>
+              <span class="step-title">4. Готов к выдаче</span>
+            </div>
+            <div class="step-line" id="line4"></div>
+            <div class="step-item" id="step5">
+              <div class="step-circle"><i class="fa-solid fa-circle-check"></i></div>
+              <span class="step-title">5. Забран (Picked Up)</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- QUICK ACTION: MARK AS PICKED UP -->
+        <div class="pickup-action-banner glass-panel-inner" id="locModalPickupBanner">
+          <div class="banner-text">
+            <strong><i class="fa-solid fa-circle-check" style="color: #34d399;"></i> Подтверждение получения заказа:</strong>
+            <p>Клиент уже забрал дроп/заказ? Нажмите кнопку ниже, чтобы зафиксировать статус «Забран (Picked Up)» в боте и в системе.</p>
+          </div>
+          <button type="button" id="locModalMarkPickedUpBtn" class="btn-primary glow-btn btn-picked-up">
+            <i class="fa-solid fa-check-double"></i>
+            <span>Отметить: Заказ Забран (Picked Up)</span>
+          </button>
+        </div>
+
+        <!-- INTERACTIVE GPS RADAR & MAPS INTEGRATION -->
+        <div class="radar-map-card glass-panel-inner">
+          <div class="map-card-header">
+            <div>
+              <span class="m-lbl">GPS Координаты Точки Выдачи / Тайника:</span>
+              <div class="coords-display-pill">
+                <i class="fa-solid fa-crosshairs text-cyan"></i>
+                <span class="font-mono" id="locModalCoordsText">41.2721, 69.2045</span>
+                <button type="button" id="copyCoordsBtn" class="btn-ghost btn-xs" title="Скопировать GPS">
+                  <i class="fa-solid fa-copy"></i>
+                  <span>Копировать</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- External Map Navigation Links -->
+            <div class="map-nav-btns">
+              <a href="#" id="openGoogleMapsBtn" target="_blank" class="btn-map-link google-btn" title="Открыть в Google Maps">
+                <i class="fa-solid fa-map-pin"></i> Google Maps
+              </a>
+              <a href="#" id="openYandexMapsBtn" target="_blank" class="btn-map-link yandex-btn" title="Открыть в Яндекс Картах">
+                <i class="fa-solid fa-location-arrow"></i> Яндекс Карты
+              </a>
+              <a href="#" id="openOsmBtn" target="_blank" class="btn-map-link osm-btn" title="Открыть в OpenStreetMap">
+                <i class="fa-solid fa-globe"></i> OSM
+              </a>
+            </div>
+          </div>
+
+          <!-- Stylized Radar Map View Widget -->
+          <div class="radar-map-display" id="radarMapDisplay">
+            <div class="radar-sweep"></div>
+            <div class="radar-ring ring-1"></div>
+            <div class="radar-ring ring-2"></div>
+            <div class="radar-ring ring-3"></div>
+            <div class="radar-grid-line h-line"></div>
+            <div class="radar-grid-line v-line"></div>
+            <div class="radar-pin" id="radarPin">
+              <div class="pin-pulse"></div>
+              <i class="fa-solid fa-location-dot"></i>
+              <span class="pin-label" id="radarPinLabel">Ташкент • Чиланзор</span>
+            </div>
+            <div class="radar-legend">
+              <span><i class="fa-solid fa-satellite"></i> GPS Точность: &lt; 3м</span>
+              <span id="radarDistrictBadge">Чиланзор</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- LOCATION & STASH EDIT FORM -->
+        <form id="trackLocationForm" class="adm-form" onsubmit="return false;" style="margin-top: 1rem;">
+          <input type="hidden" id="locModalOrderId">
+
+          <div class="form-group">
+            <label><i class="fa-solid fa-city"></i> Выбор Района Ташкента (Быстрые координаты):</label>
+            <div class="district-preset-btns">
+              <button type="button" class="btn-preset-district" data-district="Чиланзор" data-coords="41.2721, 69.2045">
+                📍 Чиланзор
+              </button>
+              <button type="button" class="btn-preset-district" data-district="Яшнабад" data-coords="41.2985, 69.3241">
+                📍 Яшнабад
+              </button>
+              <button type="button" class="btn-preset-district" data-district="Ulugbek" data-coords="41.3412, 69.4520">
+                📍 Ulugbek
+              </button>
+            </div>
+          </div>
+
+          <div class="price-input-row">
+            <div class="form-group">
+              <label for="locModalDistrict"><i class="fa-solid fa-map"></i> Район выдачи:</label>
+              <select id="locModalDistrict" class="adm-select">
+                <option value="Чиланзор">Чиланзор</option>
+                <option value="Яшнабад">Яшнабад</option>
+                <option value="Ulugbek">Ulugbek</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="locModalCoordsInput"><i class="fa-solid fa-crosshairs"></i> Координаты GPS (Широта, Долгота):</label>
+              <input type="text" id="locModalCoordsInput" placeholder="41.2721, 69.2045" class="form-input font-mono">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="locModalAddressInput"><i class="fa-solid fa-map-pin"></i> Описание Тайника / Локации для Клиента:</label>
+            <textarea id="locModalAddressInput" rows="2" placeholder="Например: Квартал 9, дом 14, магнит под металлическим отливом..." class="form-input"></textarea>
+            <span class="field-hint">Этот текст и координаты передаются покупателю в Telegram боте @yuan_rndiBOT</span>
+          </div>
+
+          <div class="price-input-row">
+            <div class="form-group">
+              <label for="locModalStatusSelect"><i class="fa-solid fa-signal"></i> Статус заказа:</label>
+              <select id="locModalStatusSelect" class="adm-select">
+                <option value="pending">Ожидает оплаты LTC</option>
+                <option value="paid">Оплачен в LTC</option>
+                <option value="drop_ready">Локация выдана (Дроп заложен)</option>
+                <option value="picked_up">Забран клиентом (Picked Up)</option>
+                <option value="cancelled">Отменен</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="locModalTrackingInput"><i class="fa-solid fa-barcode"></i> Трек-код:</label>
+              <input type="text" id="locModalTrackingInput" placeholder="DRGX-TRK-XXXX" class="form-input font-mono">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="locModalNotes"><i class="fa-solid fa-note-sticky"></i> Внутренние заметки курьера / оператора:</label>
+            <input type="text" id="locModalNotes" placeholder="Метка проверена, координаты верны" class="form-input">
+          </div>
+
+          <div class="checkbox-group" style="margin: 0.5rem 0;">
+            <label style="display: flex; align-items: center; gap: 0.6rem; cursor: pointer; color: var(--text-muted); font-size: 0.88rem;">
+              <input type="checkbox" id="locModalNotifyClient" checked style="width: 18px; height: 18px; accent-color: var(--accent-cyan);">
+              <span><i class="fa-brands fa-telegram text-cyan"></i> Автоматически отправить уведомление с обновлением клиенту в Telegram</span>
+            </label>
+          </div>
+
+          <div class="btn-row">
+            <button type="submit" id="saveLocationBtn" class="btn-primary glow-btn full-w">
+              <i class="fa-solid fa-floppy-disk"></i>
+              <span>Сохранить Локацию & Синхронизировать с Ботом</span>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
   <!-- Toast Container -->
   <div id="toastContainer" class="toast-container"></div>
 
-  <!-- Script -->
+  <!-- Scripts -->
   <script src="admin.js"></script>
 </body>
 </html>

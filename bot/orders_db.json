@@ -1,0 +1,81 @@
+{
+  "DRGX-9024-8142": {
+    "id": "DRGX-9024-8142",
+    "user_id": 90248142,
+    "user_data": {
+      "id": 90248142,
+      "username": "tashkent_vip",
+      "first_name": "Алексей",
+      "last_name": "VIP",
+      "lang": "ru"
+    },
+    "created_at": 1791880000.0,
+    "product": "Рега",
+    "qty": "2 штук",
+    "price": "25$",
+    "total_amount": 25.0,
+    "currency": "USD",
+    "pack_key": "buy_2",
+    "district": "Чиланзор",
+    "location": "Чиланзор, квартал 9, дом 14, магнит под металлическим отливом",
+    "coordinates": "41.2721, 69.2045",
+    "status": "drop_ready",
+    "pickup_status": "ready",
+    "tracking_code": "DRGX-TRK-8142",
+    "notes": "Дроп свежий, защитная метка X-42. Координаты подтверждены курьером.",
+    "updated_at": 1791883600.0
+  },
+  "DRGX-5519-9311": {
+    "id": "DRGX-5519-9311",
+    "user_id": 55199311,
+    "user_data": {
+      "id": 55199311,
+      "username": "sergey_tash",
+      "first_name": "Сергей",
+      "last_name": "К.",
+      "lang": "ru"
+    },
+    "created_at": 1791865000.0,
+    "product": "Рега",
+    "qty": "5 штук",
+    "price": "55$",
+    "total_amount": 55.0,
+    "currency": "USD",
+    "pack_key": "buy_5",
+    "district": "Яшнабад",
+    "location": "Яшнабад, ул. Султанали Машхади, тайник в нише кирпичной кладки",
+    "coordinates": "41.2985, 69.3241",
+    "status": "picked_up",
+    "pickup_status": "picked_up",
+    "picked_up_at": 1791875000.0,
+    "tracking_code": "DRGX-TRK-9311",
+    "notes": "Клиент успешно забрал заказ в 14:15, тайник чист.",
+    "updated_at": 1791875000.0
+  },
+  "DRGX-1204-4420": {
+    "id": "DRGX-1204-4420",
+    "user_id": 12044420,
+    "user_data": {
+      "id": 12044420,
+      "username": "ulugbek_client",
+      "first_name": "Гость",
+      "last_name": "",
+      "lang": "ru"
+    },
+    "created_at": 1791850000.0,
+    "product": "Рега",
+    "qty": "10 штук",
+    "price": "108$",
+    "total_amount": 108.0,
+    "currency": "USD",
+    "pack_key": "buy_10",
+    "district": "Ulugbek",
+    "location": "Пос. Улугбек, парковая зона, опора освещения №7, магнитный бокс",
+    "coordinates": "41.3412, 69.4520",
+    "status": "paid",
+    "pickup_status": "preparing",
+    "tracking_code": "DRGX-TRK-4420",
+    "notes": "Оплата LTC подтверждена в блокчейне. Курьер закладывает дроп.",
+    "updated_at": 1791855000.0
+  }
+}

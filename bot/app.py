@@ -7,11 +7,12 @@ import logging
 import smtplib
 from email.message import EmailMessage
 from html import escape
+import json
 import aiohttp
 from aiohttp import web
 from aiogram import Bot, Dispatcher
 from aiogram.client.default import DefaultBotProperties
-from aiogram.filters import CommandStart
+from aiogram.filters import CommandStart, Command
 from aiogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery
 from aiogram.enums import ParseMode
 
@@ -39,7 +40,8 @@ bot = Bot(token=TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
 dp  = Dispatcher()
 
 bot_info_cache = None
-ACTIVE_ORDERS = {}          # { order_code: {'user_id': int, 'created_at': float, 'qty': str, 'price': str, 'pack_key': str} }
+DB_FILE = os.path.join(os.path.dirname(__file__), "orders_db.json")
+ACTIVE_ORDERS = {}          # Persistent orders storage
 PROCESSED_TX_HASHES = set()
 USER_LANGUAGES = {}         # { user_id: 'ru' | 'en' | 'uz' }
 USER_CAPTCHAS = {}          # { user_id: {'ans': int, 'verified': bool} }
@@ -55,6 +57,110 @@ INVENTORY_STOCKS = {
     "buy_50": 10,
     "buy_100": 5
 }
+
+DEFAULT_SEED_ORDERS = {
+    "DRGX-9024-8142": {
+        "id": "DRGX-9024-8142",
+        "user_id": 90248142,
+        "user_data": {
+            "id": 90248142,
+            "username": "tashkent_vip",
+            "first_name": "Алексей",
+            "last_name": "VIP",
+            "lang": "ru"
+        },
+        "created_at": time.time() - 3600 * 2,
+        "product": "Рега",
+        "qty": "2 штук",
+        "price": "25$",
+        "total_amount": 25.0,
+        "currency": "USD",
+        "pack_key": "buy_2",
+        "district": "Чиланзор",
+        "location": "Чиланзор, квартал 9, дом 14, магнит под металлическим отливом",
+        "coordinates": "41.2721, 69.2045",
+        "status": "drop_ready",
+        "pickup_status": "ready",
+        "tracking_code": "DRGX-TRK-8142",
+        "notes": "Дроп свежий, защитная метка X-42. Координаты подтверждены курьером.",
+        "updated_at": time.time() - 3600 * 1
+    },
+    "DRGX-5519-9311": {
+        "id": "DRGX-5519-9311",
+        "user_id": 55199311,
+        "user_data": {
+            "id": 55199311,
+            "username": "sergey_tash",
+            "first_name": "Сергей",
+            "last_name": "К.",
+            "lang": "ru"
+        },
+        "created_at": time.time() - 3600 * 5,
+        "product": "Рега",
+        "qty": "5 штук",
+        "price": "55$",
+        "total_amount": 55.0,
+        "currency": "USD",
+        "pack_key": "buy_5",
+        "district": "Яшнабад",
+        "location": "Яшнабад, ул. Султанали Машхади, тайник в нише кирпичной кладки",
+        "coordinates": "41.2985, 69.3241",
+        "status": "picked_up",
+        "pickup_status": "picked_up",
+        "picked_up_at": time.time() - 3600 * 1.5,
+        "tracking_code": "DRGX-TRK-9311",
+        "notes": "Клиент успешно забрал заказ в 14:15, тайник чист.",
+        "updated_at": time.time() - 3600 * 1.5
+    },
+    "DRGX-1204-4420": {
+        "id": "DRGX-1204-4420",
+        "user_id": 12044420,
+        "user_data": {
+            "id": 12044420,
+            "username": "ulugbek_client",
+            "first_name": "Гость",
+            "last_name": "",
+            "lang": "ru"
+        },
+        "created_at": time.time() - 3600 * 8,
+        "product": "Рега",
+        "qty": "10 штук",
+        "price": "108$",
+        "total_amount": 108.0,
+        "currency": "USD",
+        "pack_key": "buy_10",
+        "district": "Ulugbek",
+        "location": "Пос. Улугбек, парковая зона, опора освещения №7, магнитный бокс",
+        "coordinates": "41.3412, 69.4520",
+        "status": "paid",
+        "pickup_status": "preparing",
+        "tracking_code": "DRGX-TRK-4420",
+        "notes": "Оплата LTC подтверждена в блокчейне. Курьер закладывает дроп.",
+        "updated_at": time.time() - 3600 * 6
+    }
+}
+
+
+def load_orders():
+    global ACTIVE_ORDERS
+    if os.path.exists(DB_FILE):
+        try:
+            with open(DB_FILE, "r", encoding="utf-8") as f:
+                ACTIVE_ORDERS = json.load(f)
+                logging.info(f"Loaded {len(ACTIVE_ORDERS)} orders from {DB_FILE}")
+                return
+        except Exception as e:
+            logging.error(f"Error loading {DB_FILE}: {e}")
+    ACTIVE_ORDERS = dict(DEFAULT_SEED_ORDERS)
+    save_orders()
+
+
+def save_orders():
+    try:
+        with open(DB_FILE, "w", encoding="utf-8") as f:
+            json.dump(ACTIVE_ORDERS, f, ensure_ascii=False, indent=2)
+    except Exception as e:
+        logging.error(f"Error saving {DB_FILE}: {e}")
 
 
 async def get_bot_username() -> str:
@@ -180,6 +286,7 @@ def language_keyboard():
 
 def home_keyboard(lang="ru"):
     txt_catalog = {"ru": "🛍 Купить товар", "en": "🛍 Buy Products", "uz": "🛍 Mahsulot sotib olish"}[lang]
+    txt_orders  = {"ru": "📦 Мои заказы / Трекинг", "en": "📦 My Orders / Tracking", "uz": "📦 Buyurtmalarim / Kuzatish"}[lang]
     txt_support = {"ru": "💬 Поддержка",    "en": "💬 Support",      "uz": "💬 Qo'llab-quvvatlash"}[lang]
     txt_rules   = {"ru": "📜 Правила",      "en": "📜 Rules",        "uz": "📜 Qoidalar"}[lang]
     txt_ref     = {"ru": "👥 Пригласить друга", "en": "👥 Invite Friend", "uz": "👥 Do'stlarni taklif qilish"}[lang]
@@ -189,17 +296,20 @@ def home_keyboard(lang="ru"):
     rows = [
         [
             InlineKeyboardButton(text=txt_catalog, callback_data="catalog"),
-            InlineKeyboardButton(text=txt_support, callback_data="support")
+            InlineKeyboardButton(text=txt_orders,  callback_data="orders")
         ],
         [
-            InlineKeyboardButton(text=txt_rules, callback_data="rules"),
-            InlineKeyboardButton(text=txt_ref,   callback_data="referral")
+            InlineKeyboardButton(text=txt_support, callback_data="support"),
+            InlineKeyboardButton(text=txt_rules,   callback_data="rules")
+        ],
+        [
+            InlineKeyboardButton(text=txt_ref,     callback_data="referral")
         ]
     ]
     if WEBSITE_URL:
-        rows.insert(2, [InlineKeyboardButton(text=txt_site, url=WEBSITE_URL)])
+        rows.append([InlineKeyboardButton(text=txt_site, url=WEBSITE_URL)])
     if REVIEWS_URL:
-        rows.insert(3, [InlineKeyboardButton(text=txt_rev,  url=REVIEWS_URL)])
+        rows.append([InlineKeyboardButton(text=txt_rev,  url=REVIEWS_URL)])
     return InlineKeyboardMarkup(inline_keyboard=rows)
 
 
@@ -464,14 +574,73 @@ async def menu(callback: CallbackQuery):
         }[lang]
         await callback.message.answer(supp_txt, reply_markup=keyboard)
 
-    # ── Orders ────────────────────────────────────────────────────────────────
-    elif data == "orders":
-        no_orders_txt = {
-            "ru": "📋 У вас пока нет заказов.",
-            "en": "📋 You have no active orders yet.",
-            "uz": "📋 Sizda hali buyurtmalar yo'q."
-        }[lang]
-        await callback.message.answer(no_orders_txt, reply_markup=back_home(lang))
+    # ── Orders & Live Location Tracking ──────────────────────────────────────
+    elif data == "orders" or data.startswith("orders_refresh"):
+        user_orders = [o for o in ACTIVE_ORDERS.values() if o.get('user_id') == user_id]
+        if not user_orders:
+            btn_buy  = {"ru": "🛍 Перейти в каталог",  "en": "🛍 Browse Catalog",   "uz": "🛍 Mahsulotlar katalogi"}[lang]
+            btn_home = {"ru": "🔙 Главное меню",        "en": "🔙 Main Menu",        "uz": "🔙 Asosiy menyu"}[lang]
+            kb = InlineKeyboardMarkup(inline_keyboard=[
+                [InlineKeyboardButton(text=btn_buy,  callback_data="catalog")],
+                [InlineKeyboardButton(text=btn_home, callback_data="home")]
+            ])
+            no_orders_txt = {
+                "ru": "📋 <b>У вас пока нет активных заказов.</b>\n\nВыберите фасовку препарата <b>Рега</b> в каталоге, чтобы оформить заказ!",
+                "en": "📋 <b>You have no active orders yet.</b>\n\nSelect a pack of <b>Rega</b> in the catalog to place an order!",
+                "uz": "📋 <b>Sizda hali faol buyurtmalar yo'q.</b>\n\nBuyurtma berish uchun katalogdan <b>Rega</b> ni tanlang!"
+            }[lang]
+            await callback.message.answer(no_orders_txt, reply_markup=kb)
+        else:
+            user_orders.sort(key=lambda x: x.get('created_at', 0), reverse=True)
+            header = {
+                "ru": "📦 <b>Ваши заказы и статус доставки DRAGON-X:</b>\n",
+                "en": "📦 <b>Your Orders & Delivery Status — DRAGON-X:</b>\n",
+                "uz": "📦 <b>Buyurtmalaringiz va yetkazish holati:</b>\n"
+            }[lang]
+            msg_lines = [header]
+
+            for o in user_orders[:4]:
+                oid = o.get('id', 'N/A')
+                status = o.get('status', 'pending')
+                qty_val = o.get('qty', '2 штук')
+                price_val = o.get('price', '25$')
+                dist_val = o.get('district', 'Чиланзор')
+                coords_val = o.get('coordinates', '')
+                loc_val = o.get('location', '')
+
+                if status == 'picked_up':
+                    status_badge = "✅ <b>ЗАБРАН КЛИЕНТОМ (Picked Up)</b>"
+                    status_desc = "🎉 <i>Заказ успешно получен. Выдача полностью завершена.</i>"
+                elif status == 'drop_ready':
+                    status_badge = "📍 <b>ГОТОВ К ВЫДАЧЕ (Локация выдана)</b>"
+                    status_desc = f"🧭 <b>GPS Координаты:</b> <code>{coords_val}</code>\n📌 <b>Тайник / Ориентир:</b> {loc_val}"
+                    if coords_val:
+                        status_desc += f"\n🗺 <a href='https://maps.google.com/?q={coords_val}'>Открыть локацию на карте</a>"
+                elif status == 'paid':
+                    status_badge = "💳 <b>ОПЛАЧЕН (LTC подтвержден)</b>"
+                    status_desc = f"⏳ Курьер готовит тайник/дроп в районе <b>{dist_val}</b>. Скоро координаты появятся здесь!"
+                else:
+                    status_badge = "⏳ <b>ОЖИДАЕТ ОПЛАТЫ LTC</b>"
+                    status_desc = "Переведите средства на LTC адрес для завершения."
+
+                msg_lines.append(
+                    f"────────────────────────\n"
+                    f"🔑 <b>Заказ:</b> <code>{oid}</code>\n"
+                    f"💊 <b>Товар:</b> Рега ({qty_val}) — <b>{price_val}</b>\n"
+                    f"📍 <b>Район:</b> {dist_val}\n"
+                    f"📊 <b>Статус:</b> {status_badge}\n"
+                    f"{status_desc}\n"
+                )
+
+            btn_ref  = {"ru": "🔄 Обновить статус",     "en": "🔄 Refresh Status",    "uz": "🔄 Yangilash"}[lang]
+            btn_op   = {"ru": "💬 Связаться с оператором", "en": "💬 Contact Operator", "uz": "💬 Operatorga yozish"}[lang]
+            btn_home = {"ru": "🔙 Главное меню",        "en": "🔙 Main Menu",        "uz": "🔙 Asosiy menyu"}[lang]
+            kb = InlineKeyboardMarkup(inline_keyboard=[
+                [InlineKeyboardButton(text=btn_ref,  callback_data="orders_refresh")],
+                [InlineKeyboardButton(text=btn_op,   url=SUPPORT_URL)],
+                [InlineKeyboardButton(text=btn_home, callback_data="home")]
+            ])
+            await callback.message.answer("\n".join(msg_lines), reply_markup=kb, disable_web_page_preview=True)
 
     # ── Catalogue ────────────────────────────────────────────────────────────
     elif data == "catalog":
@@ -677,21 +846,39 @@ async def menu(callback: CallbackQuery):
         qty_label = qty_data[0][lang]
         price_val = qty_data[1]
         
+        def_coords = "41.2721, 69.2045" if "Чиланзор" in cur_district else ("41.2985, 69.3241" if "Яшнабад" in cur_district else "41.3412, 69.4520")
+        try:
+            total_amt = float(price_val.replace('$', '').strip())
+        except Exception:
+            total_amt = 25.0
+
         ACTIVE_ORDERS[unique_order_id] = {
+            'id': unique_order_id,
             'user_id': user_id,
             'user_data': {
                 'id': user_id,
-                'username': callback.from_user.username,
-                'first_name': callback.from_user.first_name,
-                'last_name': callback.from_user.last_name,
+                'username': callback.from_user.username or '',
+                'first_name': callback.from_user.first_name or '',
+                'last_name': callback.from_user.last_name or '',
                 'lang': lang
             },
             'created_at': time.time(),
+            'product': "Рега",
             'qty': qty_label,
             'price': price_val,
+            'total_amount': total_amt,
+            'currency': "USD",
             'pack_key': data,
-            'district': cur_district
+            'district': cur_district,
+            'location': f"Ташкент, {cur_district} (Координаты выдаются после подтверждения оплаты)",
+            'coordinates': def_coords,
+            'status': "pending",
+            'pickup_status': "waiting_payment",
+            'tracking_code': f"DRGX-TRK-{order_rand}",
+            'notes': "Ожидает проверки оплаты LTC",
+            'updated_at': time.time()
         }
+        save_orders()
 
         btn_verify = {"ru": "🔍 Проверить транзакцию LTC", "en": "🔍 Verify LTC Transaction", "uz": "🔍 LTC Tranzaksiyani tekshirish"}[lang]
         btn_ex1    = {"ru": "🔄 Обменник 1", "en": "🔄 Exchanger 1", "uz": "🔄 Ayirboshlash 1"}[lang]
@@ -784,6 +971,13 @@ async def menu(callback: CallbackQuery):
             price_val = order_info.get('price', 'N/A') if order_info else 'N/A'
             order_district = order_info.get('district', 'Чиланзор') if order_info else 'Чиланзор'
             
+            if order_info:
+                order_info['status'] = 'paid'
+                order_info['pickup_status'] = 'paid_preparing'
+                order_info['tx_info'] = new_tx
+                order_info['updated_at'] = time.time()
+                save_orders()
+
             asyncio.create_task(notify_admin_email(
                 order_code=order_code,
                 user_info=user_meta,
@@ -886,14 +1080,348 @@ async def generic_message_handler(message: Message):
         )
 
 
-# ── Health-check & Admin Stock Web Endpoints ─────────────────────────────────
+# ── Commands: /track & /orders ───────────────────────────────────────────────
+
+@dp.message(Command("track"))
+@dp.message(Command("orders"))
+async def track_orders_command(message: Message):
+    user_id = message.from_user.id
+    lang = USER_LANGUAGES.get(user_id, "ru")
+    user_orders = [o for o in ACTIVE_ORDERS.values() if o.get('user_id') == user_id]
+    if not user_orders:
+        btn_buy  = {"ru": "🛍 В каталог товаров",  "en": "🛍 Browse Catalog",   "uz": "🛍 Mahsulotlar katalogi"}[lang]
+        kb = InlineKeyboardMarkup(inline_keyboard=[
+            [InlineKeyboardButton(text=btn_buy, callback_data="catalog")],
+            [InlineKeyboardButton(text="🔙 Главное меню", callback_data="home")]
+        ])
+        await message.answer(
+            "📋 <b>У вас пока нет активных заказов.</b>\n\nОформите заказ в каталоге, чтобы отслеживать статус и локацию выдачи!",
+            reply_markup=kb
+        )
+        return
+
+    user_orders.sort(key=lambda x: x.get('created_at', 0), reverse=True)
+    msg_parts = ["📦 <b>Ваши заказы и координаты выдачи (DRAGON-X):</b>\n"]
+    for o in user_orders[:4]:
+        oid = o.get('id', 'N/A')
+        status = o.get('status', 'pending')
+        qty_val = o.get('qty', '2 штук')
+        price_val = o.get('price', '25$')
+        dist_val = o.get('district', 'Чиланзор')
+        coords_val = o.get('coordinates', '')
+        loc_val = o.get('location', '')
+
+        if status == 'picked_up':
+            status_badge = "✅ <b>ЗАБРАН (Picked Up)</b>"
+            status_desc = "🎉 <i>Выдача завершена. Заказ успешно получен!</i>"
+        elif status == 'drop_ready':
+            status_badge = "📍 <b>ГОТОВ К ВЫДАЧЕ (Локация выдана)</b>"
+            status_desc = f"🧭 GPS: <code>{coords_val}</code>\n📌 Тайник: {loc_val}"
+            if coords_val:
+                status_desc += f"\n🗺 <a href='https://maps.google.com/?q={coords_val}'>Открыть карту</a>"
+        elif status == 'paid':
+            status_badge = "💳 <b>ОПЛАЧЕН (LTC подтвержден)</b>"
+            status_desc = f"Курьер готовит тайник в районе {dist_val}."
+        else:
+            status_badge = "⏳ <b>ОЖИДАЕТ ОПЛАТЫ LTC</b>"
+            status_desc = "Ожидание транзакции в блокчейне."
+
+        msg_parts.append(
+            f"────────────────────────\n"
+            f"🔑 <b>Заказ:</b> <code>{oid}</code>\n"
+            f"💊 Товар: <b>Рега</b> ({qty_val}) — <b>{price_val}</b>\n"
+            f"📍 Район: <b>{dist_val}</b>\n"
+            f"📊 Статус: {status_badge}\n"
+            f"{status_desc}\n"
+        )
+
+    kb = InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="🔄 Обновить статус", callback_data="orders_refresh")],
+        [InlineKeyboardButton(text="💬 Написать оператору", url=SUPPORT_URL)],
+        [InlineKeyboardButton(text="🔙 Главное меню", callback_data="home")]
+    ])
+    await message.answer("\n".join(msg_parts), reply_markup=kb, disable_web_page_preview=True)
+
+
+# ── REST API with CORS for Real-Time Admin Synchronization ───────────────────
+
+def cors_response(data=None, text=None, status=200):
+    headers = {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "GET, POST, OPTIONS, PUT, PATCH, DELETE",
+        "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Requested-With"
+    }
+    if text is not None:
+        return web.Response(text=text, status=status, headers=headers)
+    return web.json_response(data if data is not None else {}, status=status, headers=headers)
+
+
+async def options_handler(request):
+    return cors_response(text="", status=204)
+
 
 async def health_check(request):
-    return web.Response(text="OK - Dragon-X Bot is running 🐉")
+    username = await get_bot_username()
+    return cors_response({
+        "status": "ok",
+        "bot": f"@{username}",
+        "orders_count": len(ACTIVE_ORDERS),
+        "server_time": time.time(),
+        "message": "Dragon-X Bot & Real-Time Dispatch Gateway is running 🐉"
+    })
+
+
+async def get_orders_api(request):
+    orders_list = []
+    for oid, o in sorted(ACTIVE_ORDERS.items(), key=lambda x: x[1].get('created_at', 0), reverse=True):
+        user_meta = o.get('user_data', {}) if isinstance(o.get('user_data'), dict) else {}
+        username = user_meta.get('username') or o.get('username') or ''
+        tg_handle = f"@{username}" if username and not username.startswith('@') else (username or '—')
+        first_name = user_meta.get('first_name', '')
+        last_name = user_meta.get('last_name', '')
+        customer_name = f"{first_name} {last_name}".strip() or tg_handle or f"Клиент {o.get('user_id', '')}"
+
+        qty_str = o.get('qty', '2 штук')
+        price_str = o.get('price', '25$')
+        total_amount = o.get('total_amount')
+        if total_amount is None:
+            try:
+                total_amount = float(str(price_str).replace('$', '').strip())
+            except Exception:
+                total_amount = 25.0
+
+        created_ts = o.get('created_at', time.time())
+        created_iso = datetime.datetime.fromtimestamp(created_ts, datetime.timezone.utc).isoformat()
+
+        orders_list.append({
+            "id": oid,
+            "createdAt": created_iso,
+            "createdTimestamp": created_ts,
+            "customerId": f"DRGX-{o.get('user_id', 'VIP')}",
+            "userId": o.get('user_id'),
+            "customerName": customer_name,
+            "telegram": tg_handle,
+            "product": o.get('product', 'Рега'),
+            "qty": qty_str,
+            "items": [
+                {
+                    "name": o.get('product', 'Рега'),
+                    "packCount": qty_str,
+                    "quantity": 1,
+                    "unitPriceBase": total_amount
+                }
+            ],
+            "totalPacks": 1,
+            "totalAmount": total_amount,
+            "currency": "USD",
+            "district": o.get('district', 'Чиланзор'),
+            "deliveryLocation": o.get('location') or f"Ташкент, {o.get('district', 'Чиланзор')}",
+            "coordinates": o.get('coordinates', '41.2721, 69.2045'),
+            "status": o.get('status', 'pending'),
+            "pickupStatus": o.get('pickup_status', 'waiting'),
+            "pickedUpAt": o.get('picked_up_at'),
+            "trackingCode": o.get('tracking_code', f"DRGX-TRK-{oid[-4:]}"),
+            "notes": o.get('notes', ''),
+            "txHash": o.get('tx_info', {}).get('hash', '') if isinstance(o.get('tx_info'), dict) else ''
+        })
+    return cors_response(orders_list)
+
+
+async def create_order_api(request):
+    try:
+        data = await request.json()
+        order_id = data.get('id') or f"DRGX-ADM-{random.randint(1000, 9999)}"
+        district = data.get('district') or 'Чиланзор'
+        def_coords = "41.2721, 69.2045" if "Чиланзор" in district else ("41.2985, 69.3241" if "Яшнабад" in district else "41.3412, 69.4520")
+
+        qty = data.get('qty', '2 штук')
+        total_amount = float(data.get('totalAmount') or data.get('price') or 25.0)
+
+        order_record = {
+            'id': order_id,
+            'user_id': data.get('userId') or random.randint(10000000, 99999999),
+            'user_data': {
+                'username': (data.get('telegram') or '').replace('@', ''),
+                'first_name': data.get('customerName') or 'Клиент',
+                'lang': 'ru'
+            },
+            'created_at': time.time(),
+            'product': data.get('product') or 'Рега',
+            'qty': qty,
+            'price': f"{int(total_amount)}$",
+            'total_amount': total_amount,
+            'currency': 'USD',
+            'district': district,
+            'location': data.get('location') or data.get('deliveryLocation') or f"Ташкент, {district}",
+            'coordinates': data.get('coordinates') or def_coords,
+            'status': data.get('status') or 'paid',
+            'pickup_status': 'ready' if data.get('status') == 'drop_ready' else 'waiting',
+            'tracking_code': data.get('trackingCode') or f"DRGX-TRK-{random.randint(1000, 9999)}",
+            'notes': data.get('notes') or 'Создан через панель оператора',
+            'updated_at': time.time()
+        }
+        ACTIVE_ORDERS[order_id] = order_record
+        save_orders()
+        return cors_response({"status": "success", "order": order_record})
+    except Exception as e:
+        return cors_response({"status": "error", "message": str(e)}, status=400)
+
+
+async def update_order_api(request):
+    try:
+        data = await request.json()
+        order_id = data.get('id')
+        if not order_id or order_id not in ACTIVE_ORDERS:
+            return cors_response({"status": "error", "message": f"Order {order_id} not found"}, status=404)
+
+        order = ACTIVE_ORDERS[order_id]
+        
+        if 'status' in data:
+            order['status'] = data['status']
+            if data['status'] == 'picked_up' and not order.get('picked_up_at'):
+                order['picked_up_at'] = time.time()
+                order['pickup_status'] = 'picked_up'
+            elif data['status'] == 'drop_ready':
+                order['pickup_status'] = 'ready'
+
+        if 'location' in data:
+            order['location'] = data['location']
+        if 'deliveryLocation' in data:
+            order['location'] = data['deliveryLocation']
+        if 'coordinates' in data:
+            order['coordinates'] = data['coordinates']
+        if 'district' in data:
+            order['district'] = data['district']
+        if 'notes' in data:
+            order['notes'] = data['notes']
+        if 'trackingCode' in data:
+            order['tracking_code'] = data['trackingCode']
+        if 'totalAmount' in data:
+            try:
+                order['total_amount'] = float(data['totalAmount'])
+                order['price'] = f"{int(order['total_amount'])}$"
+            except Exception:
+                pass
+        if 'qty' in data:
+            order['qty'] = data['qty']
+
+        order['updated_at'] = time.time()
+        save_orders()
+
+        # Send Telegram Notification to user if requested
+        notify_requested = data.get('notifyCustomer', False)
+        user_id = order.get('user_id')
+
+        if notify_requested and user_id:
+            try:
+                status_val = order.get('status')
+                if status_val == 'picked_up':
+                    msg_text = (
+                        f"🎉 <b>Заказ {order_id} отмечен как ЗАБРАН (Picked Up)!</b>\n\n"
+                        f"💊 <b>Товар:</b> Рега ({order.get('qty', '')})\n"
+                        f"📍 <b>Район:</b> {order.get('district', '')}\n\n"
+                        "✅ Спасибо за покупку в <b>DRAGON-X</b>! Будем рады вашему отзыву.\n"
+                        f"💬 Контакт оператора: {SUPPORT_HANDLE}"
+                    )
+                elif status_val == 'drop_ready':
+                    coords = order.get('coordinates', '')
+                    map_link = f"https://maps.google.com/?q={coords}" if coords else ""
+                    msg_text = (
+                        f"📍 <b>Локация и координаты для заказа {order_id} готовы:</b>\n\n"
+                        f"🏘 <b>Район:</b> {order.get('district', '')}\n"
+                        f"🧭 <b>GPS Координаты:</b> <code>{coords}</code>\n"
+                        f"📌 <b>Ориентир / Тайник:</b> {order.get('location', '')}\n"
+                        + (f"🗺 <b>Ссылка на карту:</b> {map_link}\n\n" if map_link else "\n")
+                        + "💡 <i>После того как заберете заказ, статус будет обновлен на «Забран» (Picked Up).</i>"
+                    )
+                else:
+                    msg_text = (
+                        f"📦 <b>Обновление по заказу {order_id}:</b>\n\n"
+                        f"Статус: <b>{status_val}</b>\n"
+                        f"Детали: {order.get('location', '')}\n"
+                        f"💬 Поддержка: {SUPPORT_HANDLE}"
+                    )
+                await bot.send_message(chat_id=user_id, text=msg_text)
+                logging.info(f"Dispatched Telegram update to user {user_id} for {order_id}")
+            except Exception as tg_err:
+                logging.warning(f"Could not dispatch Telegram update to {user_id}: {tg_err}")
+
+        return cors_response({"status": "success", "order": order})
+    except Exception as e:
+        return cors_response({"status": "error", "message": str(e)}, status=400)
+
+
+async def pickup_order_api(request):
+    try:
+        data = await request.json()
+        order_id = data.get('id')
+        if not order_id or order_id not in ACTIVE_ORDERS:
+            return cors_response({"status": "error", "message": f"Order {order_id} not found"}, status=404)
+
+        order = ACTIVE_ORDERS[order_id]
+        order['status'] = 'picked_up'
+        order['pickup_status'] = 'picked_up'
+        order['picked_up_at'] = time.time()
+        order['updated_at'] = time.time()
+        if data.get('notes'):
+            order['notes'] = data['notes']
+        save_orders()
+
+        # Notify Customer in Telegram
+        user_id = order.get('user_id')
+        if data.get('notifyCustomer', True) and user_id:
+            try:
+                msg_text = (
+                    f"✅ <b>Заказ {order_id} успешно ЗАБРАН (Picked Up)!</b>\n\n"
+                    f"💊 <b>Товар:</b> Рега ({order.get('qty', '')})\n"
+                    f"📍 <b>Район:</b> {order.get('district', '')}\n\n"
+                    "Выдача полностью завершена. Спасибо, что доверяете DRAGON-X!\n"
+                    f"💬 Оператор: {SUPPORT_HANDLE}"
+                )
+                await bot.send_message(chat_id=user_id, text=msg_text)
+            except Exception as tg_err:
+                logging.warning(f"Could not notify user {user_id} of pickup: {tg_err}")
+
+        return cors_response({"status": "success", "order": order})
+    except Exception as e:
+        return cors_response({"status": "error", "message": str(e)}, status=400)
+
+
+async def delete_order_api(request):
+    try:
+        data = await request.json()
+        order_id = data.get('id')
+        if order_id in ACTIVE_ORDERS:
+            del ACTIVE_ORDERS[order_id]
+            save_orders()
+            return cors_response({"status": "success"})
+        return cors_response({"status": "not_found"}, status=404)
+    except Exception as e:
+        return cors_response({"status": "error", "message": str(e)}, status=400)
+
+
+async def get_stats_api(request):
+    total_orders = len(ACTIVE_ORDERS)
+    total_revenue = sum(o.get('total_amount', 0) for o in ACTIVE_ORDERS.values())
+    active_del = sum(1 for o in ACTIVE_ORDERS.values() if o.get('status') in ['paid', 'drop_ready'])
+    picked_up = sum(1 for o in ACTIVE_ORDERS.values() if o.get('status') == 'picked_up')
+    unique_users = len(set(o.get('user_id') for o in ACTIVE_ORDERS.values() if o.get('user_id')))
+    username = await get_bot_username()
+    return cors_response({
+        "status": "success",
+        "botUsername": f"@{username}",
+        "totalOrders": total_orders,
+        "totalRevenue": round(total_revenue, 2),
+        "activeDelivery": active_del,
+        "pickedUpCount": picked_up,
+        "totalClients": unique_users,
+        "stocks": INVENTORY_STOCKS,
+        "serverTime": time.time()
+    })
 
 
 async def get_stock_api(request):
-    return web.json_response(INVENTORY_STOCKS)
+    return cors_response(INVENTORY_STOCKS)
 
 
 async def update_stock_api(request):
@@ -902,23 +1430,37 @@ async def update_stock_api(request):
         if isinstance(data, dict):
             INVENTORY_STOCKS.update(data)
             logging.info(f"Updated inventory stocks via Admin API: {INVENTORY_STOCKS}")
-            return web.json_response({"status": "success", "stocks": INVENTORY_STOCKS})
+            return cors_response({"status": "success", "stocks": INVENTORY_STOCKS})
     except Exception as e:
-        return web.json_response({"status": "error", "message": str(e)}, status=400)
-    return web.json_response({"status": "invalid payload"}, status=400)
+        return cors_response({"status": "error", "message": str(e)}, status=400)
+    return cors_response({"status": "invalid payload"}, status=400)
 
 
 async def run_web_server():
     port = int(os.getenv("PORT", 10000))
     app  = web.Application()
+    
+    # Preflight CORS Handler
+    app.router.add_route("OPTIONS", "/{tail:.*}", options_handler)
+    
+    # REST API Routes
     app.router.add_get("/", health_check)
+    app.router.add_get("/api/ping", health_check)
+    app.router.add_get("/api/health", health_check)
+    app.router.add_get("/api/orders", get_orders_api)
+    app.router.add_post("/api/orders", create_order_api)
+    app.router.add_post("/api/orders/update", update_order_api)
+    app.router.add_post("/api/orders/pickup", pickup_order_api)
+    app.router.add_post("/api/orders/delete", delete_order_api)
+    app.router.add_get("/api/stats", get_stats_api)
     app.router.add_get("/api/stock", get_stock_api)
     app.router.add_post("/api/stock", update_stock_api)
+    
     runner = web.AppRunner(app)
     await runner.setup()
     site = web.TCPSite(runner, "0.0.0.0", port)
     await site.start()
-    logging.info(f"Health-check & Stock API web server running on port {port}")
+    logging.info(f"Health-check & REST API server running on port {port}")
 
 
 # ── Main: resilient polling & Web server runner ───────────────────────────────
@@ -928,9 +1470,12 @@ async def main():
     logging.info("Webhook deleted. Fetching bot username...")
     username = await get_bot_username()
     logging.info(f"Bot info loaded: @{username}")
-    
+
+    # Load persistent orders
+    load_orders()
+
     await init_historical_txs(LTC_ADDRESS)
-    
+
     # Run Web Server in background
     asyncio.create_task(run_web_server())
 
