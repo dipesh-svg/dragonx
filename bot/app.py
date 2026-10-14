@@ -2372,24 +2372,37 @@ async def run_web_server():
 # ── Main: resilient polling & Web server runner ───────────────────────────────
 
 async def main():
-    await bot.delete_webhook(drop_pending_updates=True)
-    logging.info("Webhook deleted. Fetching bot username...")
-    username = await get_bot_username()
-    logging.info(f"Bot info loaded: @{username}")
+    # 1. Immediately start HTTP server so Render health-check detects port within 0.1s!
+    await run_web_server()
 
-    # Load dynamic bot config & persistent orders
+    # 2. Synchronous storage loading
     load_bot_config()
     load_orders()
 
-    # Connect to Neon PostgreSQL & sync persistent cloud database
-    await init_neon_db()
+    # 3. Asynchronously initialize external services with safety timeouts so startup never hangs
+    try:
+        await asyncio.wait_for(bot.delete_webhook(drop_pending_updates=True), timeout=10)
+        logging.info("Webhook deleted successfully.")
+    except Exception as e:
+        logging.warning(f"Could not delete webhook (continuing anyway): {e}")
 
-    await init_historical_txs(get_ltc_address())
+    try:
+        username = await asyncio.wait_for(get_bot_username(), timeout=10)
+        logging.info(f"Bot info loaded: @{username}")
+    except Exception as e:
+        logging.warning(f"Could not fetch bot username: {e}")
 
-    # Run Web Server in background
-    asyncio.create_task(run_web_server())
+    try:
+        await asyncio.wait_for(init_neon_db(), timeout=15)
+    except Exception as e:
+        logging.warning(f"Neon DB init timed out or failed (falling back to JSON): {e}")
 
-    # Resilient Polling Loop (Anti-Crash Guard)
+    try:
+        await asyncio.wait_for(init_historical_txs(get_ltc_address()), timeout=10)
+    except Exception as e:
+        logging.warning(f"Historical LTC tx init timed out or failed: {e}")
+
+    # 4. Resilient Polling Loop (Anti-Crash Guard)
     while True:
         try:
             logging.info("Starting bot polling...")
