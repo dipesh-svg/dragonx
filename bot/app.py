@@ -842,6 +842,14 @@ def generate_captcha(user_id: int, lang: str):
 @dp.message(CommandStart())
 async def start(message: Message):
     user_id = message.from_user.id
+    if is_maintenance_mode():
+        m_txt = BOT_CONFIG.get("maintenance_text", "⚠️ Бот временно находится на техническом обслуживании. Свяжитесь с оператором: @ashley_graves3")
+        kb = InlineKeyboardMarkup(inline_keyboard=[
+            [InlineKeyboardButton(text="💬 Связаться с оператором", url=get_support_url())]
+        ])
+        await message.answer(m_txt, reply_markup=kb)
+        return
+
     USER_LANGUAGES.setdefault(user_id, "ru")
     await message.answer(
         "🌐 <b>Выберите язык / Select Language / Tilni tanlang:</b>",
@@ -851,6 +859,10 @@ async def start(message: Message):
 
 @dp.callback_query()
 async def menu(callback: CallbackQuery):
+    if is_maintenance_mode():
+        m_txt = BOT_CONFIG.get("maintenance_text", "⚠️ Бот временно находится на техническом обслуживании (прием заказов приостановлен).")
+        await callback.answer(m_txt[:190], show_alert=True)
+        return
     data = callback.data
     user_id = callback.from_user.id
     lang = USER_LANGUAGES.get(user_id, "ru")
@@ -1627,6 +1639,13 @@ async def generic_message_handler(message: Message):
 @dp.message(Command("track"))
 @dp.message(Command("orders"))
 async def track_orders_command(message: Message):
+    if is_maintenance_mode():
+        m_txt = BOT_CONFIG.get("maintenance_text", "⚠️ Бот временно находится на техническом обслуживании. Свяжитесь с оператором: @ashley_graves3")
+        kb = InlineKeyboardMarkup(inline_keyboard=[
+            [InlineKeyboardButton(text="💬 Связаться с оператором", url=get_support_url())]
+        ])
+        await message.answer(m_txt, reply_markup=kb)
+        return
     user_id = message.from_user.id
     lang = USER_LANGUAGES.get(user_id, "ru")
     user_orders = [o for o in ACTIVE_ORDERS.values() if o.get('user_id') == user_id]
@@ -1800,7 +1819,9 @@ async def health_check(request):
     return cors_response({
         "status": "ok",
         "bot": f"@{username}",
-        "version": "2026.10.13-master",
+        "version": "2026.10.15-master",
+        "maintenance_mode": is_maintenance_mode(),
+        "is_stopped": is_maintenance_mode(),
         "orders_count": len(ACTIVE_ORDERS),
         "server_time": time.time(),
         "message": "Dragon-X Bot & Real-Time Dispatch Gateway is running 🐉"

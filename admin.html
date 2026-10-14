@@ -102,6 +102,11 @@
       </div>
 
       <div class="admin-header-right">
+        <button id="headerBotStopBtn" class="btn-danger btn-sm" title="Остановить / Запустить бот" style="margin-right: 0.35rem; font-weight: 700;">
+          <i class="fa-solid fa-power-off"></i>
+          <span id="headerBotStopText">Остановить Бот</span>
+        </button>
+
         <button id="headerMasterBotBtn" class="btn-primary glow-btn btn-sm header-master-btn" title="Управление настройками бота, товаром, ценами и районами">
           <i class="fa-solid fa-wand-magic-sparkles"></i>
           <span>⚙️ Управление Ботом & Push</span>
@@ -221,10 +226,14 @@
             </div>
           </div>
         </div>
-        <div class="live-bot-banner-right">
+        <div class="live-bot-banner-right" style="display: flex; gap: 0.65rem; align-items: center; flex-wrap: wrap;">
+          <button type="button" id="quickBotStopBtn" class="btn-danger glow-btn btn-sm" title="Экстренная остановка / Запуск приема заказов в боте" style="font-weight: 700;">
+            <i class="fa-solid fa-power-off"></i>
+            <span id="quickBotStopText">Остановить Бот</span>
+          </button>
           <button type="button" id="bannerOpenMasterBotBtn" class="btn-primary glow-btn btn-sm">
             <i class="fa-solid fa-wand-magic-sparkles"></i>
-            <span>Изменить Товар, Цены, Районы & Запушить в Бот</span>
+            <span>Каталог, Цены & Настройки</span>
           </button>
         </div>
       </div>
@@ -1106,6 +1115,6 @@
   <div id="toastContainer" class="toast-container"></div>
 
   <!-- Scripts -->
-  <script src="admin.js?v=20261015_instant_v1"></script>
+  <script src="admin.js?v=20261015_stopbot_v1"></script>
 </body>
 </html>

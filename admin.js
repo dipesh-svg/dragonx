@@ -643,6 +643,7 @@
                     saveBotConfigLocally();
                     renderTelegramTab();
                     renderBotCatalogTab();
+                    renderBotPowerUI();
                   }
                   AdminState.isInitialConfigLoaded = true;
                 }
@@ -847,6 +848,7 @@
     renderTelegramTab();
     renderClientsTable();
     renderBotCatalogTab();
+    renderBotPowerUI();
   }
 
   function renderMetrics() {
@@ -1195,20 +1197,121 @@
       bLtc.textContent = addr.length > 14 ? `${addr.slice(0, 10)}...${addr.slice(-4)}` : addr;
     }
 
+    renderBotPowerUI();
+  }
+
+  function renderBotPowerUI() {
+    const isStopped = AdminState.botConfig && AdminState.botConfig.maintenance_mode === true;
+
+    // 1. Quick Bot Stop/Start Button in banner
+    const stopBtn = document.getElementById('quickBotStopBtn');
+    const stopTxt = document.getElementById('quickBotStopText');
+    if (stopBtn && stopTxt) {
+      if (isStopped) {
+        stopBtn.className = 'btn-success glow-btn btn-sm';
+        stopBtn.innerHTML = '<i class="fa-solid fa-play"></i> <span id="quickBotStopText">Запустить Бот</span>';
+        stopBtn.title = 'Бот остановлен. Нажмите, чтобы включить прием заказов';
+      } else {
+        stopBtn.className = 'btn-danger glow-btn btn-sm';
+        stopBtn.innerHTML = '<i class="fa-solid fa-power-off"></i> <span id="quickBotStopText">Остановить Бот</span>';
+        stopBtn.title = 'Бот работает. Нажмите, чтобы экстренно приостановить бот';
+      }
+    }
+
+    // 2. Header Bot Stop/Start Button
+    const hdrStopBtn = document.getElementById('headerBotStopBtn');
+    const hdrStopTxt = document.getElementById('headerBotStopText');
+    if (hdrStopBtn && hdrStopTxt) {
+      if (isStopped) {
+        hdrStopBtn.className = 'btn-success btn-sm';
+        hdrStopBtn.innerHTML = '<i class="fa-solid fa-play"></i> <span id="headerBotStopText">Запустить Бот</span>';
+      } else {
+        hdrStopBtn.className = 'btn-danger btn-sm';
+        hdrStopBtn.innerHTML = '<i class="fa-solid fa-power-off"></i> <span id="headerBotStopText">Остановить Бот</span>';
+      }
+    }
+
+    // 3. Status Badges & Pulse Dot
     const bOnline = document.getElementById('bannerBotOnlineBadge');
     const bDot = document.getElementById('bannerPulseDot');
     if (bOnline && bDot) {
-      if (AdminState.isApiOnline) {
+      if (isStopped) {
+        bOnline.className = 'badge-status-offline';
+        bOnline.style.background = 'rgba(239, 68, 68, 0.2)';
+        bOnline.style.color = '#ef4444';
+        bOnline.style.borderColor = 'rgba(239, 68, 68, 0.5)';
+        bOnline.innerHTML = `<i class="fa-solid fa-ban"></i> БОТ ОСТАНОВЛЕН (Пауза / Заказы выкл)`;
+        bDot.style.background = '#ef4444';
+        bDot.style.boxShadow = '0 0 14px #ef4444';
+      } else if (AdminState.isApiOnline) {
         bOnline.className = 'badge-status-online';
+        bOnline.style.background = '';
+        bOnline.style.color = '';
+        bOnline.style.borderColor = '';
         bOnline.innerHTML = `<i class="fa-solid fa-circle"></i> ОНЛАЙН (dragonx.onrender.com)`;
         bDot.style.background = '#10b981';
         bDot.style.boxShadow = '0 0 12px #10b981';
       } else {
         bOnline.className = 'badge-status-offline';
+        bOnline.style.background = '';
+        bOnline.style.color = '';
+        bOnline.style.borderColor = '';
         bOnline.innerHTML = `<i class="fa-solid fa-circle"></i> АВТОНОМНО (Кэш)`;
         bDot.style.background = '#f59e0b';
         bDot.style.boxShadow = '0 0 12px #f59e0b';
       }
+    }
+
+    // 4. Mode Labels & Toggles
+    const modeLabel = document.getElementById('displayBotModeLabel');
+    if (modeLabel) {
+      if (isStopped) {
+        modeLabel.textContent = '⛔ ОСТАНОВЛЕН (Техническое обслуживание / Заказы выключены)';
+        modeLabel.className = 'font-mono text-red';
+      } else {
+        modeLabel.textContent = '🟢 Активен (Заказы включены)';
+        modeLabel.className = 'font-mono text-green';
+      }
+    }
+
+    const t1 = document.getElementById('cfgBotMaintenanceToggle');
+    if (t1) t1.checked = isStopped;
+    const t2 = document.getElementById('adminBotMaintenanceToggle');
+    if (t2) t2.checked = isStopped;
+
+    const grp1 = document.getElementById('cfgMaintenanceTextGroup');
+    if (grp1) grp1.style.display = isStopped ? 'block' : 'none';
+    const grp2 = document.getElementById('maintenanceTextGroup');
+    if (grp2) grp2.style.display = isStopped ? 'block' : 'none';
+  }
+
+  async function toggleBotPowerState(desiredState) {
+    const isStopping = (desiredState !== undefined) ? desiredState : !AdminState.botConfig.maintenance_mode;
+    AdminState.botConfig.maintenance_mode = isStopping;
+    saveBotConfigLocally();
+    renderBotPowerUI();
+
+    showToast(isStopping ? '⛔ Отправка команды остановки в бот...' : '▶️ Запуск бота...', 'info');
+
+    const apiUrl = (AdminState.botApiUrl || detectDefaultApiUrl()).replace(/\/+$/, '');
+    try {
+      const resp = await fetch(`${apiUrl}/api/config`, {
+        method: 'POST',
+        headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
+        body: JSON.stringify({
+          maintenance_mode: isStopping,
+          maintenance_text: AdminState.botConfig.maintenance_text || '⚠️ Бот временно находится на техническом обслуживании. Свяжитесь с оператором: @ashley_graves3'
+        })
+      });
+
+      if (resp.ok) {
+        showToast(isStopping ? '⛔ БОТ УСПЕШНО ОСТАНОВЛЕН! Все заказы и кнопки заблокированы.' : '🚀 БОТ УСПЕШНО ЗАПУЩЕН! Прием заказов активен.', 'success');
+      } else {
+        showToast('Настройка сохранена локально. Проверьте связь с bot API на Render.', 'warning');
+      }
+    } catch (e) {
+      console.warn('Bot power toggle API push failed:', e.message);
+      showToast('Сохранено в локальной панели (сервер бэкенда недоступен).', 'info');
     }
   }
 
@@ -2274,15 +2377,29 @@
       bannerMasterBtn.addEventListener('click', () => switchToTab('tabPrices'));
     }
 
-    // Tab 5 Maintenance Toggle Listener
+    // Bot Maintenance / Power Listeners
     const cfgMaintToggle = document.getElementById('cfgBotMaintenanceToggle');
     if (cfgMaintToggle) {
       cfgMaintToggle.addEventListener('change', (e) => {
-        const grp = document.getElementById('cfgMaintenanceTextGroup');
-        if (grp) grp.style.display = e.target.checked ? 'block' : 'none';
-        const otherToggle = document.getElementById('adminBotMaintenanceToggle');
-        if (otherToggle) otherToggle.checked = e.target.checked;
+        toggleBotPowerState(e.target.checked);
       });
+    }
+
+    const adminMaintToggle = document.getElementById('adminBotMaintenanceToggle');
+    if (adminMaintToggle) {
+      adminMaintToggle.addEventListener('change', (e) => {
+        toggleBotPowerState(e.target.checked);
+      });
+    }
+
+    const quickStopBtn = document.getElementById('quickBotStopBtn');
+    if (quickStopBtn) {
+      quickStopBtn.addEventListener('click', () => toggleBotPowerState());
+    }
+
+    const hdrStopBtn = document.getElementById('headerBotStopBtn');
+    if (hdrStopBtn) {
+      hdrStopBtn.addEventListener('click', () => toggleBotPowerState());
     }
 
     // Tab 5 Broadcast Button
