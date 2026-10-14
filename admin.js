@@ -8,8 +8,8 @@
 
   // Hardcoded Secure Operator Credentials
   const ADMIN_CREDENTIALS = {
-    id: 'damascus@123',
-    password: 'vegadragon24'
+    id: 'Sexy_harshal@0101',
+    password: 'harshal@1234'
   };
 
   const STORAGE_KEYS = {
