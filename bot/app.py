@@ -9,6 +9,9 @@ import ssl
 from email.message import EmailMessage
 from html import escape
 import json
+import hmac
+import hashlib
+import base64
 import aiohttp
 from aiohttp import web
 from aiogram import Bot, Dispatcher
@@ -1695,6 +1698,99 @@ def cors_response(data=None, text=None, status=200):
     return web.json_response(data if data is not None else {}, status=status, headers=headers)
 
 
+# ── Operator Authentication & Security Engine ────────────────────────────────
+ADMIN_OPERATOR_ID       = os.getenv("ADMIN_OPERATOR_ID", "Sexy_harshal@0101")
+ADMIN_OPERATOR_PASSWORD = os.getenv("ADMIN_OPERATOR_PASSWORD", "harshal@1234")
+ADMIN_TOKEN_SECRET      = os.getenv("ADMIN_TOKEN_SECRET", "dragonx_jwt_secret_v1_09283410294823")
+TOKEN_EXPIRY_SECONDS    = 86400 * 7  # 7 days
+
+def generate_admin_token(operator_id: str) -> str:
+    payload = {
+        "sub": operator_id,
+        "exp": int(time.time()) + TOKEN_EXPIRY_SECONDS,
+        "iat": int(time.time()),
+        "role": "admin"
+    }
+    payload_json = json.dumps(payload, separators=(',', ':'))
+    payload_b64 = base64.urlsafe_b64encode(payload_json.encode('utf-8')).decode('utf-8').rstrip('=')
+    sig = hmac.new(ADMIN_TOKEN_SECRET.encode('utf-8'), payload_b64.encode('utf-8'), hashlib.sha256).hexdigest()
+    return f"{payload_b64}.{sig}"
+
+def verify_admin_token(token: str):
+    if not token or '.' not in token:
+        return None
+    try:
+        payload_b64, sig = token.split('.', 1)
+        expected_sig = hmac.new(ADMIN_TOKEN_SECRET.encode('utf-8'), payload_b64.encode('utf-8'), hashlib.sha256).hexdigest()
+        if not hmac.compare_digest(sig, expected_sig):
+            return None
+        padded = payload_b64 + '=' * (-len(payload_b64) % 4)
+        payload_json = base64.urlsafe_b64decode(padded.encode('utf-8')).decode('utf-8')
+        payload = json.loads(payload_json)
+        if payload.get("exp", 0) < time.time():
+            return None
+        return payload
+    except Exception:
+        return None
+
+def check_admin_auth(request: web.Request) -> bool:
+    auth_header = request.headers.get("Authorization", "")
+    token = ""
+    if auth_header.startswith("Bearer "):
+        token = auth_header[7:].strip()
+    elif "token" in request.query:
+        token = request.query.get("token", "").strip()
+    
+    if not token:
+        return False
+    return verify_admin_token(token) is not None
+
+async def admin_login_api(request: web.Request):
+    try:
+        body = await request.json()
+    except Exception:
+        return cors_response({"success": False, "error": "Неверный формат запроса"}, status=400)
+    
+    op_id = str(body.get("id", "")).strip()
+    op_pass = str(body.get("password", "")).strip()
+    
+    # Constant-time comparison prevents timing attacks
+    id_valid = hmac.compare_digest(op_id, ADMIN_OPERATOR_ID)
+    pass_valid = hmac.compare_digest(op_pass, ADMIN_OPERATOR_PASSWORD)
+    
+    if id_valid and pass_valid:
+        token = generate_admin_token(op_id)
+        logging.info(f"Operator authenticated successfully: {op_id}")
+        return cors_response({
+            "success": True,
+            "token": token,
+            "operator_id": op_id,
+            "expires_in": TOKEN_EXPIRY_SECONDS
+        })
+    else:
+        logging.warning(f"Failed login attempt for operator ID: {op_id}")
+        return cors_response({
+            "success": False,
+            "error": "Неверный ID оператора или пароль доступа!"
+        }, status=401)
+
+async def admin_verify_api(request: web.Request):
+    auth_header = request.headers.get("Authorization", "")
+    token = ""
+    if auth_header.startswith("Bearer "):
+        token = auth_header[7:].strip()
+    elif "token" in request.query:
+        token = request.query.get("token", "").strip()
+        
+    payload = verify_admin_token(token)
+    if payload:
+        return cors_response({
+            "valid": True,
+            "operator_id": payload.get("sub", ADMIN_OPERATOR_ID)
+        })
+    return cors_response({"valid": False, "error": "Unauthorized or session expired"}, status=401)
+
+
 async def options_handler(request):
     return cors_response(text="", status=204)
 
@@ -1712,6 +1808,8 @@ async def health_check(request):
 
 
 async def get_orders_api(request):
+    if not check_admin_auth(request):
+        return cors_response({"error": "Unauthorized: valid admin token required"}, status=401)
     if db_pool:
         try:
             await db_refresh_orders()
@@ -1775,6 +1873,8 @@ async def get_orders_api(request):
 SSE_CLIENTS = set()
 
 async def sse_events_api(request):
+    if not check_admin_auth(request):
+        return cors_response({"error": "Unauthorized"}, status=401)
     response = web.StreamResponse(
         status=200,
         reason='OK',
@@ -1815,6 +1915,8 @@ async def broadcast_event(event_name: str, payload: dict):
 
 
 async def create_order_api(request):
+    if not check_admin_auth(request):
+        return cors_response({"error": "Unauthorized: valid admin token required"}, status=401)
     try:
         data = await request.json()
         order_id = data.get('id') or data.get('order_id') or f"DRGX-ADM-{random.randint(1000, 9999)}"
@@ -1862,6 +1964,8 @@ async def create_order_api(request):
 
 
 async def update_order_api(request):
+    if not check_admin_auth(request):
+        return cors_response({"error": "Unauthorized: valid admin token required"}, status=401)
     try:
         data = await request.json()
         order_id = data.get('id') or data.get('order_id')
@@ -1960,6 +2064,8 @@ async def update_order_api(request):
 
 
 async def pickup_order_api(request):
+    if not check_admin_auth(request):
+        return cors_response({"error": "Unauthorized: valid admin token required"}, status=401)
     try:
         data = await request.json()
         order_id = data.get('id') or data.get('order_id')
@@ -2002,6 +2108,8 @@ async def pickup_order_api(request):
 
 
 async def delete_order_api(request):
+    if not check_admin_auth(request):
+        return cors_response({"error": "Unauthorized: valid admin token required"}, status=401)
     try:
         data = await request.json() if request.can_read_body else {}
         order_id = data.get('id') or data.get('order_id')
@@ -2035,6 +2143,8 @@ async def delete_order_api(request):
 
 
 async def delete_order_param_api(request):
+    if not check_admin_auth(request):
+        return cors_response({"error": "Unauthorized: valid admin token required"}, status=401)
     order_id = request.match_info.get('order_id')
     if not order_id:
         return cors_response({"status": "error", "message": "Missing order_id"}, status=400)
@@ -2052,6 +2162,8 @@ async def delete_order_param_api(request):
 
 
 async def get_stats_api(request):
+    if not check_admin_auth(request):
+        return cors_response({"error": "Unauthorized: valid admin token required"}, status=401)
     total_orders = len(ACTIVE_ORDERS)
     total_revenue = sum(o.get('total_amount', 0) for o in ACTIVE_ORDERS.values())
     active_del = sum(1 for o in ACTIVE_ORDERS.values() if o.get('status') in ['paid', 'drop_ready'])
@@ -2076,6 +2188,8 @@ async def get_stock_api(request):
 
 
 async def update_stock_api(request):
+    if not check_admin_auth(request):
+        return cors_response({"error": "Unauthorized: valid admin token required"}, status=401)
     try:
         data = await request.json()
         if isinstance(data, dict):
@@ -2108,6 +2222,8 @@ async def get_config_api(request):
 
 
 async def update_config_api(request):
+    if not check_admin_auth(request):
+        return cors_response({"error": "Unauthorized: valid admin token required"}, status=401)
     try:
         data = await request.json()
         if not isinstance(data, dict):
@@ -2160,6 +2276,8 @@ async def update_config_api(request):
 
 
 async def broadcast_api(request):
+    if not check_admin_auth(request):
+        return cors_response({"error": "Unauthorized: valid admin token required"}, status=401)
     try:
         data = await request.json()
         text = (data.get("message") or "").strip()
@@ -2200,6 +2318,10 @@ async def run_web_server():
     
     # Preflight CORS Handler
     app.router.add_route("OPTIONS", "/{tail:.*}", options_handler)
+    
+    # Auth Routes
+    app.router.add_post("/api/auth/login", admin_login_api)
+    app.router.add_get("/api/auth/verify", admin_verify_api)
     
     # REST API Routes
     app.router.add_get("/", health_check)

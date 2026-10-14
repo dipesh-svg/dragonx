@@ -6,14 +6,10 @@
 (function () {
   'use strict';
 
-  // Hardcoded Secure Operator Credentials
-  const ADMIN_CREDENTIALS = {
-    id: 'Sexy_harshal@0101',
-    password: 'harshal@1234'
-  };
-
   const STORAGE_KEYS = {
     ADMIN_SESSION: 'dragonx_admin_session_v1',
+    ADMIN_TOKEN: 'dragonx_admin_token_v3',
+    OPERATOR_ID: 'dragonx_operator_id_v3',
     ORDERS: 'dragonx_orders_db_v2',
     DELETED_ORDERS: 'dragonx_deleted_orders_v2',
     USERS: 'dragonx_users_v2',
@@ -246,6 +242,8 @@
   // Admin App State
   const AdminState = {
     isAuthenticated: false,
+    authToken: null,
+    operatorId: null,
     activeTab: 'tabOrders',
     orders: [],
     deletedOrderIds: new Set(),
@@ -270,51 +268,149 @@
     return 'https://dragonx.onrender.com';
   }
 
+  // Helper: inject Authorization Bearer token into outgoing API requests
+  function getAuthHeaders(extraHeaders = {}) {
+    const headers = { ...extraHeaders };
+    const token = AdminState.authToken || sessionStorage.getItem(STORAGE_KEYS.ADMIN_TOKEN);
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+    return headers;
+  }
+
   // =========================================================================
-  // 1. AUTHENTICATION & LOGIN GATE
+  // 1. AUTHENTICATION & LOGIN GATE (SERVER-SIDE TOKEN AUTH)
   // =========================================================================
-  function checkAdminSession() {
-    const session = sessionStorage.getItem(STORAGE_KEYS.ADMIN_SESSION);
-    if (session === 'authenticated') {
+  async function checkAdminSession() {
+    const token = sessionStorage.getItem(STORAGE_KEYS.ADMIN_TOKEN);
+    const opId = sessionStorage.getItem(STORAGE_KEYS.OPERATOR_ID);
+    if (token) {
       AdminState.isAuthenticated = true;
+      AdminState.authToken = token;
+      AdminState.operatorId = opId || 'Оператор';
       unlockDashboard();
+      verifyTokenWithServer(token);
     } else {
       lockDashboard();
     }
   }
 
-  function handleAdminLogin(id, password) {
+  async function verifyTokenWithServer(token) {
+    if (!token) return;
+    try {
+      const apiUrl = (AdminState.botApiUrl || detectDefaultApiUrl()).replace(/\/+$/, '');
+      const resp = await fetch(`${apiUrl}/api/auth/verify`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (resp.status === 401) {
+        handleAdminLogout();
+        showToast('Сессия оператора устарела. Пожалуйста, войдите снова.', 'warning');
+      } else if (resp.ok) {
+        const data = await resp.json().catch(() => ({}));
+        if (data.operator_id) {
+          AdminState.operatorId = data.operator_id;
+          sessionStorage.setItem(STORAGE_KEYS.OPERATOR_ID, data.operator_id);
+          const dispEl = document.getElementById('adminDisplayId');
+          if (dispEl) dispEl.textContent = data.operator_id;
+        }
+      }
+    } catch (e) {
+      console.warn('Token verify warning:', e);
+    }
+  }
+
+  async function handleAdminLogin(id, password) {
     const cleanId = (id || '').trim();
     const cleanPass = (password || '').trim();
 
-    if (cleanId === ADMIN_CREDENTIALS.id && cleanPass === ADMIN_CREDENTIALS.password) {
-      sessionStorage.setItem(STORAGE_KEYS.ADMIN_SESSION, 'authenticated');
-      sessionStorage.setItem('dragonx_operator_id', cleanId);
-      AdminState.isAuthenticated = true;
-      
-      const passInp = document.getElementById('adminLoginPassword');
-      if (passInp) passInp.value = '';
+    const errEl = document.getElementById('adminLoginError');
 
-      unlockDashboard();
-      showToast('Авторизация успешна. Добро пожаловать в Диспетчерскую DRAGON-X!', 'success');
-      return true;
-    } else {
-      const errEl = document.getElementById('adminLoginError');
-      if (errEl) errEl.classList.remove('hidden');
-      const passInp = document.getElementById('adminLoginPassword');
-      if (passInp) passInp.value = '';
-      showToast('Ошибка доступа: неверный ID или пароль!', 'error');
+    if (!cleanId || !cleanPass) {
+      if (errEl) {
+        errEl.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> <span>Введите ID оператора и пароль!</span>';
+        errEl.classList.remove('hidden');
+      }
       return false;
+    }
+
+    const submitBtn = document.getElementById('adminLoginSubmitBtn');
+    const originalBtnHtml = submitBtn ? submitBtn.innerHTML : '';
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> <span>Проверка сервера...</span>';
+    }
+
+    if (errEl) errEl.classList.add('hidden');
+
+    try {
+      const apiUrl = (AdminState.botApiUrl || detectDefaultApiUrl()).replace(/\/+$/, '');
+      const resp = await fetch(`${apiUrl}/api/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: cleanId, password: cleanPass })
+      });
+
+      const data = await resp.json().catch(() => ({}));
+
+      if (resp.ok && data.success && data.token) {
+        sessionStorage.setItem(STORAGE_KEYS.ADMIN_SESSION, 'authenticated');
+        sessionStorage.setItem(STORAGE_KEYS.ADMIN_TOKEN, data.token);
+        sessionStorage.setItem(STORAGE_KEYS.OPERATOR_ID, data.operator_id || cleanId);
+
+        AdminState.isAuthenticated = true;
+        AdminState.authToken = data.token;
+        AdminState.operatorId = data.operator_id || cleanId;
+
+        const passInp = document.getElementById('adminLoginPassword');
+        if (passInp) passInp.value = '';
+        const idInp = document.getElementById('adminLoginId');
+        if (idInp) idInp.value = '';
+        if (errEl) errEl.classList.add('hidden');
+
+        unlockDashboard();
+        showToast(`Авторизация успешна. Добро пожаловать, ${AdminState.operatorId}!`, 'success');
+        return true;
+      } else {
+        if (errEl) {
+          errEl.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> <span>${data.error || 'Неверный ID оператора или пароль доступа!'}</span>`;
+          errEl.classList.remove('hidden');
+        }
+        const passInp = document.getElementById('adminLoginPassword');
+        if (passInp) passInp.value = '';
+        showToast('Ошибка доступа: неверный ID или пароль!', 'error');
+        return false;
+      }
+    } catch (err) {
+      console.error('Login network error:', err);
+      if (errEl) {
+        errEl.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> <span>Сервер бэкенда просыпается или временно недоступен. Подождите 10-15 сек и повторите.</span>';
+        errEl.classList.remove('hidden');
+      }
+      showToast('Сервер бэкенда недоступен или перезапускается.', 'error');
+      return false;
+    } finally {
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalBtnHtml;
+      }
     }
   }
 
   function handleAdminLogout() {
     sessionStorage.removeItem(STORAGE_KEYS.ADMIN_SESSION);
-    sessionStorage.removeItem('dragonx_operator_id');
+    sessionStorage.removeItem(STORAGE_KEYS.ADMIN_TOKEN);
+    sessionStorage.removeItem(STORAGE_KEYS.OPERATOR_ID);
     AdminState.isAuthenticated = false;
+    AdminState.authToken = null;
+    AdminState.operatorId = null;
+
     if (AdminState.syncIntervalId) {
       clearInterval(AdminState.syncIntervalId);
       AdminState.syncIntervalId = null;
+    }
+    if (activeEventSource) {
+      try { activeEventSource.close(); } catch (e) {}
+      activeEventSource = null;
     }
     lockDashboard();
     showToast('Сессия оператора завершена.', 'info');
@@ -326,7 +422,7 @@
     if (gate) gate.classList.add('logged-in');
     if (dash) dash.classList.remove('hidden');
 
-    const opId = sessionStorage.getItem('dragonx_operator_id') || ADMIN_CREDENTIALS.id;
+    const opId = AdminState.operatorId || sessionStorage.getItem(STORAGE_KEYS.OPERATOR_ID) || 'Оператор';
     const dispEl = document.getElementById('adminDisplayId');
     if (dispEl) dispEl.textContent = opId;
 
@@ -495,13 +591,19 @@
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 7000);
 
-      // 1. Fetch Orders
+      // 1. Fetch Orders with Bearer Auth
       const resp = await fetch(`${apiUrl}/api/orders`, {
         method: 'GET',
-        headers: { 'Accept': 'application/json' },
+        headers: getAuthHeaders({ 'Accept': 'application/json' }),
         signal: controller.signal
       });
       clearTimeout(timeoutId);
+
+      if (resp.status === 401) {
+        handleAdminLogout();
+        showToast('Сессия оператора истекла. Авторизуйтесь снова.', 'warning');
+        return;
+      }
 
       const elapsed = Math.round(performance.now() - startTime);
 
@@ -664,8 +766,9 @@
       activeEventSource = null;
     }
     const apiUrl = (AdminState.botApiUrl || detectDefaultApiUrl()).replace(/\/+$/, '');
+    const token = AdminState.authToken || sessionStorage.getItem(STORAGE_KEYS.ADMIN_TOKEN) || '';
     try {
-      const es = new EventSource(`${apiUrl}/api/events`);
+      const es = new EventSource(`${apiUrl}/api/events?token=${encodeURIComponent(token)}`);
       activeEventSource = es;
 
       es.addEventListener('order_created', (e) => {
@@ -1304,7 +1407,7 @@
     try {
       const resp = await fetch(`${apiUrl}/api/config`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
         body: JSON.stringify(AdminState.botConfig)
       });
       if (resp.ok) {
@@ -1337,7 +1440,7 @@
       showToast('Отправка обновлений в Telegram бот (dragonx.onrender.com)...', 'info');
       const resp = await fetch(`${apiUrl}/api/config`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
         body: JSON.stringify(AdminState.botConfig)
       });
 
@@ -1379,7 +1482,7 @@
       showToast('Отправка рассылки клиентам...', 'info');
       const resp = await fetch(`${apiUrl}/api/broadcast`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({ message: text })
       });
 
@@ -1618,7 +1721,7 @@
     try {
       const resp = await fetch(`${apiUrl}/api/orders/pickup`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({
           id: orderId,
           order_id: orderId,
@@ -1663,7 +1766,7 @@
     try {
       const resp = await fetch(`${apiUrl}/api/orders/update`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({
           id: orderId,
           order_id: orderId,
@@ -1758,7 +1861,7 @@
     try {
       const resp = await fetch(`${apiUrl}/api/orders/delete`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({ id: orderId, order_id: orderId })
       });
       if (resp.ok) {
@@ -1803,7 +1906,7 @@
     const apiUrl = (AdminState.botApiUrl || detectDefaultApiUrl()).replace(/\/+$/, '');
     fetch(`${apiUrl}/api/orders`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
       body: JSON.stringify(newOrd)
     }).catch(() => {});
   }
