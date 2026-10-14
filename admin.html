@@ -14,13 +14,13 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700&family=Orbitron:wght@600;800;900&display=swap" rel="stylesheet">
   
   <!-- Main Styles & Dedicated Admin CSS -->
-  <link rel="stylesheet" href="styles.css?v=20261013_v5">
-  <link rel="stylesheet" href="admin.css?v=20261013_v5">
+  <link rel="stylesheet" href="styles.css?v=20261015_v10">
+  <link rel="stylesheet" href="admin.css?v=20261015_v10">
 </head>
 <body class="admin-body">
 
   <!-- ======================================================== -->
-  <!-- 1. OPERATOR AUTHENTICATION GATE (damascus@123 / vegadragon24) -->
+  <!-- 1. OPERATOR AUTHENTICATION GATE -->
   <!-- ======================================================== -->
   <div id="adminAuthGate" class="admin-login-overlay">
     <div class="admin-login-card glass-panel glow-cyan">
@@ -34,11 +34,11 @@
 
       <p class="login-subtitle">Авторизуйтесь для управления заказами препарата Рега, координатами тайников и Telegram-ботом.</p>
 
-      <form id="adminLoginForm" class="admin-form" onsubmit="return false;">
+      <form id="adminLoginForm" class="admin-form" autocomplete="off" onsubmit="return false;">
         <div class="form-group">
           <label for="adminLoginId"><i class="fa-solid fa-id-badge"></i> Идентификатор Оператора:</label>
           <div class="input-with-icon">
-            <input type="text" id="adminLoginId" placeholder="damascus@123" value="damascus@123" required class="form-input font-mono">
+            <input type="text" id="adminLoginId" name="admin_user_id" placeholder="Введите ID оператора" value="" autocomplete="off" required class="form-input font-mono">
             <i class="fa-solid fa-user-shield input-icon-right"></i>
           </div>
         </div>
@@ -46,7 +46,7 @@
         <div class="form-group">
           <label for="adminLoginPassword"><i class="fa-solid fa-key"></i> Пароль Доступа:</label>
           <div class="input-with-icon">
-            <input type="password" id="adminLoginPassword" placeholder="••••••••••••" value="vegadragon24" required class="form-input font-mono">
+            <input type="password" id="adminLoginPassword" name="admin_user_password" placeholder="Введите пароль доступа" value="" autocomplete="new-password" required class="form-input font-mono">
             <button type="button" id="toggleAdminPwdBtn" class="pwd-toggle-btn" title="Показать/скрыть пароль">
               <i class="fa-solid fa-eye"></i>
             </button>
@@ -116,7 +116,7 @@
 
         <div class="admin-user-pill">
           <i class="fa-solid fa-user-shield"></i>
-          <span class="admin-name" id="adminDisplayId">damascus@123</span>
+          <span class="admin-name" id="adminDisplayId">Оператор</span>
         </div>
 
         <button id="adminLogoutBtn" class="btn-danger btn-sm" title="Выйти из системы">
@@ -1103,6 +1103,6 @@
   <div id="toastContainer" class="toast-container"></div>
 
   <!-- Scripts -->
-  <script src="admin.js?v=20261013_v9"></script>
+  <script src="admin.js?v=20261015_v10"></script>
 </body>
 </html>

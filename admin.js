@@ -1,6 +1,5 @@
 /**
  * DRAGON-X PHARMA - OPERATOR DISPATCH & BOT MASTER CONTROL CONSOLE
- * Secure Admin Gateway: ID = damascus@123 | PASS = vegadragon24
  * Real-time Telegram Bot API Synchronization • Master Dynamic Catalog & Pricing • GPS Tracking
  */
 
@@ -285,12 +284,17 @@
   }
 
   function handleAdminLogin(id, password) {
-    const cleanId = id.trim();
-    const cleanPass = password.trim();
+    const cleanId = (id || '').trim();
+    const cleanPass = (password || '').trim();
 
     if (cleanId === ADMIN_CREDENTIALS.id && cleanPass === ADMIN_CREDENTIALS.password) {
       sessionStorage.setItem(STORAGE_KEYS.ADMIN_SESSION, 'authenticated');
+      sessionStorage.setItem('dragonx_operator_id', cleanId);
       AdminState.isAuthenticated = true;
+      
+      const passInp = document.getElementById('adminLoginPassword');
+      if (passInp) passInp.value = '';
+
       unlockDashboard();
       showToast('Авторизация успешна. Добро пожаловать в Диспетчерскую DRAGON-X!', 'success');
       return true;
@@ -306,6 +310,7 @@
 
   function handleAdminLogout() {
     sessionStorage.removeItem(STORAGE_KEYS.ADMIN_SESSION);
+    sessionStorage.removeItem('dragonx_operator_id');
     AdminState.isAuthenticated = false;
     if (AdminState.syncIntervalId) {
       clearInterval(AdminState.syncIntervalId);
@@ -321,6 +326,10 @@
     if (gate) gate.classList.add('logged-in');
     if (dash) dash.classList.remove('hidden');
 
+    const opId = sessionStorage.getItem('dragonx_operator_id') || ADMIN_CREDENTIALS.id;
+    const dispEl = document.getElementById('adminDisplayId');
+    if (dispEl) dispEl.textContent = opId;
+
     loadData();
     renderAll();
     startAutoSync();
@@ -331,6 +340,14 @@
     const dash = document.getElementById('adminDashboard');
     if (gate) gate.classList.remove('logged-in');
     if (dash) dash.classList.add('hidden');
+
+    const idInp = document.getElementById('adminLoginId');
+    if (idInp) idInp.value = '';
+    const passInp = document.getElementById('adminLoginPassword');
+    if (passInp) passInp.value = '';
+
+    const dispEl = document.getElementById('adminDisplayId');
+    if (dispEl) dispEl.textContent = 'Оператор';
   }
 
   // =========================================================================
@@ -2327,6 +2344,12 @@
 
   // Initialization
   document.addEventListener('DOMContentLoaded', () => {
+    // Explicitly clear login inputs on load to prevent auto-fill exposure
+    const idInp = document.getElementById('adminLoginId');
+    if (idInp) idInp.value = '';
+    const passInp = document.getElementById('adminLoginPassword');
+    if (passInp) passInp.value = '';
+
     checkAdminSession();
     setupEventListeners();
   });
