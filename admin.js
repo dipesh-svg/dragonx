@@ -357,35 +357,37 @@
     const originalBtnHtml = submitBtn ? submitBtn.innerHTML : '';
     if (submitBtn) {
       submitBtn.disabled = true;
-      submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> <span>Проверка доступа...</span>';
+      submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> <span>Авторизация...</span>';
     }
 
     if (errEl) errEl.classList.add('hidden');
 
-    let serverToken = null;
-    let operatorName = cleanId;
-
-    // 1. Try server-side authentication if available
     try {
-      const apiUrl = (AdminState.botApiUrl || detectDefaultApiUrl()).replace(/\/+$/, '');
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 2000);
+      // Instant verification via one-way salted SHA-256 cryptographic hash
+      const computedHash = await sha256Hex(`${cleanId}:${cleanPass}:${AUTH_VAULT.salt}`);
+      const isValid = (computedHash === AUTH_VAULT.hash);
 
-      const resp = await fetch(`${apiUrl}/api/auth/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: cleanId, password: cleanPass }),
-        signal: controller.signal
-      });
-      clearTimeout(timeoutId);
+      if (isValid) {
+        const sessionToken = 'drgx_sec_' + btoa(`${cleanId}:${Date.now()}`);
 
-      if (resp.ok) {
-        const data = await resp.json().catch(() => ({}));
-        if (data.success && data.token) {
-          serverToken = data.token;
-          if (data.operator_id) operatorName = data.operator_id;
-        }
-      } else if (resp.status === 401) {
+        sessionStorage.setItem(STORAGE_KEYS.ADMIN_SESSION, 'authenticated');
+        sessionStorage.setItem(STORAGE_KEYS.ADMIN_TOKEN, sessionToken);
+        sessionStorage.setItem(STORAGE_KEYS.OPERATOR_ID, cleanId);
+
+        AdminState.isAuthenticated = true;
+        AdminState.authToken = sessionToken;
+        AdminState.operatorId = cleanId;
+
+        const passInp = document.getElementById('adminLoginPassword');
+        if (passInp) passInp.value = '';
+        const idInp = document.getElementById('adminLoginId');
+        if (idInp) idInp.value = '';
+        if (errEl) errEl.classList.add('hidden');
+
+        unlockDashboard();
+        showToast(`Авторизация успешна. Добро пожаловать, ${cleanId}!`, 'success');
+        return true;
+      } else {
         if (errEl) {
           errEl.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> <span>Неверный ID оператора или пароль доступа!</span>';
           errEl.classList.remove('hidden');
@@ -393,57 +395,13 @@
         const passInp = document.getElementById('adminLoginPassword');
         if (passInp) passInp.value = '';
         showToast('Ошибка доступа: неверный ID или пароль!', 'error');
-        if (submitBtn) {
-          submitBtn.disabled = false;
-          submitBtn.innerHTML = originalBtnHtml;
-        }
         return false;
       }
-    } catch (e) {
-      // Backend is offline, sleeping, or running older code without /api/auth/login
-    }
-
-    // 2. Cryptographic one-way hash validation fallback
-    const computedHash = await sha256Hex(`${cleanId}:${cleanPass}:${AUTH_VAULT.salt}`);
-    const isCryptographicallyValid = (computedHash === AUTH_VAULT.hash);
-
-    if (serverToken || isCryptographicallyValid) {
-      const finalToken = serverToken || ('drgx_sec_' + btoa(`${cleanId}:${Date.now()}`));
-
-      sessionStorage.setItem(STORAGE_KEYS.ADMIN_SESSION, 'authenticated');
-      sessionStorage.setItem(STORAGE_KEYS.ADMIN_TOKEN, finalToken);
-      sessionStorage.setItem(STORAGE_KEYS.OPERATOR_ID, operatorName);
-
-      AdminState.isAuthenticated = true;
-      AdminState.authToken = finalToken;
-      AdminState.operatorId = operatorName;
-
-      const passInp = document.getElementById('adminLoginPassword');
-      if (passInp) passInp.value = '';
-      const idInp = document.getElementById('adminLoginId');
-      if (idInp) idInp.value = '';
-      if (errEl) errEl.classList.add('hidden');
-
-      unlockDashboard();
-      showToast(`Авторизация успешна. Добро пожаловать, ${AdminState.operatorId}!`, 'success');
+    } finally {
       if (submitBtn) {
         submitBtn.disabled = false;
         submitBtn.innerHTML = originalBtnHtml;
       }
-      return true;
-    } else {
-      if (errEl) {
-        errEl.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> <span>Неверный ID оператора или пароль доступа!</span>';
-        errEl.classList.remove('hidden');
-      }
-      const passInp = document.getElementById('adminLoginPassword');
-      if (passInp) passInp.value = '';
-      showToast('Ошибка доступа: неверный ID или пароль!', 'error');
-      if (submitBtn) {
-        submitBtn.disabled = false;
-        submitBtn.innerHTML = originalBtnHtml;
-      }
-      return false;
     }
   }
 
