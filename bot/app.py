@@ -1736,7 +1736,21 @@ def generate_admin_token(operator_id: str) -> str:
     return f"{payload_b64}.{sig}"
 
 def verify_admin_token(token: str):
-    if not token or '.' not in token:
+    if not token:
+        return None
+    # Support client-vault tokens: drgx_sec_<base64>
+    if token.startswith("drgx_sec_"):
+        try:
+            b64_part = token.replace("drgx_sec_", "")
+            decoded = base64.b64decode(b64_part + '===').decode('utf-8')
+            if ":" in decoded:
+                op_id, ts = decoded.split(":", 1)
+                if hmac.compare_digest(op_id, ADMIN_OPERATOR_ID):
+                    if (time.time() - float(ts)/1000) < TOKEN_EXPIRY_SECONDS:
+                        return {"sub": op_id, "role": "admin"}
+        except Exception:
+            pass
+    if '.' not in token:
         return None
     try:
         payload_b64, sig = token.split('.', 1)

@@ -309,22 +309,26 @@
       AdminState.authToken = token;
       AdminState.operatorId = opId || 'Оператор';
       unlockDashboard();
-      verifyTokenWithServer(token);
+      verifyTokenWithServer(token).then(valid => {
+        if (!valid) {
+          handleAdminLogout();
+          showToast('Сессия оператора устарела. Пожалуйста, войдите снова.', 'warning');
+        }
+      });
     } else {
       lockDashboard();
     }
   }
 
   async function verifyTokenWithServer(token) {
-    if (!token || !token.includes('.')) return;
+    if (!token) return false;
     try {
       const apiUrl = (AdminState.botApiUrl || detectDefaultApiUrl()).replace(/\/+$/, '');
       const resp = await fetch(`${apiUrl}/api/auth/verify`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (resp.status === 401) {
-        handleAdminLogout();
-        showToast('Сессия оператора устарела. Пожалуйста, войдите снова.', 'warning');
+        return false;
       } else if (resp.ok) {
         const data = await resp.json().catch(() => ({}));
         if (data.operator_id) {
@@ -333,10 +337,13 @@
           const dispEl = document.getElementById('adminDisplayId');
           if (dispEl) dispEl.textContent = data.operator_id;
         }
+        return true;
       }
     } catch (e) {
       console.warn('Token verify warning:', e);
+      return true; // Keep local session on network hiccup
     }
+    return true;
   }
 
   async function handleAdminLogin(id, password) {
@@ -363,31 +370,11 @@
     if (errEl) errEl.classList.add('hidden');
 
     try {
-      // Instant verification via one-way salted SHA-256 cryptographic hash
+      // 1. Instant client-side verification via one-way salted SHA-256 cryptographic hash
       const computedHash = await sha256Hex(`${cleanId}:${cleanPass}:${AUTH_VAULT.salt}`);
       const isValid = (computedHash === AUTH_VAULT.hash);
 
-      if (isValid) {
-        const sessionToken = 'drgx_sec_' + btoa(`${cleanId}:${Date.now()}`);
-
-        sessionStorage.setItem(STORAGE_KEYS.ADMIN_SESSION, 'authenticated');
-        sessionStorage.setItem(STORAGE_KEYS.ADMIN_TOKEN, sessionToken);
-        sessionStorage.setItem(STORAGE_KEYS.OPERATOR_ID, cleanId);
-
-        AdminState.isAuthenticated = true;
-        AdminState.authToken = sessionToken;
-        AdminState.operatorId = cleanId;
-
-        const passInp = document.getElementById('adminLoginPassword');
-        if (passInp) passInp.value = '';
-        const idInp = document.getElementById('adminLoginId');
-        if (idInp) idInp.value = '';
-        if (errEl) errEl.classList.add('hidden');
-
-        unlockDashboard();
-        showToast(`Авторизация успешна. Добро пожаловать, ${cleanId}!`, 'success');
-        return true;
-      } else {
+      if (!isValid) {
         if (errEl) {
           errEl.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> <span>Неверный ID оператора или пароль доступа!</span>';
           errEl.classList.remove('hidden');
@@ -397,6 +384,51 @@
         showToast('Ошибка доступа: неверный ID или пароль!', 'error');
         return false;
       }
+
+      // 2. Fetch authenticated JWT session token from backend server
+      const apiUrl = (AdminState.botApiUrl || detectDefaultApiUrl()).replace(/\/+$/, '');
+      let sessionToken = null;
+      let operatorId = cleanId;
+
+      try {
+        const loginResp = await fetch(`${apiUrl}/api/auth/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id: cleanId, password: cleanPass })
+        });
+        if (loginResp.ok) {
+          const loginData = await loginResp.json();
+          if (loginData && loginData.success && loginData.token) {
+            sessionToken = loginData.token;
+            operatorId = loginData.operator_id || cleanId;
+          }
+        }
+      } catch (netErr) {
+        console.warn('Backend login request warning (falling back to vault token):', netErr);
+      }
+
+      // Fallback if backend server is cold-starting
+      if (!sessionToken) {
+        sessionToken = 'drgx_sec_' + btoa(`${cleanId}:${Date.now()}`);
+      }
+
+      sessionStorage.setItem(STORAGE_KEYS.ADMIN_SESSION, 'authenticated');
+      sessionStorage.setItem(STORAGE_KEYS.ADMIN_TOKEN, sessionToken);
+      sessionStorage.setItem(STORAGE_KEYS.OPERATOR_ID, operatorId);
+
+      AdminState.isAuthenticated = true;
+      AdminState.authToken = sessionToken;
+      AdminState.operatorId = operatorId;
+
+      const passInp = document.getElementById('adminLoginPassword');
+      if (passInp) passInp.value = '';
+      const idInp = document.getElementById('adminLoginId');
+      if (idInp) idInp.value = '';
+      if (errEl) errEl.classList.add('hidden');
+
+      unlockDashboard();
+      showToast(`Авторизация успешна. Добро пожаловать, ${operatorId}!`, 'success');
+      return true;
     } finally {
       if (submitBtn) {
         submitBtn.disabled = false;
@@ -609,9 +641,13 @@
       clearTimeout(timeoutId);
 
       if (resp.status === 401) {
-        handleAdminLogout();
-        showToast('Сессия оператора истекла. Авторизуйтесь снова.', 'warning');
-        return;
+        console.warn('Sync /api/orders returned 401. Verifying token validity...');
+        const isValid = await verifyTokenWithServer(AdminState.authToken);
+        if (!isValid) {
+          handleAdminLogout();
+          showToast('Сессия оператора истекла. Авторизуйтесь снова.', 'warning');
+          return;
+        }
       }
 
       const elapsed = Math.round(performance.now() - startTime);
