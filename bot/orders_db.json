@@ -23,90 +23,13 @@
     "pickup_status": "waiting",
     "tracking_code": "DRGX-TRK-8265",
     "notes": "Оплачено в блокчейне LTC (0.40608 LTC). TxID: f1500bf280ad33816fe71ad4cbffff0da51df7b2a7e78c20e51d55dd9234c384",
+    "photos": [],
     "tx_info": {
       "hash": "f1500bf280ad33816fe71ad4cbffff0da51df7b2a7e78c20e51d55dd9234c384",
       "amount_ltc": 0.40608,
       "confirmations": 2
     },
     "updated_at": 1791893000.0
-  },
-  "DRGX-8281942784-2817": {
-    "id": "DRGX-8281942784-2817",
-    "user_id": 8281942784,
-    "user_data": {
-      "id": 8281942784,
-      "username": "dkouzz",
-      "first_name": "𝐃.𝐊",
-      "last_name": "",
-      "lang": "ru"
-    },
-    "created_at": 1791890760.0,
-    "product": "Рега",
-    "qty": "2 штук",
-    "price": "25.00$",
-    "total_amount": 25.0,
-    "currency": "USD",
-    "pack_key": "buy_2",
-    "district": "Чиланзор",
-    "location": "Ташкент, Чиланзор (Координаты выдаются после подтверждения оплаты)",
-    "coordinates": "41.2721, 69.2045",
-    "status": "pending",
-    "pickup_status": "waiting_payment",
-    "tracking_code": "DRGX-TRK-2817",
-    "notes": "Ожидает проверки оплаты LTC",
-    "updated_at": 1791890760.0
-  },
-  "DRGX-7738837350-3207": {
-    "id": "DRGX-7738837350-3207",
-    "user_id": 7738837350,
-    "user_data": {
-      "id": 7738837350,
-      "username": "hello_narco",
-      "first_name": "𝐻𝐸𝐿𝐿☯ 𝒩𝒜R𝒞☯ ❎",
-      "last_name": "",
-      "lang": "ru"
-    },
-    "created_at": 1791889020.0,
-    "product": "Рега",
-    "qty": "2 штук",
-    "price": "25.00$",
-    "total_amount": 25.0,
-    "currency": "USD",
-    "pack_key": "buy_2",
-    "district": "Чиланзор",
-    "location": "Ташкент, Чиланзор (Координаты выдаются после подтверждения оплаты)",
-    "coordinates": "41.2721, 69.2045",
-    "status": "pending",
-    "pickup_status": "waiting_payment",
-    "tracking_code": "DRGX-TRK-3207",
-    "notes": "Ожидает проверки оплаты LTC",
-    "updated_at": 1791889020.0
-  },
-  "DRGX-8281942784-5209": {
-    "id": "DRGX-8281942784-5209",
-    "user_id": 8281942784,
-    "user_data": {
-      "id": 8281942784,
-      "username": "",
-      "first_name": "𝐃.𝐊",
-      "last_name": "",
-      "lang": "ru"
-    },
-    "created_at": 1791888600.0,
-    "product": "Рега",
-    "qty": "2 штук",
-    "price": "25.00$",
-    "total_amount": 25.0,
-    "currency": "USD",
-    "pack_key": "buy_2",
-    "district": "Яшнабад",
-    "location": "Ташкент, Яшнабад (Координаты выдаются после подтверждения оплаты)",
-    "coordinates": "41.2985, 69.3241",
-    "status": "pending",
-    "pickup_status": "waiting_payment",
-    "tracking_code": "DRGX-TRK-5209",
-    "notes": "Ожидает проверки оплаты LTC",
-    "updated_at": 1791888600.0
   },
   "DRGX-20261013-4821": {
     "id": "DRGX-20261013-4821",
@@ -133,6 +56,7 @@
     "picked_up_at": 1791883600.0,
     "tracking_code": "DRGX-TRK-4821",
     "notes": "Клиент забрал заказ без задержек. Все чисто.",
+    "photos": [],
     "updated_at": 1791883600.0
   },
   "DRGX-9024-8142": {
@@ -159,6 +83,9 @@
     "pickup_status": "ready",
     "tracking_code": "DRGX-TRK-8142",
     "notes": "Дроп свежий, защитная метка X-42. Координаты подтверждены курьером.",
+    "photos": [
+      "https://images.unsplash.com/photo-1590674899484-d5640e854abe?auto=format&fit=crop&w=600&q=80"
+    ],
     "updated_at": 1791883600.0
   },
   "DRGX-5519-9311": {
@@ -186,6 +113,7 @@
     "picked_up_at": 1791875000.0,
     "tracking_code": "DRGX-TRK-9311",
     "notes": "Клиент успешно забрал заказ в 14:15, тайник чист.",
+    "photos": [],
     "updated_at": 1791875000.0
   },
   "DRGX-1204-4420": {
@@ -212,6 +140,7 @@
     "pickup_status": "preparing",
     "tracking_code": "DRGX-TRK-4420",
     "notes": "Оплата LTC подтверждена в блокчейне. Курьер закладывает дроп.",
+    "photos": [],
     "updated_at": 1791855000.0
   }
 }

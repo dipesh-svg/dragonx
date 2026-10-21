@@ -17,7 +17,7 @@ from aiohttp import web
 from aiogram import Bot, Dispatcher
 from aiogram.client.default import DefaultBotProperties
 from aiogram.filters import CommandStart, Command
-from aiogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery
+from aiogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery, BufferedInputFile
 from aiogram.enums import ParseMode
 
 logging.basicConfig(level=logging.INFO)
@@ -195,90 +195,13 @@ DEFAULT_SEED_ORDERS = {
         "pickup_status": "waiting",
         "tracking_code": "DRGX-TRK-8265",
         "notes": "Оплачено в блокчейне LTC (0.40608 LTC). TxID: f1500bf280ad33816fe71ad4cbffff0da51df7b2a7e78c20e51d55dd9234c384",
+        "photos": [],
         "tx_info": {
             "hash": "f1500bf280ad33816fe71ad4cbffff0da51df7b2a7e78c20e51d55dd9234c384",
             "amount_ltc": 0.40608,
             "confirmations": 2
         },
         "updated_at": 1791893000.0
-    },
-    "DRGX-8281942784-2817": {
-        "id": "DRGX-8281942784-2817",
-        "user_id": 8281942784,
-        "user_data": {
-            "id": 8281942784,
-            "username": "dkouzz",
-            "first_name": "𝐃.𝐊",
-            "last_name": "",
-            "lang": "ru"
-        },
-        "created_at": 1791890760.0,
-        "product": "Рега",
-        "qty": "2 штук",
-        "price": "25.00$",
-        "total_amount": 25.00,
-        "currency": "USD",
-        "pack_key": "buy_2",
-        "district": "Чиланзор",
-        "location": "Ташкент, Чиланзор (Координаты выдаются после подтверждения оплаты)",
-        "coordinates": "41.2721, 69.2045",
-        "status": "pending",
-        "pickup_status": "waiting_payment",
-        "tracking_code": "DRGX-TRK-2817",
-        "notes": "Ожидает проверки оплаты LTC",
-        "updated_at": 1791890760.0
-    },
-    "DRGX-7738837350-3207": {
-        "id": "DRGX-7738837350-3207",
-        "user_id": 7738837350,
-        "user_data": {
-            "id": 7738837350,
-            "username": "hello_narco",
-            "first_name": "𝐻𝐸𝐿𝐿☯ 𝒩𝒜R𝒞☯ ❎",
-            "last_name": "",
-            "lang": "ru"
-        },
-        "created_at": 1791889020.0,
-        "product": "Рега",
-        "qty": "2 штук",
-        "price": "25.00$",
-        "total_amount": 25.00,
-        "currency": "USD",
-        "pack_key": "buy_2",
-        "district": "Чиланзор",
-        "location": "Ташкент, Чиланзор (Координаты выдаются после подтверждения оплаты)",
-        "coordinates": "41.2721, 69.2045",
-        "status": "pending",
-        "pickup_status": "waiting_payment",
-        "tracking_code": "DRGX-TRK-3207",
-        "notes": "Ожидает проверки оплаты LTC",
-        "updated_at": 1791889020.0
-    },
-    "DRGX-8281942784-5209": {
-        "id": "DRGX-8281942784-5209",
-        "user_id": 8281942784,
-        "user_data": {
-            "id": 8281942784,
-            "username": "",
-            "first_name": "𝐃.𝐊",
-            "last_name": "",
-            "lang": "ru"
-        },
-        "created_at": 1791888600.0,
-        "product": "Рега",
-        "qty": "2 штук",
-        "price": "25.00$",
-        "total_amount": 25.00,
-        "currency": "USD",
-        "pack_key": "buy_2",
-        "district": "Яшнабад",
-        "location": "Ташкент, Яшнабад (Координаты выдаются после подтверждения оплаты)",
-        "coordinates": "41.2985, 69.3241",
-        "status": "pending",
-        "pickup_status": "waiting_payment",
-        "tracking_code": "DRGX-TRK-5209",
-        "notes": "Ожидает проверки оплаты LTC",
-        "updated_at": 1791888600.0
     },
     "DRGX-20261013-4821": {
         "id": "DRGX-20261013-4821",
@@ -305,6 +228,7 @@ DEFAULT_SEED_ORDERS = {
         "picked_up_at": 1791883600.0,
         "tracking_code": "DRGX-TRK-4821",
         "notes": "Клиент забрал заказ без задержек. Все чисто.",
+        "photos": [],
         "updated_at": 1791883600.0
     },
     "DRGX-9024-8142": {
@@ -331,6 +255,9 @@ DEFAULT_SEED_ORDERS = {
         "pickup_status": "ready",
         "tracking_code": "DRGX-TRK-8142",
         "notes": "Дроп свежий, защитная метка X-42. Координаты подтверждены курьером.",
+        "photos": [
+            "https://images.unsplash.com/photo-1590674899484-d5640e854abe?auto=format&fit=crop&w=600&q=80"
+        ],
         "updated_at": 1791883600.0
     },
     "DRGX-5519-9311": {
@@ -358,6 +285,7 @@ DEFAULT_SEED_ORDERS = {
         "picked_up_at": 1791875000.0,
         "tracking_code": "DRGX-TRK-9311",
         "notes": "Клиент успешно забрал заказ в 14:15, тайник чист.",
+        "photos": [],
         "updated_at": 1791875000.0
     },
     "DRGX-1204-4420": {
@@ -384,6 +312,7 @@ DEFAULT_SEED_ORDERS = {
         "pickup_status": "preparing",
         "tracking_code": "DRGX-TRK-4420",
         "notes": "Оплата LTC подтверждена в блокчейне. Курьер закладывает дроп.",
+        "photos": [],
         "updated_at": 1791855000.0
     }
 }
@@ -628,13 +557,44 @@ def load_orders():
     if os.path.exists(DB_FILE):
         try:
             with open(DB_FILE, "r", encoding="utf-8") as f:
-                ACTIVE_ORDERS = json.load(f)
-                logging.info(f"Loaded {len(ACTIVE_ORDERS)} orders from {DB_FILE}")
+                loaded = json.load(f)
+                cleaned = {}
+                for oid, o in loaded.items():
+                    o.setdefault('photos', [])
+                    if o.get('status') in ['paid', 'drop_ready', 'picked_up']:
+                        cleaned[oid] = o
+                    elif (time.time() - o.get('created_at', 0)) < 3600:
+                        cleaned[oid] = o
+                ACTIVE_ORDERS = cleaned
+                logging.info(f"Loaded {len(ACTIVE_ORDERS)} verified orders from {DB_FILE}")
                 return
         except Exception as e:
             logging.error(f"Error loading {DB_FILE}: {e}")
     ACTIVE_ORDERS = dict(DEFAULT_SEED_ORDERS)
     save_orders()
+
+
+DROP_STASH_FILE = os.path.join(os.path.dirname(__file__), "drop_stash.json")
+DROP_STASH = {}
+
+def load_drop_stash():
+    global DROP_STASH
+    if os.path.exists(DROP_STASH_FILE):
+        try:
+            with open(DROP_STASH_FILE, "r", encoding="utf-8") as f:
+                DROP_STASH = json.load(f)
+                logging.info(f"Loaded {len(DROP_STASH)} prepared drops from stash.")
+                return
+        except Exception as e:
+            logging.error(f"Error loading {DROP_STASH_FILE}: {e}")
+    DROP_STASH = {}
+
+def save_drop_stash():
+    try:
+        with open(DROP_STASH_FILE, "w", encoding="utf-8") as f:
+            json.dump(DROP_STASH, f, ensure_ascii=False, indent=2)
+    except Exception as e:
+        logging.error(f"Error saving {DROP_STASH_FILE}: {e}")
 
 
 def save_orders(specific_order_id=None):
@@ -1141,12 +1101,27 @@ async def menu(callback: CallbackQuery):
             btn_ref  = {"ru": "🔄 Обновить статус",     "en": "🔄 Refresh Status",    "uz": "🔄 Yangilash"}[lang]
             btn_op   = {"ru": "💬 Связаться с оператором", "en": "💬 Contact Operator", "uz": "💬 Operatorga yozish"}[lang]
             btn_home = {"ru": "🔙 Главное меню",        "en": "🔙 Main Menu",        "uz": "🔙 Asosiy menyu"}[lang]
-            kb = InlineKeyboardMarkup(inline_keyboard=[
-                [InlineKeyboardButton(text=btn_ref,  callback_data="orders_refresh")],
-                [InlineKeyboardButton(text=btn_op,   url=SUPPORT_URL)],
-                [InlineKeyboardButton(text=btn_home, callback_data="home")]
-            ])
+            
+            inline_rows = []
+            for o in user_orders[:4]:
+                if o.get('status') == 'drop_ready' and o.get('photos'):
+                    inline_rows.append([
+                        InlineKeyboardButton(text=f"📷 Фото тайника ({o.get('id', '')[-4:]})", callback_data=f"drop_photo_{o.get('id')}")
+                    ])
+            inline_rows.append([InlineKeyboardButton(text=btn_ref,  callback_data="orders_refresh")])
+            inline_rows.append([InlineKeyboardButton(text=btn_op,   url=SUPPORT_URL)])
+            inline_rows.append([InlineKeyboardButton(text=btn_home, callback_data="home")])
+            kb = InlineKeyboardMarkup(inline_keyboard=inline_rows)
             await callback.message.answer("\n".join(msg_lines), reply_markup=kb, disable_web_page_preview=True)
+
+    elif data.startswith("drop_photo_"):
+        target_oid = data.replace("drop_photo_", "")
+        target_order = ACTIVE_ORDERS.get(target_oid)
+        if target_order and target_order.get('photos'):
+            await callback.answer("Загружаем фото тайника...")
+            await send_drop_photos_telegram(user_id, target_order)
+        else:
+            await callback.answer("Фото тайника недоступно или еще не загружено.", show_alert=True)
 
     # ── Catalogue ────────────────────────────────────────────────────────────
     elif data == "catalog":
@@ -1696,11 +1671,16 @@ async def track_orders_command(message: Message):
             f"{status_desc}\n"
         )
 
-    kb = InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text="🔄 Обновить статус", callback_data="orders_refresh")],
-        [InlineKeyboardButton(text="💬 Написать оператору", url=SUPPORT_URL)],
-        [InlineKeyboardButton(text="🔙 Главное меню", callback_data="home")]
-    ])
+    inline_rows = []
+    for o in user_orders[:4]:
+        if o.get('status') == 'drop_ready' and o.get('photos'):
+            inline_rows.append([
+                InlineKeyboardButton(text=f"📷 Фото тайника ({o.get('id', '')[-4:]})", callback_data=f"drop_photo_{o.get('id')}")
+            ])
+    inline_rows.append([InlineKeyboardButton(text="🔄 Обновить статус", callback_data="orders_refresh")])
+    inline_rows.append([InlineKeyboardButton(text="💬 Написать оператору", url=SUPPORT_URL)])
+    inline_rows.append([InlineKeyboardButton(text="🔙 Главное меню", callback_data="home")])
+    kb = InlineKeyboardMarkup(inline_keyboard=inline_rows)
     await message.answer("\n".join(msg_parts), reply_markup=kb, disable_web_page_preview=True)
 
 
@@ -1718,8 +1698,8 @@ def cors_response(data=None, text=None, status=200):
 
 
 # ── Operator Authentication & Security Engine ────────────────────────────────
-ADMIN_OPERATOR_ID       = os.getenv("ADMIN_OPERATOR_ID", "Sexy_harshal@0101")
-ADMIN_OPERATOR_PASSWORD = os.getenv("ADMIN_OPERATOR_PASSWORD", "harshal@1234")
+ADMIN_OPERATOR_ID       = os.getenv("ADMIN_OPERATOR_ID", "Sexy_tatti@0101")
+ADMIN_OPERATOR_PASSWORD = os.getenv("ADMIN_OPERATOR_PASSWORD", "tatti@1234")
 ADMIN_TOKEN_SECRET      = os.getenv("ADMIN_TOKEN_SECRET", "dragonx_jwt_secret_v1_09283410294823")
 TOKEN_EXPIRY_SECONDS    = 86400 * 7  # 7 days
 
@@ -1850,8 +1830,14 @@ async def get_orders_api(request):
             await db_refresh_orders()
         except Exception:
             pass
+    include_pending = request.query.get("include_pending", "false").lower() == "true"
     orders_list = []
     for oid, o in sorted(ACTIVE_ORDERS.items(), key=lambda x: x[1].get('created_at', 0), reverse=True):
+        status_val = o.get('status', 'pending')
+        # Only return completely received payments in the dashboard
+        if not include_pending and status_val not in ['paid', 'drop_ready', 'picked_up']:
+            continue
+
         user_meta = o.get('user_data', {}) if isinstance(o.get('user_data'), dict) else {}
         username = user_meta.get('username') or o.get('username') or ''
         tg_handle = f"@{username}" if username and not username.startswith('@') else (username or '—')
@@ -1895,11 +1881,12 @@ async def get_orders_api(request):
             "district": o.get('district', 'Чиланзор'),
             "deliveryLocation": o.get('location') or f"Ташкент, {o.get('district', 'Чиланзор')}",
             "coordinates": o.get('coordinates', '41.2721, 69.2045'),
-            "status": o.get('status', 'pending'),
+            "status": status_val,
             "pickupStatus": o.get('pickup_status', 'waiting'),
             "pickedUpAt": o.get('picked_up_at'),
             "trackingCode": o.get('tracking_code', f"DRGX-TRK-{oid[-4:]}"),
             "notes": o.get('notes', ''),
+            "photos": o.get('photos', []),
             "txHash": o.get('tx_info', {}).get('hash', '') if isinstance(o.get('tx_info'), dict) else ''
         })
     return cors_response(orders_list)
@@ -1998,6 +1985,56 @@ async def create_order_api(request):
         return cors_response({"status": "error", "message": str(e)}, status=400)
 
 
+async def send_drop_photos_telegram(user_id: int, order: dict):
+    if not user_id:
+        return False
+    oid = order.get('id', 'N/A')
+    district = order.get('district', 'Чиланзор')
+    coords = order.get('coordinates', '')
+    loc = order.get('location', '')
+    qty = order.get('qty', '2 штук')
+    photos = order.get('photos', [])
+    
+    map_link = f"https://maps.google.com/?q={coords}" if coords else ""
+    yandex_link = f"https://yandex.com/maps/?pt={coords.replace(' ', '')}&z=17&l=map" if coords else ""
+
+    caption = (
+        f"📍 <b>ВАШ ТАЙНИК / ДРОП ГОТОВ К ВЫДАЧЕ!</b>\n\n"
+        f"🔑 <b>Заказ:</b> <code>{oid}</code>\n"
+        f"💊 <b>Товар:</b> Рега ({qty})\n"
+        f"🏘 <b>Район:</b> {district}\n"
+        f"🧭 <b>GPS Координаты:</b> <code>{coords}</code>\n"
+        f"📌 <b>Ориентир / Тайник:</b>\n{loc}\n\n"
+        + (f"🗺 <b>Навигация:</b> <a href='{map_link}'>Google Карты</a> | <a href='{yandex_link}'>Яндекс Карты</a>\n\n" if map_link else "")
+        + "💡 <i>После успешного съема статус обновится на «Забран» (Picked Up).</i>"
+    )
+
+    if not photos:
+        await bot.send_message(chat_id=user_id, text=caption, disable_web_page_preview=False)
+        return True
+
+    sent_any = False
+    for idx, p in enumerate(photos):
+        p_caption = caption if idx == 0 else f"📷 <i>Фото тайника #{idx+1} (Заказ {oid})</i>"
+        try:
+            if isinstance(p, str) and p.startswith("data:image/"):
+                header, b64data = p.split(",", 1)
+                img_bytes = base64.b64decode(b64data)
+                ext = "png" if "png" in header else "jpg"
+                input_file = BufferedInputFile(img_bytes, filename=f"drop_{oid}_{idx+1}.{ext}")
+                await bot.send_photo(chat_id=user_id, photo=input_file, caption=p_caption)
+                sent_any = True
+            elif isinstance(p, str) and (p.startswith("http://") or p.startswith("https://")):
+                await bot.send_photo(chat_id=user_id, photo=p, caption=p_caption)
+                sent_any = True
+        except Exception as e:
+            logging.error(f"Error sending drop photo #{idx+1} for {oid}: {e}")
+
+    if not sent_any:
+        await bot.send_message(chat_id=user_id, text=caption, disable_web_page_preview=False)
+    return True
+
+
 async def update_order_api(request):
     if not check_admin_auth(request):
         return cors_response({"error": "Unauthorized: valid admin token required"}, status=401)
@@ -2037,6 +2074,8 @@ async def update_order_api(request):
             order['tracking_code'] = data['trackingCode']
         if 'tracking_code' in data:
             order['tracking_code'] = data['tracking_code']
+        if 'photos' in data and isinstance(data['photos'], list):
+            order['photos'] = data['photos']
         if 'totalAmount' in data:
             try:
                 order['total_amount'] = float(data['totalAmount'])
@@ -2064,17 +2103,9 @@ async def update_order_api(request):
                         "✅ Спасибо за покупку в <b>DRAGON-X</b>! Будем рады вашему отзыву.\n"
                         f"💬 Контакт оператора: {SUPPORT_HANDLE}"
                     )
+                    await bot.send_message(chat_id=user_id, text=msg_text)
                 elif status_val == 'drop_ready':
-                    coords = order.get('coordinates', '')
-                    map_link = f"https://maps.google.com/?q={coords}" if coords else ""
-                    msg_text = (
-                        f"📍 <b>Локация и координаты для заказа {order_id} готовы:</b>\n\n"
-                        f"🏘 <b>Район:</b> {order.get('district', '')}\n"
-                        f"🧭 <b>GPS Координаты:</b> <code>{coords}</code>\n"
-                        f"📌 <b>Ориентир / Тайник:</b> {order.get('location', '')}\n"
-                        + (f"🗺 <b>Ссылка на карту:</b> {map_link}\n\n" if map_link else "\n")
-                        + "💡 <i>После того как заберете заказ, статус будет обновлен на «Забран» (Picked Up).</i>"
-                    )
+                    await send_drop_photos_telegram(user_id, order)
                 else:
                     msg_text = (
                         f"📦 <b>Обновление по заказу {order_id}:</b>\n\n"
@@ -2082,7 +2113,7 @@ async def update_order_api(request):
                         f"Детали: {order.get('location', '')}\n"
                         f"💬 Поддержка: {SUPPORT_HANDLE}"
                     )
-                await bot.send_message(chat_id=user_id, text=msg_text)
+                    await bot.send_message(chat_id=user_id, text=msg_text)
                 logging.info(f"Dispatched Telegram update to user {user_id} for {order_id}")
             except Exception as tg_err:
                 logging.warning(f"Could not dispatch Telegram update to {user_id}: {tg_err}")
@@ -2096,6 +2127,123 @@ async def update_order_api(request):
         return cors_response({"status": "success", "order": order})
     except Exception as e:
         return cors_response({"status": "error", "message": str(e)}, status=400)
+
+
+async def get_stash_api(request):
+    if not check_admin_auth(request):
+        return cors_response({"error": "Unauthorized: valid admin token required"}, status=401)
+    district = request.query.get("district")
+    qty = request.query.get("qty")
+    status_filter = request.query.get("status")
+
+    items = list(DROP_STASH.values())
+    if district and district != "all":
+        items = [i for i in items if i.get("district") == district]
+    if qty and qty != "all":
+        items = [i for i in items if str(i.get("volume_num", "")) == str(qty) or str(i.get("volume", "")) == str(qty)]
+    if status_filter and status_filter != "all":
+        items = [i for i in items if i.get("status", "ready") == status_filter]
+
+    items.sort(key=lambda x: x.get("created_at", 0), reverse=True)
+    return cors_response(items)
+
+
+async def save_stash_api(request):
+    if not check_admin_auth(request):
+        return cors_response({"error": "Unauthorized: valid admin token required"}, status=401)
+    try:
+        data = await request.json()
+        stash_id = data.get("id") or f"STASH-{int(time.time())}-{random.randint(100, 999)}"
+        existing = DROP_STASH.get(stash_id, {})
+
+        vol_str = data.get("volume") or data.get("qty") or "2 штук"
+        try:
+            vol_num = int(''.join(filter(str.isdigit, str(vol_str)))) or 2
+        except Exception:
+            vol_num = 2
+
+        item = {
+            "id": stash_id,
+            "district": data.get("district", "Чиланзор"),
+            "volume": vol_str,
+            "volume_num": vol_num,
+            "coordinates": data.get("coordinates", ""),
+            "location": data.get("location") or data.get("landmark", ""),
+            "notes": data.get("notes", ""),
+            "photos": data.get("photos", []),
+            "status": data.get("status", existing.get("status", "ready")),
+            "assigned_order_id": data.get("assigned_order_id", existing.get("assigned_order_id")),
+            "created_at": existing.get("created_at", time.time()),
+            "updated_at": time.time()
+        }
+        DROP_STASH[stash_id] = item
+        save_drop_stash()
+        logging.info(f"Saved drop stash {stash_id} ({vol_str}, {item['district']})")
+        return cors_response({"status": "success", "stash": item})
+    except Exception as e:
+        return cors_response({"status": "error", "message": str(e)}, status=400)
+
+
+async def assign_stash_api(request):
+    if not check_admin_auth(request):
+        return cors_response({"error": "Unauthorized: valid admin token required"}, status=401)
+    try:
+        data = await request.json()
+        stash_id = data.get("stash_id")
+        order_id = data.get("order_id")
+        notify = data.get("notify_customer", True)
+
+        if not stash_id or stash_id not in DROP_STASH:
+            return cors_response({"status": "error", "message": f"Stash {stash_id} not found"}, status=404)
+        if not order_id or order_id not in ACTIVE_ORDERS:
+            return cors_response({"status": "error", "message": f"Order {order_id} not found"}, status=404)
+
+        stash = DROP_STASH[stash_id]
+        order = ACTIVE_ORDERS[order_id]
+
+        # Apply coordinates, location, and photos to order
+        order['coordinates'] = stash.get('coordinates', order.get('coordinates'))
+        order['location'] = stash.get('location', order.get('location'))
+        order['photos'] = stash.get('photos', [])
+        order['status'] = 'drop_ready'
+        order['pickup_status'] = 'ready'
+        order['updated_at'] = time.time()
+        order['notes'] = (order.get('notes', '') + f" [Выдан из утреннего склада {stash_id}]").strip()
+        save_orders(order_id)
+
+        # Mark stash as assigned
+        stash['status'] = 'assigned'
+        stash['assigned_order_id'] = order_id
+        stash['updated_at'] = time.time()
+        save_drop_stash()
+
+        # Send Telegram notification with photos
+        if notify and order.get('user_id'):
+            try:
+                await send_drop_photos_telegram(order.get('user_id'), order)
+            except Exception as tg_err:
+                logging.error(f"Error dispatching telegram drop: {tg_err}")
+
+        try:
+            loop = asyncio.get_running_loop()
+            loop.create_task(broadcast_event("order_updated", order))
+        except Exception:
+            pass
+
+        return cors_response({"status": "success", "order": order, "stash": stash})
+    except Exception as e:
+        return cors_response({"status": "error", "message": str(e)}, status=400)
+
+
+async def delete_stash_api(request):
+    if not check_admin_auth(request):
+        return cors_response({"error": "Unauthorized: valid admin token required"}, status=401)
+    stash_id = request.match_info.get("stash_id")
+    if stash_id in DROP_STASH:
+        del DROP_STASH[stash_id]
+        save_drop_stash()
+        return cors_response({"status": "success", "stash_id": stash_id})
+    return cors_response({"error": "Stash not found"}, status=404)
 
 
 async def pickup_order_api(request):
@@ -2199,11 +2347,13 @@ async def delete_order_param_api(request):
 async def get_stats_api(request):
     if not check_admin_auth(request):
         return cors_response({"error": "Unauthorized: valid admin token required"}, status=401)
-    total_orders = len(ACTIVE_ORDERS)
-    total_revenue = sum(o.get('total_amount', 0) for o in ACTIVE_ORDERS.values())
-    active_del = sum(1 for o in ACTIVE_ORDERS.values() if o.get('status') in ['paid', 'drop_ready'])
-    picked_up = sum(1 for o in ACTIVE_ORDERS.values() if o.get('status') == 'picked_up')
-    unique_users = len(set(o.get('user_id') for o in ACTIVE_ORDERS.values() if o.get('user_id')))
+    # Only calculate stats from completely received payments
+    confirmed = [o for o in ACTIVE_ORDERS.values() if o.get('status') in ['paid', 'drop_ready', 'picked_up']]
+    total_orders = len(confirmed)
+    total_revenue = sum(o.get('total_amount', 0) for o in confirmed)
+    active_del = sum(1 for o in confirmed if o.get('status') in ['paid', 'drop_ready'])
+    picked_up = sum(1 for o in confirmed if o.get('status') == 'picked_up')
+    unique_users = len(set(o.get('user_id') for o in confirmed if o.get('user_id')))
     username = await get_bot_username()
     return cors_response({
         "status": "success",
@@ -2375,6 +2525,10 @@ async def run_web_server():
     app.router.add_get("/api/stats", get_stats_api)
     app.router.add_get("/api/stock", get_stock_api)
     app.router.add_post("/api/stock", update_stock_api)
+    app.router.add_get("/api/stash", get_stash_api)
+    app.router.add_post("/api/stash", save_stash_api)
+    app.router.add_post("/api/stash/assign", assign_stash_api)
+    app.router.add_delete("/api/stash/{stash_id}", delete_stash_api)
     
     runner = web.AppRunner(app)
     await runner.setup()
@@ -2392,6 +2546,7 @@ async def main():
     # 2. Synchronous storage loading
     load_bot_config()
     load_orders()
+    load_drop_stash()
 
     # 3. Asynchronously initialize external services with safety timeouts so startup never hangs
     try:

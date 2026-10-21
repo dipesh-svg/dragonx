@@ -15,7 +15,8 @@
     USERS: 'dragonx_users_v2',
     BOT_CONFIG: 'dragonx_bot_config_v2',
     DELIVERY_ZONES: 'dragonx_delivery_zones_v2',
-    STOCK_CONFIG: 'dragonx_stock_config_v2'
+    STOCK_CONFIG: 'dragonx_stock_config_v2',
+    DROP_STASH: 'dragonx_drop_stash_v2'
   };
 
   // Tashkent District Coordinates Presets
@@ -25,7 +26,7 @@
     'Ulugbek': '41.3412, 69.4520'
   };
 
-  // Real Verified Orders for Tashkent DRAGON-X
+  // Real Verified Received Orders for Tashkent DRAGON-X (Excludes unconfirmed pending checkouts)
   const SEED_ORDERS = [
     {
       id: 'DRGX-8634764266-8265',
@@ -44,64 +45,8 @@
       deliveryLocation: 'Чиланзор, тайник готовится курьером',
       coordinates: '41.2721, 69.2045',
       trackingCode: 'DRGX-TRK-8265',
+      photos: [],
       notes: 'Оплачено в блокчейне LTC (0.40608 LTC). TxID: f1500bf280ad33816fe71ad4cbffff0da51df7b2a7e78c20e51d55dd9234c384'
-    },
-    {
-      id: 'DRGX-8281942784-2817',
-      createdAt: '2026-10-13T11:46:00.000Z',
-      customerId: 'DRGX-8281942784',
-      customerName: '𝐃.𝐊',
-      telegram: '@dkouzz',
-      district: 'Чиланзор',
-      item: 'Рега',
-      volume: '2 штук',
-      totalAmount: 25.00,
-      currency: 'USD',
-      cryptoAmount: 0.385,
-      cryptoCurrency: 'LTC',
-      status: 'pending',
-      deliveryLocation: 'Ташкент, Чиланзор (Координаты выдаются после подтверждения оплаты)',
-      coordinates: '41.2721, 69.2045',
-      trackingCode: 'DRGX-TRK-2817',
-      notes: 'Ожидает проверки оплаты LTC'
-    },
-    {
-      id: 'DRGX-7738837350-3207',
-      createdAt: '2026-10-13T11:17:00.000Z',
-      customerId: 'DRGX-7738837350',
-      customerName: '𝐻𝐸𝐿𝐿☯ 𝒩𝒜R𝒞☯ ❎',
-      telegram: '@hello_narco',
-      district: 'Чиланзор',
-      item: 'Рега',
-      volume: '2 штук',
-      totalAmount: 25.00,
-      currency: 'USD',
-      cryptoAmount: 0.385,
-      cryptoCurrency: 'LTC',
-      status: 'pending',
-      deliveryLocation: 'Ташкент, Чиланзор (Координаты выдаются после подтверждения оплаты)',
-      coordinates: '41.2721, 69.2045',
-      trackingCode: 'DRGX-TRK-3207',
-      notes: 'Ожидает проверки оплаты LTC'
-    },
-    {
-      id: 'DRGX-8281942784-5209',
-      createdAt: '2026-10-13T11:10:00.000Z',
-      customerId: 'DRGX-8281942784',
-      customerName: '𝐃.𝐊',
-      telegram: '—',
-      district: 'Яшнабад',
-      item: 'Рега',
-      volume: '2 штук',
-      totalAmount: 25.00,
-      currency: 'USD',
-      cryptoAmount: 0.385,
-      cryptoCurrency: 'LTC',
-      status: 'pending',
-      deliveryLocation: 'Ташкент, Яшнабад (Координаты выдаются после подтверждения оплаты)',
-      coordinates: '41.2985, 69.3241',
-      trackingCode: 'DRGX-TRK-5209',
-      notes: 'Ожидает проверки оплаты LTC'
     },
     {
       id: 'DRGX-20261013-4821',
@@ -121,6 +66,7 @@
       coordinates: '41.2721, 69.2045',
       trackingCode: 'DRGX-TRK-4821',
       pickedUpAt: '2026-10-13T09:45:00.000Z',
+      photos: [],
       notes: 'Клиент забрал заказ без задержек. Все чисто.'
     },
     {
@@ -140,6 +86,9 @@
       deliveryLocation: 'Чиланзор, квартал 9, дом 14, магнит под металлическим отливом',
       coordinates: '41.2721, 69.2045',
       trackingCode: 'DRGX-TRK-8142',
+      photos: [
+        'https://images.unsplash.com/photo-1590674899484-d5640e854abe?auto=format&fit=crop&w=600&q=80'
+      ],
       notes: 'Дроп свежий, защитная метка X-42. Координаты подтверждены курьером.'
     },
     {
@@ -160,6 +109,7 @@
       coordinates: '41.2985, 69.3241',
       trackingCode: 'DRGX-TRK-9311',
       pickedUpAt: '2026-10-13T06:15:00.000Z',
+      photos: [],
       notes: 'Клиент успешно забрал заказ в 14:15, тайник чист.'
     },
     {
@@ -179,6 +129,7 @@
       deliveryLocation: 'Пос. Улугбек, парковая зона, опора освещения №7, магнитный бокс',
       coordinates: '41.3412, 69.4520',
       trackingCode: 'DRGX-TRK-4420',
+      photos: [],
       notes: 'Оплата LTC подтверждена в блокчейне. Курьер закладывает дроп.'
     }
   ];
@@ -258,7 +209,11 @@
     syncIntervalId: null,
     searchQuery: '',
     statusFilter: 'all',
-    activeTrackingOrderId: null
+    activeTrackingOrderId: null,
+    dropStash: [],
+    activeStashPhotos: [],
+    activeOrderModalPhotos: [],
+    matchedStashItem: null
   };
 
   function detectDefaultApiUrl() {
@@ -281,7 +236,7 @@
   // Cryptographic Vault (One-way salted SHA-256; credentials cannot be reversed or stolen from frontend code)
   const AUTH_VAULT = {
     salt: 'dragonx_secure_vault_salt_918237491',
-    hash: 'a264e7fd4c79f0f44adf3b936409ab5beacbb412b68fdcd5f76d77ea81181721'
+    hash: '5d3452f3878ee6b4166d2af601bee4357af980f2c2a725875d1ad14d6b6f91bb'
   };
 
   async function sha256Hex(str) {
@@ -514,14 +469,14 @@
     }
 
 
-    // 2. Orders Local Storage
+    // 2. Orders Local Storage (Only completely received payments)
     loadDeletedOrderIdsLocally();
     try {
       const savedOrders = localStorage.getItem(STORAGE_KEYS.ORDERS);
       if (savedOrders) {
         const parsed = JSON.parse(savedOrders);
         const legacyMockIds = new Set(['DRGX-20261013-7914', 'DRGX-20261013-9102', 'DRGX-20261013-1153']);
-        const cleaned = parsed.filter(o => !legacyMockIds.has(o.id) && !AdminState.deletedOrderIds.has(o.id));
+        const cleaned = parsed.filter(o => !legacyMockIds.has(o.id) && !AdminState.deletedOrderIds.has(o.id) && ['paid', 'drop_ready', 'picked_up'].includes(o.status));
         AdminState.orders = cleaned.length > 0 ? cleaned : SEED_ORDERS.filter(o => !AdminState.deletedOrderIds.has(o.id));
       } else {
         AdminState.orders = SEED_ORDERS.filter(o => !AdminState.deletedOrderIds.has(o.id));
@@ -555,6 +510,9 @@
     } catch (e) {
       buildUsersFromOrders();
     }
+
+    // 5. Drop Stash Local Storage & Real-Time Sync
+    loadDropStashLocally();
   }
 
   function saveDeletedOrderIdsLocally() {
@@ -746,6 +704,12 @@
       const oid = bo.id || bo.order_id;
       if (!oid || deletedSet.has(oid)) return;
 
+      // Only add completely received payments to the dashboard
+      const st = bo.status || 'pending';
+      if (!['paid', 'drop_ready', 'picked_up'].includes(st)) {
+        return;
+      }
+
       const orderDate = bo.createdAt || 
         (bo.createdTimestamp ? new Date(bo.createdTimestamp * 1000).toISOString() : 
         (bo.created_at ? new Date(bo.created_at * 1000).toISOString() : new Date().toISOString()));
@@ -770,11 +734,12 @@
         currency: bo.currency || 'USD',
         cryptoAmount: cryptoVal,
         cryptoCurrency: 'LTC',
-        status: bo.status || 'pending',
+        status: st,
         deliveryLocation: bo.deliveryLocation || bo.location || 'Локация выдается в боте',
         coordinates: bo.coordinates || DISTRICT_COORDS[bo.district] || '41.2721, 69.2045',
         trackingCode: bo.trackingCode || bo.tracking_code || `DRGX-TRK-${(oid||'').slice(-4)}`,
         pickedUpAt: bo.pickedUpAt || (bo.picked_up_at ? new Date(bo.picked_up_at * 1000).toISOString() : null),
+        photos: Array.isArray(bo.photos) ? bo.photos : [],
         notes: bo.notes || ''
       };
       botMap.set(normalized.id, normalized);
@@ -791,8 +756,10 @@
     const legacyMockIds = new Set(['DRGX-20261013-7914', 'DRGX-20261013-9102', 'DRGX-20261013-1153']);
     AdminState.orders.forEach(lo => {
       if (!processedIds.has(lo.id) && !legacyMockIds.has(lo.id) && !deletedSet.has(lo.id)) {
-        merged.push(lo);
-        processedIds.add(lo.id);
+        if (['paid', 'drop_ready', 'picked_up'].includes(lo.status)) {
+          merged.push(lo);
+          processedIds.add(lo.id);
+        }
       }
     });
 
@@ -880,6 +847,7 @@
   function renderAll() {
     renderMetrics();
     renderOrdersTable();
+    renderDropStash();
     renderZonesList();
     renderTelegramTab();
     renderClientsTable();
@@ -894,10 +862,12 @@
     const pickedUpEl = document.getElementById('metricPickedUpCount');
     const ordersBadge = document.getElementById('ordersTabCount');
 
-    const totalOrders = AdminState.orders.length;
-    const totalRevenue = AdminState.orders.reduce((sum, ord) => sum + (parseFloat(ord.totalAmount) || 0), 0);
-    const activeDelivery = AdminState.orders.filter(ord => ord.status === 'drop_ready' || ord.status === 'paid').length;
-    const pickedUpCount = AdminState.orders.filter(ord => ord.status === 'picked_up').length;
+    // Only count and aggregate completely received payments
+    const confirmed = AdminState.orders.filter(ord => ['paid', 'drop_ready', 'picked_up'].includes(ord.status));
+    const totalOrders = confirmed.length;
+    const totalRevenue = confirmed.reduce((sum, ord) => sum + (parseFloat(ord.totalAmount) || 0), 0);
+    const activeDelivery = confirmed.filter(ord => ord.status === 'drop_ready' || ord.status === 'paid').length;
+    const pickedUpCount = confirmed.filter(ord => ord.status === 'picked_up').length;
 
     if (totalOrdersEl) totalOrdersEl.textContent = totalOrders;
     if (totalRevEl) totalRevEl.textContent = `${totalRevenue.toFixed(2)} $`;
@@ -1667,9 +1637,262 @@
     if (tabId === 'tabTelegram') renderTelegramTab();
     if (tabId === 'tabOrders') renderOrdersTable();
     if (tabId === 'tabClients') renderClientsTable();
-    if (tabId === 'tabLocations') renderZonesList();
+    if (tabId === 'tabPrices') renderBotCatalogTab();
+    if (tabId === 'tabTelegram') renderTelegramTab();
+    if (tabId === 'tabOrders') renderOrdersTable();
+    if (tabId === 'tabClients') renderClientsTable();
+    if (tabId === 'tabLocations') {
+      renderDropStash();
+      renderZonesList();
+    }
 
     window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  // =========================================================================
+  // 5.5 MORNING DROP STASH & REAL-TIME DISPATCH ENGINE
+  // =========================================================================
+  const DEFAULT_DROP_STASH = [
+    {
+      id: "STASH-CHIL-2-01",
+      volume: "2 штук",
+      volume_num: 2,
+      district: "Чиланзор",
+      coordinates: "41.272145, 69.204512",
+      location: "Квартал 9, дом 14, магнит под металлическим отливом окна 1 этажа",
+      notes: "Утренний дроп #1. Надежный тайник, доступ 24/7",
+      photos: [
+        "https://images.unsplash.com/photo-1590674899484-d5640e854abe?auto=format&fit=crop&w=600&q=80"
+      ],
+      status: "ready",
+      created_at: 1792345000.0
+    },
+    {
+      id: "STASH-YASH-3-01",
+      volume: "3 штук",
+      volume_num: 3,
+      district: "Яшнабад",
+      coordinates: "41.298540, 69.324120",
+      location: "Ул. Султанали Машхади, за гаражом #42, серый магнитный контейнер в кирпичной нише",
+      notes: "Утренний дроп #2. Защитная метка X-42",
+      photos: [
+        "https://images.unsplash.com/photo-1541888946425-d0fbb186f5f7?auto=format&fit=crop&w=600&q=80"
+      ],
+      status: "ready",
+      created_at: 1792345100.0
+    },
+    {
+      id: "STASH-ULUG-2-01",
+      volume: "2 штук",
+      volume_num: 2,
+      district: "Ulugbek",
+      coordinates: "41.341250, 69.452010",
+      location: "Поселок Улугбек, парковая зона, опора освещения #7, магнитный бокс снизу швеллера",
+      notes: "Утренний дроп #3. Сухое место",
+      photos: [
+        "https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=600&q=80"
+      ],
+      status: "ready",
+      created_at: 1792345200.0
+    }
+  ];
+
+  function loadDropStashLocally() {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEYS.DROP_STASH);
+      if (saved) {
+        AdminState.dropStash = JSON.parse(saved);
+      } else {
+        AdminState.dropStash = [...DEFAULT_DROP_STASH];
+        saveDropStashLocally();
+      }
+    } catch (e) {
+      AdminState.dropStash = [...DEFAULT_DROP_STASH];
+    }
+    fetchStashFromBackend();
+  }
+
+  function saveDropStashLocally() {
+    try {
+      localStorage.setItem(STORAGE_KEYS.DROP_STASH, JSON.stringify(AdminState.dropStash));
+    } catch (e) {}
+  }
+
+  async function fetchStashFromBackend() {
+    try {
+      const apiUrl = (AdminState.botApiUrl || detectDefaultApiUrl()).replace(/\/+$/, '');
+      const resp = await fetch(`${apiUrl}/api/stash`, {
+        headers: getAuthHeaders()
+      });
+      if (resp.ok) {
+        const data = await resp.json();
+        if (Array.isArray(data) && data.length > 0) {
+          AdminState.dropStash = data;
+          saveDropStashLocally();
+          renderDropStash();
+        }
+      }
+    } catch (e) {
+      console.warn('Stash backend sync:', e.message);
+    }
+  }
+
+  function renderDropStash() {
+    const grid = document.getElementById('dropStashGrid');
+    if (!grid) return;
+
+    const totalEl = document.getElementById('stashTotalCount');
+    const availEl = document.getElementById('stashAvailableCount');
+    const assignEl = document.getElementById('stashAssignedCount');
+    const tabBadge = document.getElementById('stashTabCount');
+
+    const total = AdminState.dropStash.length;
+    const available = AdminState.dropStash.filter(s => s.status !== 'assigned').length;
+    const assigned = AdminState.dropStash.filter(s => s.status === 'assigned').length;
+
+    if (totalEl) totalEl.textContent = total;
+    if (availEl) availEl.textContent = available;
+    if (assignEl) assignEl.textContent = assigned;
+    if (tabBadge) tabBadge.textContent = available;
+
+    const fDist = document.getElementById('stashFilterDistrict')?.value || 'all';
+    const fVol = document.getElementById('stashFilterVolume')?.value || 'all';
+    const fStat = document.getElementById('stashFilterStatus')?.value || 'all';
+
+    let list = AdminState.dropStash.filter(s => {
+      if (fDist !== 'all' && s.district !== fDist) return false;
+      if (fVol !== 'all' && String(s.volume_num || s.volume).replace(/\D/g, '') !== fVol) return false;
+      if (fStat !== 'all' && (s.status || 'ready') !== fStat) return false;
+      return true;
+    });
+
+    if (list.length === 0) {
+      grid.innerHTML = `
+        <div style="grid-column: 1/-1; text-align: center; padding: 3rem; color: var(--text-dim);">
+          <i class="fa-solid fa-boxes-stacked" style="font-size: 2.2rem; margin-bottom: 0.75rem; color: var(--accent-cyan); opacity: 0.5;"></i>
+          <p>В утреннем складе пока нет тайников с выбранными фильтрами.</p>
+        </div>
+      `;
+      return;
+    }
+
+    grid.innerHTML = list.map(item => {
+      const isAssigned = item.status === 'assigned';
+      const photos = Array.isArray(item.photos) ? item.photos : [];
+      const volNum = item.volume_num || parseInt(String(item.volume).replace(/\D/g, '')) || 2;
+      const volBadgeClass = volNum >= 5 ? 'gold' : '';
+
+      const photosHtml = photos.length > 0 ? `
+        <div class="stash-card-photos">
+          ${photos.map(p => `
+            <img src="${p}" class="stash-card-photo-thumb" alt="Фото тайника" onclick="window.AdminOps.previewImage('${p}')">
+          `).join('')}
+        </div>
+      ` : `<div style="font-size: 0.75rem; color: var(--text-dim); font-style: italic;">Фото еще не добавлены</div>`;
+
+      return `
+        <div class="drop-stash-card ${isAssigned ? 'assigned' : ''}" id="stash-card-${item.id}">
+          <div class="stash-card-head">
+            <span class="stash-card-badge ${volBadgeClass}">
+              <i class="fa-solid fa-capsules"></i> ${escapeHtml(item.volume || `${volNum} шт`)}
+            </span>
+            <span class="status-pill ${isAssigned ? 'status-picked-up' : 'status-drop-ready'}">
+              ${isAssigned ? '🔵 Выдан' : '🟢 Доступен'}
+            </span>
+          </div>
+
+          <div class="stash-card-details">
+            <div><strong>${escapeHtml(item.id)}</strong> • <span class="text-cyan">${escapeHtml(item.district)}</span></div>
+            <div style="margin-top: 0.25rem;">${escapeHtml(item.location || 'Без описания')}</div>
+            ${item.notes ? `<div style="font-size: 0.75rem; color: var(--text-dim); margin-top: 0.2rem;">💡 ${escapeHtml(item.notes)}</div>` : ''}
+          </div>
+
+          <div class="stash-card-coords">
+            <i class="fa-solid fa-crosshairs"></i>
+            <span>${escapeHtml(item.coordinates || '41.2721, 69.2045')}</span>
+            <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(item.coordinates || '')}" target="_blank" style="margin-left: auto; color: var(--accent-cyan); text-decoration: none;" title="Открыть на карте">
+              <i class="fa-solid fa-arrow-up-right-from-square"></i>
+            </a>
+          </div>
+
+          ${photosHtml}
+
+          <div class="stash-card-actions">
+            ${!isAssigned ? `
+              <button type="button" class="btn-primary glow-btn btn-xs" onclick="window.AdminOps.quickAssignStashPrompt('${item.id}')">
+                <i class="fa-solid fa-link"></i> Привязать к заказу
+              </button>
+            ` : `
+              <span style="font-size: 0.75rem; color: #34d399;"><i class="fa-solid fa-check"></i> Выдан (${escapeHtml(item.assigned_order_id || '')})</span>
+            `}
+            <button type="button" class="btn-ghost btn-xs text-danger" onclick="window.AdminOps.deleteStashItem('${item.id}')" title="Удалить тайник">
+              <i class="fa-solid fa-trash-can"></i>
+            </button>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  function findMatchingStash(order) {
+    if (!AdminState.dropStash || AdminState.dropStash.length === 0) return null;
+    const oVolStr = String(order.volume || '');
+    const oVolNum = parseInt(oVolStr.replace(/\D/g, '')) || 2;
+    const oDist = (order.district || '').toLowerCase().trim();
+
+    // 1. Exact match: district + volume, status ready
+    let match = AdminState.dropStash.find(s => 
+      s.status !== 'assigned' && 
+      (s.volume_num === oVolNum || parseInt(String(s.volume).replace(/\D/g, '')) === oVolNum) &&
+      (s.district || '').toLowerCase().trim() === oDist
+    );
+    // 2. Fallback: volume match
+    if (!match) {
+      match = AdminState.dropStash.find(s => 
+        s.status !== 'assigned' && 
+        (s.volume_num === oVolNum || parseInt(String(s.volume).replace(/\D/g, '')) === oVolNum)
+      );
+    }
+    return match;
+  }
+
+  function renderStashPreviewGallery() {
+    const gallery = document.getElementById('stashPhotoPreviewGallery');
+    if (!gallery) return;
+    gallery.innerHTML = AdminState.activeStashPhotos.map((src, idx) => `
+      <div class="drop-photo-thumb-wrap">
+        <img src="${src}" alt="Фото ${idx+1}">
+        <button type="button" class="drop-photo-del-btn" onclick="window.AdminOps.removeStashPhoto(${idx})" title="Удалить фото">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+    `).join('');
+  }
+
+  function renderOrderModalPhotos() {
+    const gallery = document.getElementById('orderDropPhotoGallery');
+    if (!gallery) return;
+    gallery.innerHTML = AdminState.activeOrderModalPhotos.map((src, idx) => `
+      <div class="drop-photo-thumb-wrap">
+        <img src="${src}" alt="Фото ${idx+1}">
+        <button type="button" class="drop-photo-del-btn" onclick="window.AdminOps.removeOrderModalPhoto(${idx})" title="Удалить фото">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+    `).join('');
+  }
+
+  function handleFilesInput(files, targetArr, renderFn) {
+    if (!files || files.length === 0) return;
+    Array.from(files).forEach(file => {
+      if (!file.type.startsWith('image/')) return;
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        targetArr.push(e.target.result);
+        renderFn();
+      };
+      reader.readAsDataURL(file);
+    });
   }
 
   // =========================================================================
@@ -1744,6 +1967,26 @@
 
     const notesInput = document.getElementById('locModalNotes');
     if (notesInput) notesInput.value = ord.notes || '';
+
+    // Initialize Order Drop Photos
+    AdminState.activeOrderModalPhotos = Array.isArray(ord.photos) ? [...ord.photos] : [];
+    renderOrderModalPhotos();
+
+    // Check for matching morning prepared drop stash
+    const matchedStash = findMatchingStash(ord);
+    AdminState.matchedStashItem = matchedStash;
+    const matchBanner = document.getElementById('stashMatchBanner');
+    if (matchBanner) {
+      if (matchedStash && ord.status !== 'picked_up') {
+        matchBanner.classList.remove('hidden');
+        const pCount = Array.isArray(matchedStash.photos) ? matchedStash.photos.length : 0;
+        const vTitle = matchedStash.volume || `${matchedStash.volume_num || 2} шт`;
+        document.getElementById('stashMatchTitle').textContent = `${matchedStash.id} (${vTitle} • ${matchedStash.district})`;
+        document.getElementById('stashMatchDesc').textContent = `${matchedStash.location || 'Готовый утренний тайник'} • Фото: ${pCount} шт`;
+      } else {
+        matchBanner.classList.add('hidden');
+      }
+    }
 
     modal.classList.remove('hidden');
   }
@@ -1900,15 +2143,24 @@
     ord.status = status;
     ord.trackingCode = tracking;
     ord.notes = notes;
+    ord.photos = [...AdminState.activeOrderModalPhotos];
     if (status === 'picked_up' && !ord.pickedUpAt) {
       ord.pickedUpAt = new Date().toISOString();
+    }
+
+    if (AdminState.matchedStashItem) {
+      AdminState.matchedStashItem.status = 'assigned';
+      AdminState.matchedStashItem.assigned_order_id = orderId;
+      saveDropStashLocally();
+      renderDropStash();
     }
 
     saveOrdersLocally();
     renderAll();
     closeAllModals();
 
-    showToast(`Локация и координаты для заказа ${orderId} сохранены!`, 'success');
+    const photoCount = ord.photos.length;
+    showToast(`Локация, координаты и ${photoCount} фото для заказа ${orderId} сохранены!`, 'success');
 
     const apiUrl = (AdminState.botApiUrl || detectDefaultApiUrl()).replace(/\/+$/, '');
     try {
@@ -1923,13 +2175,14 @@
           coordinates: coords,
           delivery_location: address,
           notes: notes,
+          photos: ord.photos,
           notify_customer: notifyCustomer,
           notifyCustomer: notifyCustomer
         })
       });
 
       if (resp.ok) {
-        showToast(`Синхронизировано с ботом в реальном времени! ${notifyCustomer ? 'Клиенту отправлено уведомление.' : ''}`, 'success');
+        showToast(`Синхронизировано с ботом в реальном времени! ${notifyCustomer ? 'Клиенту отправлены координаты и фото тайника в Telegram.' : ''}`, 'success');
       }
     } catch (e) {
       console.warn('Bot API update call failed:', e.message);
@@ -2241,6 +2494,138 @@
         });
       });
     }
+
+    // 1-Click Apply Morning Stash to Order Modal
+    const applyStashBtn = document.getElementById('applyMatchedStashBtn');
+    if (applyStashBtn) {
+      applyStashBtn.addEventListener('click', () => {
+        const item = AdminState.matchedStashItem;
+        if (!item) return;
+
+        const coordsInp = document.getElementById('locModalCoordsInput');
+        const addrInp = document.getElementById('locModalAddressInput');
+        const distSel = document.getElementById('locModalDistrict');
+        const statusSel = document.getElementById('locModalStatusSelect');
+
+        if (coordsInp && item.coordinates) coordsInp.value = item.coordinates;
+        if (addrInp && item.location) addrInp.value = item.location;
+        if (distSel && item.district) distSel.value = item.district;
+        if (statusSel) statusSel.value = 'drop_ready';
+
+        if (Array.isArray(item.photos)) {
+          AdminState.activeOrderModalPhotos = [...item.photos];
+          renderOrderModalPhotos();
+        }
+
+        if (item.district && item.coordinates) {
+          updateRadarMapWidget(item.district, item.coordinates);
+        }
+
+        showToast(`Утренний тайник ${item.id} применен! Координаты и ${AdminState.activeOrderModalPhotos.length} фото загружены.`, 'success');
+      });
+    }
+
+    // Dropzone for Order Location Modal Photos
+    const orderDropzone = document.getElementById('orderDropPhotoDropzone');
+    const orderFileInput = document.getElementById('orderDropPhotoFileInput');
+    if (orderDropzone && orderFileInput) {
+      orderDropzone.addEventListener('click', () => orderFileInput.click());
+      orderFileInput.addEventListener('change', (e) => {
+        handleFilesInput(e.target.files, AdminState.activeOrderModalPhotos, renderOrderModalPhotos);
+        orderFileInput.value = '';
+      });
+
+      orderDropzone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        orderDropzone.classList.add('dragover');
+      });
+      orderDropzone.addEventListener('dragleave', () => orderDropzone.classList.remove('dragover'));
+      orderDropzone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        orderDropzone.classList.remove('dragover');
+        handleFilesInput(e.dataTransfer.files, AdminState.activeOrderModalPhotos, renderOrderModalPhotos);
+      });
+    }
+
+    // Dropzone for Stash Tab Form Photos
+    const stashDropzone = document.getElementById('stashPhotoDropzone');
+    const stashFileInput = document.getElementById('stashPhotoFileInput');
+    if (stashDropzone && stashFileInput) {
+      stashDropzone.addEventListener('click', () => stashFileInput.click());
+      stashFileInput.addEventListener('change', (e) => {
+        handleFilesInput(e.target.files, AdminState.activeStashPhotos, renderStashPreviewGallery);
+        stashFileInput.value = '';
+      });
+
+      stashDropzone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        stashDropzone.classList.add('dragover');
+      });
+      stashDropzone.addEventListener('dragleave', () => stashDropzone.classList.remove('dragover'));
+      stashDropzone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        stashDropzone.classList.remove('dragover');
+        handleFilesInput(e.dataTransfer.files, AdminState.activeStashPhotos, renderStashPreviewGallery);
+      });
+    }
+
+    // Add Stash Form Submit
+    const addStashForm = document.getElementById('addDropStashForm');
+    if (addStashForm) {
+      addStashForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const district = document.getElementById('stashDistrict').value;
+        const volume = document.getElementById('stashVolume').value;
+        const coordinates = document.getElementById('stashCoordinates').value.trim();
+        const location = document.getElementById('stashLocation').value.trim();
+        const notes = document.getElementById('stashNotes').value.trim();
+        const photos = [...AdminState.activeStashPhotos];
+
+        const volNum = parseInt(volume.replace(/\D/g, '')) || 2;
+        const newStash = {
+          id: `STASH-${district.slice(0,4).toUpperCase()}-${volNum}-${Math.floor(10 + Math.random() * 90)}`,
+          district,
+          volume,
+          volume_num: volNum,
+          coordinates,
+          location,
+          notes,
+          photos,
+          status: 'ready',
+          created_at: Date.now() / 1000
+        };
+
+        AdminState.dropStash.unshift(newStash);
+        saveDropStashLocally();
+        renderDropStash();
+
+        // Clear inputs
+        document.getElementById('stashCoordinates').value = '';
+        document.getElementById('stashLocation').value = '';
+        document.getElementById('stashNotes').value = '';
+        AdminState.activeStashPhotos = [];
+        renderStashPreviewGallery();
+
+        showToast(`Утренний тайник ${newStash.id} сохранен в склад!`, 'success');
+
+        try {
+          const apiUrl = (AdminState.botApiUrl || detectDefaultApiUrl()).replace(/\/+$/, '');
+          await fetch(`${apiUrl}/api/stash`, {
+            method: 'POST',
+            headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
+            body: JSON.stringify(newStash)
+          });
+        } catch (err) {
+          console.warn('Stash save backend error:', err);
+        }
+      });
+    }
+
+    // Stash Filters
+    ['stashFilterDistrict', 'stashFilterVolume', 'stashFilterStatus'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.addEventListener('change', renderDropStash);
+    });
 
     // Update Full Order Form Submit
     const updateOrderForm = document.getElementById('updateOrderForm');
@@ -2604,6 +2989,75 @@
       navigator.clipboard.writeText(clientId).then(() => {
         showToast(`Unique ID ${clientId} скопирован в буфер!`, 'success');
       });
+    },
+    removeStashPhoto: function (idx) {
+      AdminState.activeStashPhotos.splice(idx, 1);
+      renderStashPreviewGallery();
+    },
+    removeOrderModalPhoto: function (idx) {
+      AdminState.activeOrderModalPhotos.splice(idx, 1);
+      renderOrderModalPhotos();
+    },
+    previewImage: function (url) {
+      if (url) window.open(url, '_blank');
+    },
+    deleteStashItem: async function (stashId) {
+      if (!confirm(`Удалить тайник ${stashId} из утреннего склада?`)) return;
+      AdminState.dropStash = AdminState.dropStash.filter(s => s.id !== stashId);
+      saveDropStashLocally();
+      renderDropStash();
+      showToast(`Тайник ${stashId} удален из склада`, 'info');
+      try {
+        const apiUrl = (AdminState.botApiUrl || detectDefaultApiUrl()).replace(/\/+$/, '');
+        await fetch(`${apiUrl}/api/stash/${stashId}`, {
+          method: 'DELETE',
+          headers: getAuthHeaders()
+        });
+      } catch (e) {}
+    },
+    quickAssignStashPrompt: function (stashId) {
+      const stash = AdminState.dropStash.find(s => s.id === stashId);
+      if (!stash) return;
+
+      const vNum = stash.volume_num || parseInt(String(stash.volume).replace(/\D/g, '')) || 2;
+      const matchingOrders = AdminState.orders.filter(o => 
+        o.status === 'paid' && 
+        (parseInt(String(o.volume || '').replace(/\D/g, '')) === vNum || (o.district || '').toLowerCase() === (stash.district || '').toLowerCase())
+      );
+
+      if (matchingOrders.length === 0) {
+        showToast(`Нет оплаченных заказов на ${vNum} шт, ожидающих выдачи. Откройте нужный заказ в таблице и примените тайник в форме.`, 'info');
+        return;
+      }
+
+      const targetOrder = matchingOrders[0];
+      if (confirm(`Привязать тайник ${stash.id} (${stash.volume}, ${stash.district}) к заказу ${targetOrder.id} (${targetOrder.customerName || targetOrder.telegram})?`)) {
+        targetOrder.coordinates = stash.coordinates;
+        targetOrder.deliveryLocation = stash.location;
+        targetOrder.photos = Array.isArray(stash.photos) ? [...stash.photos] : [];
+        targetOrder.status = 'drop_ready';
+        stash.status = 'assigned';
+        stash.assigned_order_id = targetOrder.id;
+
+        saveDropStashLocally();
+        saveOrdersLocally();
+        renderAll();
+
+        showToast(`Тайник ${stash.id} выдан заказу ${targetOrder.id}! Отправляем клиенту в Telegram...`, 'success');
+
+        const apiUrl = (AdminState.botApiUrl || detectDefaultApiUrl()).replace(/\/+$/, '');
+        fetch(`${apiUrl}/api/stash/assign`, {
+          method: 'POST',
+          headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
+          body: JSON.stringify({
+            stash_id: stash.id,
+            order_id: targetOrder.id,
+            notify_customer: true
+          })
+        }).then(r => {
+          if (r.ok) showToast(`Клиент получил точные координаты и фото тайника в Telegram!`, 'success');
+        }).catch(() => {});
+      }
     }
   };
 

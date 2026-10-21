@@ -1409,4 +1409,316 @@
   }
 }
 
+/* ========================================================
+   MORNING DROP STASH & PHOTO DISPATCH ENGINE
+   ======================================================== */
+.stash-header-card {
+  padding: 1.25rem 1.5rem;
+  border-radius: var(--radius-lg);
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.9) 0%, rgba(13, 19, 36, 0.95) 100%);
+  border: 1px solid rgba(0, 240, 255, 0.25);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
+}
+
+.stash-header-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.stash-title-block h3 {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 0.35rem;
+}
+
+.stash-title-block p {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  max-width: 650px;
+  line-height: 1.5;
+}
+
+.stash-kpi-group {
+  display: flex;
+  gap: 1rem;
+}
+
+.kpi-mini-card {
+  background: rgba(2, 6, 23, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius-md);
+  padding: 0.65rem 1.1rem;
+  text-align: center;
+  min-width: 100px;
+}
+
+.kpi-mini-card .kpi-num {
+  display: block;
+  font-size: 1.45rem;
+  font-weight: 800;
+  font-family: var(--font-mono, monospace);
+  line-height: 1.1;
+}
+
+.kpi-mini-card .kpi-lbl {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  letter-spacing: 0.5px;
+}
+
+.stash-filter-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+  flex-wrap: wrap;
+}
+
+.stash-filters-row {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.filter-select {
+  padding: 0.45rem 0.85rem;
+  font-size: 0.82rem;
+  background: rgba(15, 23, 42, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: var(--radius-sm);
+  color: #e2e8f0;
+}
+
+/* DROP PHOTO DROPZONE & PREVIEWS */
+.drop-photo-dropzone {
+  border: 2px dashed rgba(0, 240, 255, 0.35);
+  border-radius: var(--radius-md);
+  padding: 1.2rem 1rem;
+  background: rgba(0, 240, 255, 0.03);
+  text-align: center;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.drop-photo-dropzone:hover, .drop-photo-dropzone.dragover {
+  border-color: #00f0ff;
+  background: rgba(0, 240, 255, 0.08);
+  transform: translateY(-1px);
+}
+
+.drop-photo-gallery {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-top: 0.75rem;
+}
+
+.drop-photo-thumb-wrap {
+  position: relative;
+  width: 72px;
+  height: 72px;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  border: 1px solid rgba(0, 240, 255, 0.4);
+  background: #020617;
+}
+
+.drop-photo-thumb-wrap img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform var(--transition-fast);
+}
+
+.drop-photo-thumb-wrap:hover img {
+  transform: scale(1.08);
+}
+
+.drop-photo-del-btn {
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  width: 20px;
+  height: 20px;
+  background: rgba(239, 68, 68, 0.9);
+  color: #fff;
+  border: none;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.65rem;
+  cursor: pointer;
+  transition: transform var(--transition-fast);
+}
+
+.drop-photo-del-btn:hover {
+  transform: scale(1.2);
+  background: #dc2626;
+}
+
+/* SMART STASH MATCH BANNER (IN LOCATION MODAL) */
+.stash-match-banner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.9rem 1.15rem;
+  margin-bottom: 1.15rem;
+  border-radius: var(--radius-md);
+  background: linear-gradient(90deg, rgba(234, 179, 8, 0.12) 0%, rgba(15, 23, 42, 0.8) 100%);
+  border: 1px solid rgba(234, 179, 8, 0.4);
+  animation: glowPulseGold 2.5s infinite alternate;
+}
+
+@keyframes glowPulseGold {
+  from { box-shadow: 0 0 10px rgba(234, 179, 8, 0.15); }
+  to { box-shadow: 0 0 20px rgba(234, 179, 8, 0.35); }
+}
+
+.stash-match-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: #fbbf24;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  margin-bottom: 0.25rem;
+}
+
+.stash-match-info strong {
+  display: block;
+  font-size: 0.95rem;
+  color: #fff;
+}
+
+.stash-match-info p {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  margin-top: 0.15rem;
+  max-width: 420px;
+}
+
+/* STASH GRID & CARDS */
+.drop-stash-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1rem;
+}
+
+.drop-stash-card {
+  background: rgba(15, 23, 42, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-md);
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  transition: all var(--transition-fast);
+  position: relative;
+  overflow: hidden;
+}
+
+.drop-stash-card:hover {
+  border-color: rgba(0, 240, 255, 0.4);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  transform: translateY(-2px);
+}
+
+.drop-stash-card.assigned {
+  opacity: 0.75;
+  border-color: rgba(147, 51, 234, 0.3);
+}
+
+.stash-card-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.stash-card-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.25rem 0.65rem;
+  background: rgba(0, 240, 255, 0.12);
+  border: 1px solid rgba(0, 240, 255, 0.3);
+  border-radius: 9999px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #00f0ff;
+}
+
+.stash-card-badge.gold {
+  background: rgba(234, 179, 8, 0.15);
+  border-color: rgba(234, 179, 8, 0.4);
+  color: #fbbf24;
+}
+
+.stash-card-photos {
+  display: flex;
+  gap: 0.4rem;
+  overflow-x: auto;
+  padding-bottom: 0.25rem;
+}
+
+.stash-card-photo-thumb {
+  width: 60px;
+  height: 60px;
+  border-radius: var(--radius-sm);
+  object-fit: cover;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  cursor: pointer;
+  transition: transform var(--transition-fast);
+}
+
+.stash-card-photo-thumb:hover {
+  transform: scale(1.1);
+  border-color: #00f0ff;
+}
+
+.stash-card-details {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  line-height: 1.45;
+}
+
+.stash-card-details strong {
+  color: #e2e8f0;
+}
+
+.stash-card-coords {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: var(--font-mono, monospace);
+  font-size: 0.78rem;
+  color: #38bdf8;
+  background: rgba(2, 6, 23, 0.6);
+  padding: 0.35rem 0.6rem;
+  border-radius: var(--radius-sm);
+}
+
+.stash-card-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: auto;
+  padding-top: 0.5rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+
 

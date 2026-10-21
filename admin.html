@@ -187,8 +187,9 @@
       </button>
 
       <button class="adm-tab-btn" data-tab="tabLocations">
-        <i class="fa-solid fa-location-crosshairs"></i>
-        <span>Локации Доставки & Дропы</span>
+        <i class="fa-solid fa-boxes-stacked text-gold"></i>
+        <span>Утренний Склад Тайников</span>
+        <span class="tab-badge" id="stashTabCount">0</span>
       </button>
 
       <button class="adm-tab-btn" data-tab="tabTelegram">
@@ -298,61 +299,153 @@
     <!-- ======================================================== -->
     <!-- TAB 2: DELIVERY & DROP LOCATIONS -->
     <!-- ======================================================== -->
+    <!-- ======================================================== -->
+    <!-- TAB 2: MORNING DROP STASH VAULT (УТРЕННИЙ СКЛАД ТАЙНИКОВ) -->
+    <!-- ======================================================== -->
     <div id="tabLocations" class="admin-tab-pane hidden">
-      <div class="locations-pane-grid">
+      <!-- Stash Header & Quick KPIs -->
+      <div class="stash-header-card glass-panel glow-cyan">
+        <div class="stash-header-content">
+          <div class="stash-title-block">
+            <div class="title-with-icon">
+              <i class="fa-solid fa-boxes-stacked title-icon text-gold"></i>
+              <div>
+                <h3>Утренний Склад Тайников и Дропов (Morning Drop Stash)</h3>
+                <p>Загружайте утренние фотографии, GPS координаты и ориентиры по фасовкам (2 шт, 3 шт, 5 шт). При выдаче заказа система подбирает готовый тайник и отправляет фото клиенту в Telegram.</p>
+              </div>
+            </div>
+          </div>
+          <div class="stash-kpi-group">
+            <div class="kpi-mini-card">
+              <span class="kpi-num text-cyan" id="stashTotalCount">0</span>
+              <span class="kpi-lbl">Всего тайников</span>
+            </div>
+            <div class="kpi-mini-card">
+              <span class="kpi-num text-green" id="stashAvailableCount">0</span>
+              <span class="kpi-lbl">Готовы к выдаче</span>
+            </div>
+            <div class="kpi-mini-card">
+              <span class="kpi-num text-purple" id="stashAssignedCount">0</span>
+              <span class="kpi-lbl">Выданы клиентам</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="locations-pane-grid" style="margin-top: 1.25rem;">
         
-        <!-- Left: Delivery Configuration & Information -->
+        <!-- Left: Add New Prepared Drop Form -->
         <div class="locations-info-card glass-panel">
           <div class="card-title-row">
-            <i class="fa-solid fa-map-location-dot title-icon"></i>
+            <i class="fa-solid fa-cloud-arrow-up title-icon text-cyan"></i>
             <div>
-              <h3>Настройки Гео-Локаций Доставки & Тайников</h3>
-              <p>Управление точками выдачи в районах Чиланзор, Яшнабад, Ulugbek</p>
+              <h3>Добавить Готовый Тайник</h3>
+              <p>Загрузка утреннего дропа с фото и координатами</p>
             </div>
           </div>
 
-          <div class="notice-box-gold">
-            <i class="fa-solid fa-circle-info"></i>
-            <span><strong>Информация:</strong> Координаты GPS и тайники сохраняются оператором и синхронизируются с Telegram ботом @yuan_rndiBOT в реальном времени.</span>
-          </div>
+          <form id="addDropStashForm" class="adm-form" onsubmit="return false;">
+            <div class="price-input-row">
+              <div class="form-group">
+                <label for="stashDistrict"><i class="fa-solid fa-map"></i> Район города:</label>
+                <select id="stashDistrict" class="adm-select">
+                  <option value="Чиланзор">Чиланзор</option>
+                  <option value="Яшнабад">Яшнабад</option>
+                  <option value="Ulugbek">Ulugbek</option>
+                  <option value="Юнусабад">Юнусабад</option>
+                  <option value="Мирзо-Улугбек">Мирзо-Улугбек</option>
+                  <option value="Сергели">Сергели</option>
+                </select>
+              </div>
 
-          <form id="addLocationZoneForm" class="zone-form" onsubmit="return false;">
-            <h4>Добавить Город / Район / Дроп-Зону:</h4>
-            
-            <div class="form-group">
-              <label for="zoneCityName">Город / Регион:</label>
-              <input type="text" id="zoneCityName" placeholder="Ташкент" value="Ташкент" required class="form-input">
+              <div class="form-group">
+                <label for="stashVolume"><i class="fa-solid fa-capsules"></i> Фасовка / Количество:</label>
+                <select id="stashVolume" class="adm-select">
+                  <option value="2 штук">2 шт (25$)</option>
+                  <option value="3 штук">3 шт (35$)</option>
+                  <option value="5 штук">5 шт (55$)</option>
+                  <option value="10 штук">10 шт (108$)</option>
+                  <option value="1 штук">1 шт (Пробник)</option>
+                </select>
+              </div>
             </div>
 
             <div class="form-group">
-              <label for="zoneAreaName">Район обслуживания:</label>
-              <input type="text" id="zoneAreaName" placeholder="Чиланзор / Яшнабад / Ulugbek" required class="form-input">
+              <label><i class="fa-solid fa-crosshairs"></i> Быстрый выбор координат района:</label>
+              <div class="district-preset-btns">
+                <button type="button" class="btn-preset-district" data-district="Чиланзор" data-coords="41.2721, 69.2045">Чиланзор</button>
+                <button type="button" class="btn-preset-district" data-district="Яшнабад" data-coords="41.2985, 69.3241">Яшнабад</button>
+                <button type="button" class="btn-preset-district" data-district="Ulugbek" data-coords="41.3412, 69.4520">Ulugbek</button>
+              </div>
             </div>
 
             <div class="form-group">
-              <label for="zoneCoordinatesDefault">Координаты GPS (Широта, Долгота):</label>
-              <input type="text" id="zoneCoordinatesDefault" placeholder="41.2721, 69.2045" class="form-input font-mono">
+              <label for="stashCoordinates"><i class="fa-solid fa-location-crosshairs"></i> GPS Координаты (Широта, Долгота):</label>
+              <input type="text" id="stashCoordinates" placeholder="41.272145, 69.204512" class="form-input font-mono" required>
             </div>
 
             <div class="form-group">
-              <label for="zoneDeliveryNotes">Описание тайника / Инструкция:</label>
-              <textarea id="zoneDeliveryNotes" rows="3" placeholder="Бесконтактный магнитный тайник / Упаковка в термопакет..." class="form-input"></textarea>
+              <label for="stashLocation"><i class="fa-solid fa-map-pin"></i> Точное описание ориентира / тайника:</label>
+              <textarea id="stashLocation" rows="3" placeholder="Квартал 9, дом 14, магнит под металлическим отливом окна 1 этажа во дворе..." class="form-input" required></textarea>
             </div>
 
-            <button type="submit" id="saveZoneBtn" class="btn-primary glow-btn full-w">
-              <i class="fa-solid fa-plus"></i>
-              <span>Сохранить Новую Локацию Доставки</span>
+            <!-- Stash Photos Upload Box -->
+            <div class="form-group">
+              <label><i class="fa-solid fa-camera"></i> Фотографии тайника (с места закладки):</label>
+              <div class="drop-photo-dropzone" id="stashPhotoDropzone">
+                <input type="file" id="stashPhotoFileInput" accept="image/*" multiple style="display: none;">
+                <i class="fa-solid fa-camera text-gold" style="font-size: 1.75rem;"></i>
+                <div class="dropzone-text">
+                  <span>Перетащите фото тайника или <b>нажмите для выбора</b></span>
+                  <span class="field-hint">Поддерживается загрузка нескольких ракурсов</span>
+                </div>
+              </div>
+              <div class="drop-photo-gallery" id="stashPhotoPreviewGallery"></div>
+            </div>
+
+            <div class="form-group">
+              <label for="stashNotes"><i class="fa-solid fa-note-sticky"></i> Заметка оператора / курьера:</label>
+              <input type="text" id="stashNotes" placeholder="Утренний дроп #1, сухое место, магнит 24/7" class="form-input">
+            </div>
+
+            <button type="submit" id="saveDropStashBtn" class="btn-primary glow-btn full-w">
+              <i class="fa-solid fa-floppy-disk"></i>
+              <span>Сохранить Тайник в Утренний Склад</span>
             </button>
           </form>
         </div>
 
-        <!-- Right: Active Location Zones List -->
+        <!-- Right: Prepared Stash Grid & Filters -->
         <div class="locations-list-card glass-panel">
-          <h3>Активные Локации & Зоны Доставки</h3>
-          <p class="section-sub">Доступные точки для назначения в заказах Ташкента</p>
+          <div class="stash-filter-bar">
+            <div>
+              <h3>Склад Готовых Тайников</h3>
+              <p class="section-sub">Тайники, подготовленные к моментальной выдаче</p>
+            </div>
+            <div class="stash-filters-row">
+              <select id="stashFilterDistrict" class="adm-select filter-select">
+                <option value="all">Все районы</option>
+                <option value="Чиланзор">Чиланзор</option>
+                <option value="Яшнабад">Яшнабад</option>
+                <option value="Ulugbek">Ulugbek</option>
+              </select>
+              <select id="stashFilterVolume" class="adm-select filter-select">
+                <option value="all">Все фасовки</option>
+                <option value="2">2 шт</option>
+                <option value="3">3 шт</option>
+                <option value="5">5 шт</option>
+                <option value="10">10 шт</option>
+              </select>
+              <select id="stashFilterStatus" class="adm-select filter-select">
+                <option value="all">Все статусы</option>
+                <option value="ready">🟢 Доступны</option>
+                <option value="assigned">🔵 Выданы</option>
+              </select>
+            </div>
+          </div>
 
-          <div class="active-zones-list" id="activeZonesList">
-            <!-- Rendered by JS -->
+          <div class="drop-stash-grid" id="dropStashGrid">
+            <!-- Rendered dynamically by JS -->
           </div>
         </div>
 
@@ -980,6 +1073,21 @@
           </button>
         </div>
 
+        <!-- SMART MORNING STASH MATCH BANNER -->
+        <div id="stashMatchBanner" class="stash-match-banner glass-panel-inner hidden">
+          <div class="stash-match-left">
+            <span class="stash-match-badge"><i class="fa-solid fa-wand-magic-sparkles text-gold"></i> ГОТОВЫЙ УТРЕННИЙ ТАЙНИК НАЙДЕН</span>
+            <div class="stash-match-info">
+              <strong id="stashMatchTitle">STASH-CHIL-2-01 (2 шт • Чиланзор)</strong>
+              <p id="stashMatchDesc">Квартал 9, дом 14, магнит под металлическим отливом...</p>
+            </div>
+          </div>
+          <button type="button" id="applyMatchedStashBtn" class="btn-primary glow-btn btn-sm">
+            <i class="fa-solid fa-bolt"></i>
+            <span>Применить тайник в 1 клик</span>
+          </button>
+        </div>
+
         <!-- INTERACTIVE GPS RADAR & MAPS INTEGRATION -->
         <div class="radar-map-card glass-panel-inner">
           <div class="map-card-header">
@@ -1070,6 +1178,20 @@
             <span class="field-hint">Этот текст и координаты передаются покупателю в Telegram боте @yuan_rndiBOT</span>
           </div>
 
+          <!-- DROP PHOTOS UPLOAD & PREVIEW -->
+          <div class="form-group">
+            <label><i class="fa-solid fa-camera"></i> Фотографии тайника (будут отправлены клиенту в Telegram):</label>
+            <div class="drop-photo-dropzone" id="orderDropPhotoDropzone">
+              <input type="file" id="orderDropPhotoFileInput" accept="image/*" multiple style="display: none;">
+              <i class="fa-solid fa-camera text-cyan" style="font-size: 1.5rem;"></i>
+              <div class="dropzone-text">
+                <span>Нажмите для выбора фото или перетащите файлы</span>
+                <span class="field-hint">Поддерживается несколько ракурсов места закладки</span>
+              </div>
+            </div>
+            <div class="drop-photo-gallery" id="orderDropPhotoGallery"></div>
+          </div>
+
           <div class="price-input-row">
             <div class="form-group">
               <label for="locModalStatusSelect"><i class="fa-solid fa-signal"></i> Статус заказа:</label>
@@ -1102,8 +1224,8 @@
 
           <div class="btn-row">
             <button type="submit" id="saveLocationBtn" class="btn-primary glow-btn full-w">
-              <i class="fa-solid fa-floppy-disk"></i>
-              <span>Сохранить Локацию & Синхронизировать с Ботом</span>
+              <i class="fa-solid fa-paper-plane"></i>
+              <span>Выдать Локацию & Фото в Telegram Клиенту</span>
             </button>
           </div>
         </form>
@@ -1115,6 +1237,6 @@
   <div id="toastContainer" class="toast-container"></div>
 
   <!-- Scripts -->
-  <script src="admin.js?v=20261018_auth_fix_v2"></script>
+  <script src="admin.js?v=20261022_loc_stash_v4"></script>
 </body>
 </html>

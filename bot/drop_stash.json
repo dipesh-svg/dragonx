@@ -1,0 +1,44 @@
+{
+  "STASH-CHIL-2-01": {
+    "id": "STASH-CHIL-2-01",
+    "volume": "2 штук",
+    "volume_num": 2,
+    "district": "Чиланзор",
+    "coordinates": "41.272145, 69.204512",
+    "location": "Квартал 9, дом 14, магнит под металлическим отливом окна 1 этажа",
+    "notes": "Утренний дроп #1. Надежный тайник, доступ 24/7",
+    "photos": [
+      "https://images.unsplash.com/photo-1590674899484-d5640e854abe?auto=format&fit=crop&w=600&q=80"
+    ],
+    "status": "ready",
+    "created_at": 1792345000.0
+  },
+  "STASH-YASH-3-01": {
+    "id": "STASH-YASH-3-01",
+    "volume": "3 штук",
+    "volume_num": 3,
+    "district": "Яшнабад",
+    "coordinates": "41.298540, 69.324120",
+    "location": "Ул. Султанали Машхади, за гаражом #42, серый магнитный контейнер в кирпичной нише",
+    "notes": "Утренний дроп #2. Защитная метка X-42",
+    "photos": [
+      "https://images.unsplash.com/photo-1541888946425-d0fbb186f5f7?auto=format&fit=crop&w=600&q=80"
+    ],
+    "status": "ready",
+    "created_at": 1792345100.0
+  },
+  "STASH-ULUG-2-01": {
+    "id": "STASH-ULUG-2-01",
+    "volume": "2 штук",
+    "volume_num": 2,
+    "district": "Ulugbek",
+    "coordinates": "41.341250, 69.452010",
+    "location": "Поселок Улугбек, парковая зона, опора освещения #7, магнитный бокс снизу швеллера",
+    "notes": "Утренний дроп #3. Сухое место",
+    "photos": [
+      "https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=600&q=80"
+    ],
+    "status": "ready",
+    "created_at": 1792345200.0
+  }
+}
